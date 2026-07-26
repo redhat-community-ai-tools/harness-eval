@@ -10,7 +10,7 @@ Evaluate AI code agent setups for best practices, redundancy, security, and cros
 
 Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift Pipelines), a **Claude Code plugin**, and **Cursor commands**.
 
-Supports Claude Code, Cursor, Copilot, Gemini CLI, and OpenCode projects. Auto-detects which tool(s) a project uses. Also discovers third-party modules installed via package managers.
+Supports Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, and OpenCode projects. Auto-detects which tool(s) a project uses. Also discovers third-party modules installed via package managers.
 
 ## What it does
 
@@ -40,9 +40,11 @@ Auto-detects which tool(s) a project uses and evaluates all discovered component
 |-----------|------------------|
 | Claude Code | `CLAUDE.md`, `skills/`, `commands/`, `.claude/agents/`, `.claude/settings.json`, `.mcp.json` |
 | Cursor | `.cursor/rules/*.mdc`, `.cursorrules`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
-| Copilot | `.github/skills/`, `.github/prompts/`, `.github/agents/` |
-| Gemini CLI | `GEMINI.md`, `.gemini/commands/` |
-| OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/` |
+| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` |
+| Cline | `.clinerules` (file or directory of `*.md`) |
+| Copilot | `.github/copilot-instructions.md`, `.github/skills/`, `.github/prompts/`, `.github/agents/` |
+| Gemini CLI | `GEMINI.md`, `.gemini/commands/`, `.gemini/settings.json` (MCP) |
+| OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `opencode.json` (MCP) |
 | Third-party modules | `.lola/modules/` (skills, commands, agents installed via package managers) |
 
 Multi-tool projects are fully supported. When a project contains files for multiple assistants, all are discovered, deduplicated, and evaluated together.
