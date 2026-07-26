@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules.mcp._shared import extract_servers
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -41,7 +42,7 @@ class McpDuplicateServer:
         if not isinstance(data, dict):
             return
 
-        servers = data.get("mcpServers")
+        servers = extract_servers(data)
         if not isinstance(servers, dict):
             return
 

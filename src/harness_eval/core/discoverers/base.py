@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -41,6 +42,20 @@ def _recursive_glob(root: Path, pattern: str) -> list[Path]:
             continue
         results.append(f)
     return results
+
+
+def _json_top_level_keys(filepath: Path) -> set[str]:
+    """Return the set of top-level keys in a JSON file, or empty on any error.
+
+    Used to gate MCP-config discovery so that non-MCP config files (e.g. a
+    Gemini settings.json with only editor prefs) are not treated as MCP
+    configs and flagged by MCP rules.
+    """
+    try:
+        data = json.loads(filepath.read_text(encoding="utf-8", errors="replace"))
+    except (json.JSONDecodeError, ValueError, OSError):
+        return set()
+    return set(data.keys()) if isinstance(data, dict) else set()
 
 
 def parse_file(
