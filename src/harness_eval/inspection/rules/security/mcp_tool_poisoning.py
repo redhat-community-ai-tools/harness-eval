@@ -121,11 +121,15 @@ class McpToolPoisoning:
     )
 
     def create(self, context: RuleContext) -> None:
-        skill = context.skill
-        if not skill.raw_content:
-            return
+        from harness_eval.inspection.rules.security._shared import (
+            extract_all_skill_md_content,
+        )
 
-        lines = skill.raw_content.split("\n")
+        for content, file_path in extract_all_skill_md_content(context):
+            self._scan_content(context, content, file_path)
+
+    def _scan_content(self, context: RuleContext, content: str, file_path: str) -> None:
+        lines = content.split("\n")
 
         for i, line in enumerate(lines):
             pattern_matched = False
@@ -136,7 +140,7 @@ class McpToolPoisoning:
                             message_id="mcp_hidden_instruction",
                             data={"label": label, "line": str(i + 1)},
                             location=Location(
-                                file=skill.skill_md_path,
+                                file=file_path,
                                 start_line=i + 1,
                             ),
                         )
@@ -152,7 +156,7 @@ class McpToolPoisoning:
                             message_id="mcp_hidden_instruction",
                             data={"label": "base64 blob in text", "line": str(i + 1)},
                             location=Location(
-                                file=skill.skill_md_path,
+                                file=file_path,
                                 start_line=i + 1,
                             ),
                         )
@@ -169,7 +173,7 @@ class McpToolPoisoning:
                                 "line": str(i + 1),
                             },
                             location=Location(
-                                file=skill.skill_md_path,
+                                file=file_path,
                                 start_line=i + 1,
                             ),
                         )
@@ -186,7 +190,7 @@ class McpToolPoisoning:
                                 "line": str(i + 1),
                             },
                             location=Location(
-                                file=skill.skill_md_path,
+                                file=file_path,
                                 start_line=i + 1,
                             ),
                         )
@@ -203,7 +207,7 @@ class McpToolPoisoning:
                                 "line": str(i + 1),
                             },
                             location=Location(
-                                file=skill.skill_md_path,
+                                file=file_path,
                                 start_line=i + 1,
                             ),
                             severity_override=Severity.WARNING,

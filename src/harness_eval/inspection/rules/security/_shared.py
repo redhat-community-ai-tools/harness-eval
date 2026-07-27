@@ -50,6 +50,27 @@ def extract_content_and_path(
     return None
 
 
+def extract_all_skill_md_content(
+    context: RuleContext,
+) -> list[tuple[str, str]]:
+    """Return (content, abs_path) for SKILL.md and all markdown sub-files."""
+    from pathlib import Path
+
+    skill = context.skill
+    results: list[tuple[str, str]] = []
+
+    if skill.raw_content:
+        results.append((skill.raw_content, skill.skill_md_path))
+
+    if skill.dir_path and skill.sub_file_contents:
+        skill_dir = Path(skill.dir_path)
+        for rel_path, content in skill.sub_file_contents.items():
+            if content:
+                results.append((content, str(skill_dir / rel_path)))
+
+    return results
+
+
 def scan_lines_for_patterns(
     content: str,
     file_path: str,

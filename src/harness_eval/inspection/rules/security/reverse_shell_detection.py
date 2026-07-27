@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import re
 
-from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.security._shared import (
-    extract_content_and_path,
+    extract_all_skill_md_content,
     scan_lines_for_patterns,
 )
 from harness_eval.inspection.types import (
@@ -43,15 +42,12 @@ class ReverseShellDetection:
     )
 
     def create(self, context: RuleContext) -> None:
-        result = extract_content_and_path(context, ComponentType.SKILL)
-        if result is None:
-            return
-        content, file_path = result
-        scan_lines_for_patterns(
-            content,
-            file_path,
-            context,
-            _REVERSE_SHELL_PATTERNS,
-            detected_msg="shell_detected",
-            code_block_msg="shell_in_code_block",
-        )
+        for content, file_path in extract_all_skill_md_content(context):
+            scan_lines_for_patterns(
+                content,
+                file_path,
+                context,
+                _REVERSE_SHELL_PATTERNS,
+                detected_msg="shell_detected",
+                code_block_msg="shell_in_code_block",
+            )

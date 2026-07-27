@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.0] - 2026-07-27
+
+### Added
+- Security rules now scan all markdown sub-files inside skill directories, not just SKILL.md. Dangerous content in phase files, rubric files, mode files, and other `.md` sub-files is now detected with correct file paths and line numbers. Capped at 50 sub-files and 100KB per file to prevent runaway scanning.
+
 ## [6.1.1] - 2026-07-24
 
 ### Fixed
