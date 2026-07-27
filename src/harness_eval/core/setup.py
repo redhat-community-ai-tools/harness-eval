@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from fnmatch import fnmatch
 from pathlib import Path
 
 from harness_eval.core.discoverers import get_all_discoverers
@@ -14,12 +15,28 @@ from harness_eval.core.types import (
 )
 
 
+def _matches_exclude(component_path: str, root: Path, patterns: tuple[str, ...]) -> bool:
+    """Check if a component path matches any exclude pattern."""
+    abs_path = str(Path(component_path).resolve())
+    try:
+        rel_path = str(Path(component_path).resolve().relative_to(root.resolve()))
+    except ValueError:
+        rel_path = component_path
+    filename = Path(component_path).name
+
+    for pattern in patterns:
+        if fnmatch(rel_path, pattern) or fnmatch(filename, pattern) or fnmatch(abs_path, pattern):
+            return True
+    return False
+
+
 def discover_setup(
     name: str,
     path: str,
     user_config_dir: str | None = None,
     *,
     recursive: bool = False,
+    exclude: tuple[str, ...] = (),
 ) -> Setup:
     """Walk a directory and discover all agent-relevant components."""
     root = Path(path)
@@ -35,6 +52,9 @@ def discover_setup(
 
     components = _deduplicate_components(components)
     components.extend(_discover_uncategorized(root, components))
+
+    if exclude:
+        components = [c for c in components if not _matches_exclude(c.path, root, exclude)]
 
     detected = _detect_tools(root)
     fp = fingerprint_setup(path, user_config_dir=user_config_dir)

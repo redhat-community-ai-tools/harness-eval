@@ -118,6 +118,11 @@ def _parse_adjudication_response(
     default=None,
     help="Path to baseline JSON file. Suppress baselined findings.",
 )
+@click.option(
+    "--exclude",
+    multiple=True,
+    help="Glob patterns for files/dirs to exclude from scanning (repeatable).",
+)
 def eval_setup_security(
     path: str,
     fmt: str,
@@ -131,6 +136,7 @@ def eval_setup_security(
     recursive: bool,
     enforce: str | None,
     baseline_path: str | None,
+    exclude: tuple[str, ...],
 ) -> None:
     """Deep security audit: all deterministic security rules + optional LLM review."""
     if enforce and (fail_on_error or fail_on_warning):
@@ -144,7 +150,11 @@ def eval_setup_security(
 
     target = Path(path)
     setup = discover_setup(
-        name=target.name, path=path, user_config_dir=user_config, recursive=recursive
+        name=target.name,
+        path=path,
+        user_config_dir=user_config,
+        recursive=recursive,
+        exclude=exclude,
     )
     results = inspect_setup(setup, SECURITY)
 

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.1] - 2026-07-27
+
+### Added
+- `--exclude` option for `lint` and `security` CLI commands: repeatable glob patterns to exclude files or directories from scanning. Matches against relative path, absolute path, and filename (like gitignore). Example: `--exclude ".github/scripts/*" --exclude "*.yml"`
+- `exclude` input for GitHub Action: multi-line glob patterns, one per line
+
 ## [6.2.0] - 2026-07-27
 
 ### Added

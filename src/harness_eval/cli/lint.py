@@ -78,6 +78,11 @@ from harness_eval.output.metadata import EvalMetadata
     default=None,
     help="Path to baseline JSON file. Suppress baselined findings.",
 )
+@click.option(
+    "--exclude",
+    multiple=True,
+    help="Glob patterns for files/dirs to exclude from scanning (repeatable).",
+)
 def eval_setup_lint(
     path: str,
     preset: str,
@@ -92,6 +97,7 @@ def eval_setup_lint(
     enforce: str | None,
     report_card_path: str | None,
     baseline_path: str | None,
+    exclude: tuple[str, ...],
 ) -> None:
     """Lint: deterministic rules + system analysis. No LLM, fast."""
     if enforce and (fail_on_error or fail_on_warning):
@@ -123,7 +129,11 @@ def eval_setup_lint(
 
     if target.is_dir():
         setup = discover_setup(
-            name=target.name, path=path, user_config_dir=user_config, recursive=recursive
+            name=target.name,
+            path=path,
+            user_config_dir=user_config,
+            recursive=recursive,
+            exclude=exclude,
         )
         results = inspect_setup(setup, config_rules)
 

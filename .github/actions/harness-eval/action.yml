@@ -31,6 +31,9 @@ inputs:
   recursive:
     description: "Recursively search for agent configs in all subdirectories"
     default: "false"
+  exclude:
+    description: "Glob patterns to exclude from scanning, one per line"
+    default: ""
   version:
     description: "harness-eval version to install (e.g. '5.0.0'). Leave empty for latest."
     default: ""
@@ -69,12 +72,18 @@ runs:
         if [ "${{ inputs.recursive }}" = "true" ]; then
           recursive_flag="--recursive"
         fi
+        exclude_flags=""
+        while IFS= read -r pat; do
+          pat=$(echo "$pat" | xargs)
+          [ -z "$pat" ] && continue
+          exclude_flags="$exclude_flags --exclude $pat"
+        done <<< "${{ inputs.exclude }}"
         failed=0
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
-          harness-eval security "$dir" $recursive_flag || true
-          if ! harness-eval security "$dir" $recursive_flag --fail-on-warning > /dev/null 2>&1; then
+          harness-eval security "$dir" $recursive_flag $exclude_flags || true
+          if ! harness-eval security "$dir" $recursive_flag $exclude_flags --fail-on-warning > /dev/null 2>&1; then
             failed=1
           fi
         done <<< "${{ inputs.path }}"
@@ -94,6 +103,12 @@ runs:
         if [ "${{ inputs.recursive }}" = "true" ]; then
           recursive_flag="--recursive"
         fi
+        exclude_flags=""
+        while IFS= read -r pat; do
+          pat=$(echo "$pat" | xargs)
+          [ -z "$pat" ] && continue
+          exclude_flags="$exclude_flags --exclude $pat"
+        done <<< "${{ inputs.exclude }}"
         failed=0
         json_dir="${{ runner.temp }}/harness-eval-json"
         mkdir -p "$json_dir"
@@ -101,9 +116,9 @@ runs:
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
-          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag || true
-          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag --format json > "$json_dir/lint-$i.json" 2>/dev/null || true
-          if ! harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $fail_flag > /dev/null 2>&1; then
+          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags || true
+          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format json > "$json_dir/lint-$i.json" 2>/dev/null || true
+          if ! harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags $fail_flag > /dev/null 2>&1; then
             failed=1
           fi
           i=$((i + 1))
@@ -122,12 +137,18 @@ runs:
         if [ "${{ inputs.recursive }}" = "true" ]; then
           recursive_flag="--recursive"
         fi
+        exclude_flags=""
+        while IFS= read -r pat; do
+          pat=$(echo "$pat" | xargs)
+          [ -z "$pat" ] && continue
+          exclude_flags="$exclude_flags --exclude $pat"
+        done <<< "${{ inputs.exclude }}"
         total_results=0
         i=0
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
-          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag --format sarif --output "$sarif_dir/results-$i.sarif" || true
+          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format sarif --output "$sarif_dir/results-$i.sarif" || true
           count=$(python3 -c "import json; d=json.load(open('$sarif_dir/results-$i.sarif')); print(len(d['runs'][0]['results']))" 2>/dev/null || echo "0")
           total_results=$((total_results + count))
           i=$((i + 1))
