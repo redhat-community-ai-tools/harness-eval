@@ -4,6 +4,9 @@ import math
 import re
 from collections import Counter
 
+from harness_eval.inspection.rules.security._shared import (
+    extract_all_skill_md_content,
+)
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -121,10 +124,6 @@ class McpToolPoisoning:
     )
 
     def create(self, context: RuleContext) -> None:
-        from harness_eval.inspection.rules.security._shared import (
-            extract_all_skill_md_content,
-        )
-
         for content, file_path in extract_all_skill_md_content(context):
             self._scan_content(context, content, file_path)
 
