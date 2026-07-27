@@ -252,7 +252,7 @@ def format_terminal(
 
     if system.uncategorized_files:
         lines.append("")
-        lines.append("Uncategorized Files (discovered but no rules apply yet):")
+        lines.append("Uncategorized Files (security-only rules applied):")
         lines.append(f"{'─' * 60}")
         for f in system.uncategorized_files:
             lines.append(f"  {f}")

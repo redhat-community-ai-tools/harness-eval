@@ -501,6 +501,11 @@ _SECURITY_ONLY_RULES = {
     "security/obfuscation",
     "security/data-exfiltration",
     "security/mcp-tool-poisoning",
+    "security/coercive-override",
+    "security/memory-write-unscoped",
+    "security/prompt-exfiltration",
+    "security/stealth-persistence",
+    "security/unbounded-delegation",
 }
 
 
@@ -699,6 +704,16 @@ def inspect_setup(
         results.append(
             lint_mcp_config(
                 comp.path,
+                config_rules,
+                scan_state=scan_state,
+                source_tool=comp.source_tool,
+            )
+        )
+    for comp in setup.by_type(CT.UNCATEGORIZED):
+        results.append(
+            lint_text_file(
+                comp.path,
+                CT.UNCATEGORIZED,
                 config_rules,
                 scan_state=scan_state,
                 source_tool=comp.source_tool,

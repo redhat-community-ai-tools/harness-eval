@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import re
 
-from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.security._shared import (
-    extract_content_and_path,
+    extract_all_skill_md_content,
     scan_lines_for_credential_patterns,
 )
 from harness_eval.inspection.types import (
@@ -62,21 +61,18 @@ class NoCredentialAccess:
     )
 
     def create(self, context: RuleContext) -> None:
-        result = extract_content_and_path(context, ComponentType.SKILL)
-        if result is None:
-            return
-        content, file_path = result
-        scan_lines_for_credential_patterns(
-            content,
-            file_path,
-            context,
-            [
-                ("sensitive_path", _SENSITIVE_PATHS),
-                ("sensitive_env", _SENSITIVE_ENV_VARS),
-                ("dangerous_command", _DANGEROUS_COMMANDS),
-            ],
-            code_block_msg="skip",
-            suggestion=(
-                "Use a secret manager or environment variable injection instead of hardcoded paths."
-            ),
-        )
+        for content, file_path in extract_all_skill_md_content(context):
+            scan_lines_for_credential_patterns(
+                content,
+                file_path,
+                context,
+                [
+                    ("sensitive_path", _SENSITIVE_PATHS),
+                    ("sensitive_env", _SENSITIVE_ENV_VARS),
+                    ("dangerous_command", _DANGEROUS_COMMANDS),
+                ],
+                code_block_msg="skip",
+                suggestion=(
+                    "Use a secret manager or environment variable injection instead of hardcoded paths."
+                ),
+            )

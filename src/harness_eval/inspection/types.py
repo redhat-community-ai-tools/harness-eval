@@ -105,6 +105,7 @@ class ParsedSkill:
     body: str
     body_start_line: int
     files: list[str]
+    sub_file_contents: dict[str, str] = field(default_factory=dict)
     parse_errors: list[str] = field(default_factory=list)
     tokens: int = 0
 

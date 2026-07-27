@@ -39,6 +39,31 @@ def _not_found(path: Path, expected: str) -> tuple[str, None, list[str]]:
     return "", None, [f"{expected} not found" if expected else f"Path does not exist: {path}"]
 
 
+_MAX_SUB_FILES = 50
+_MAX_SUB_FILE_BYTES = 100_000
+
+
+def _read_md_sub_files(skill_dir: Path, skill_md: Path) -> dict[str, str]:
+    """Read .md files in *skill_dir* except the primary SKILL.md."""
+    result: dict[str, str] = {}
+    skill_md_resolved = skill_md.resolve()
+    for p in sorted(skill_dir.rglob("*.md")):
+        if p.resolve() == skill_md_resolved:
+            continue
+        if ".git" in p.parts or "__pycache__" in p.parts:
+            continue
+        if len(result) >= _MAX_SUB_FILES:
+            break
+        try:
+            if p.stat().st_size > _MAX_SUB_FILE_BYTES:
+                continue
+            content = p.read_text(encoding="utf-8", errors="replace")
+            result[str(p.relative_to(skill_dir))] = content
+        except OSError:
+            continue
+    return result
+
+
 def _resolve_skill_path(skill_path: str) -> tuple[Path, Path | None, list[str]]:
     """Resolve a skill path to (skill_dir, skill_md, errors)."""
     path = Path(skill_path)
@@ -81,6 +106,7 @@ def parse_skill(skill_path: str) -> ParsedSkill:
             body="",
             body_start_line=0,
             files=list_files(skill_dir),
+            sub_file_contents=_read_md_sub_files(skill_dir, skill_dir / "SKILL.md"),
             parse_errors=errors,
         )
 
@@ -97,6 +123,7 @@ def parse_skill(skill_path: str) -> ParsedSkill:
         body=fm.body,
         body_start_line=fm.body_start_line,
         files=list_files(skill_dir),
+        sub_file_contents=_read_md_sub_files(skill_dir, skill_md),
         parse_errors=parse_errors,
         tokens=count_tokens(raw_content),
     )
