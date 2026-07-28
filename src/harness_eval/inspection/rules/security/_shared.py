@@ -120,7 +120,8 @@ def scan_lines_for_patterns(
                     elif example_msg is not None:
                         is_quoted = stripped.startswith(">") or stripped.startswith('"')
                         is_example = any(
-                            w in line.lower() for w in ["for example", "e.g.", "such as", "like:"]
+                            w in line.lower()
+                            for w in ["for example", "e.g.", "such as", "like:", "instead of"]
                         )
                         if is_quoted or is_example:
                             message_id = example_msg
@@ -134,7 +135,8 @@ def scan_lines_for_patterns(
                 elif example_msg is not None:
                     is_quoted = stripped.startswith(">") or stripped.startswith('"')
                     is_example = any(
-                        w in line.lower() for w in ["for example", "e.g.", "such as", "like:"]
+                        w in line.lower()
+                        for w in ["for example", "e.g.", "such as", "like:", "instead of"]
                     )
                     if is_quoted or is_example:
                         message_id = example_msg
