@@ -71,6 +71,12 @@ def extract_all_skill_md_content(
     return results
 
 
+_NEGATION_RE = re.compile(
+    r"\b(?:not|don'?t|do\s+not|never|avoid|must\s+not|should\s+not|cannot|can'?t)\b",
+    re.I,
+)
+
+
 def scan_lines_for_patterns(
     content: str,
     file_path: str,
@@ -79,6 +85,7 @@ def scan_lines_for_patterns(
     detected_msg: str,
     code_block_msg: str | None = None,
     example_msg: str | None = None,
+    negation_msg: str | None = None,
 ) -> None:
     """Scan content lines for regex patterns with optional context awareness.
 
@@ -86,6 +93,8 @@ def scan_lines_for_patterns(
     inside them use that message ID with WARNING severity.
     When example_msg is provided, matches in quotes or example contexts
     use that message ID with WARNING severity.
+    When negation_msg is provided, lines containing negation words before
+    the pattern match use that message ID with WARNING severity.
     """
     lines = content.split("\n")
     in_code_fence = False
@@ -98,10 +107,30 @@ def scan_lines_for_patterns(
             continue
 
         for label, pattern in patterns:
-            if pattern.search(line):
+            match = pattern.search(line)
+            if match:
                 if code_block_msg is not None and in_code_fence:
                     message_id = code_block_msg
                     severity_override: Severity | None = Severity.WARNING
+                elif negation_msg is not None:
+                    prefix = line[: match.start()]
+                    if _NEGATION_RE.search(prefix):
+                        message_id = negation_msg
+                        severity_override = Severity.WARNING
+                    elif example_msg is not None:
+                        is_quoted = stripped.startswith(">") or stripped.startswith('"')
+                        is_example = any(
+                            w in line.lower() for w in ["for example", "e.g.", "such as", "like:"]
+                        )
+                        if is_quoted or is_example:
+                            message_id = example_msg
+                            severity_override = Severity.WARNING
+                        else:
+                            message_id = detected_msg
+                            severity_override = None
+                    else:
+                        message_id = detected_msg
+                        severity_override = None
                 elif example_msg is not None:
                     is_quoted = stripped.startswith(">") or stripped.startswith('"')
                     is_example = any(

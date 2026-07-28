@@ -264,6 +264,17 @@ class TestContentRules:
         broken = [d for d in result.diagnostics if d.rule_id == "content/broken-references"]
         assert len(broken) == 1
 
+    def test_broken_reference_skips_bare_env_vars(self, tmp_path: Path) -> None:
+        skill_dir = tmp_path / "env-ref"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: env-ref\ndescription: Skill with bare env var ref\n---\n\n"
+            "Write output to `$OUTPUT_DIR/result.json` when done."
+        )
+        result = lint(str(skill_dir))
+        broken = [d for d in result.diagnostics if d.rule_id == "content/broken-references"]
+        assert len(broken) == 0
+
 
 class TestFrontmatterRules:
     def test_missing_description(self, tmp_path: Path) -> None:

@@ -19,7 +19,7 @@ _DIR_REF_PATTERN = re.compile(r"(?:scripts|references|assets)/[\w./-]+")
 
 _VERSION_RE = re.compile(r"^\d+(\.\d+)+$")
 _GIT_REF_RE = re.compile(r"(\.\.\.?|@\{|HEAD|upstream|origin|main|master)")
-_TEMPLATE_VAR_RE = re.compile(r"\$\{|<[a-z_-]+>|\{\{")
+_TEMPLATE_VAR_RE = re.compile(r"\$\{|\$[A-Z_][A-Z0-9_]*|<[a-z_-]+>|\{\{")
 _GLOB_RE = re.compile(r"[*?]")
 _COMMAND_RE = re.compile(r"^(git|bash|uv|npm|curl|grep|tail|mv|cat|echo|find|sed|awk)\s")
 _PLACEHOLDER_RE = re.compile(r"[A-Z]{3,4}[A-Z0-9]*-")

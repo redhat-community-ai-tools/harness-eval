@@ -56,6 +56,7 @@ class PromptExfiltration:
             "exfil_detected": "Line {{line}} contains a prompt exfiltration pattern ('{{label}}'). System instructions should not be exposed in outputs.",
             "exfil_in_code_block": "Line {{line}} contains '{{label}}' inside a code block (likely safe).",
             "exfil_in_example": "Line {{line}} contains '{{label}}' in a quote or example (likely safe).",
+            "exfil_negated": "Line {{line}} contains '{{label}}' preceded by negation (likely a restriction, not exfiltration).",
         },
         frameworks={"owasp_llm": "LLM07"},
     )
@@ -70,4 +71,5 @@ class PromptExfiltration:
                 detected_msg="exfil_detected",
                 code_block_msg="exfil_in_code_block",
                 example_msg="exfil_in_example",
+                negation_msg="exfil_negated",
             )
