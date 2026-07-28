@@ -1,0 +1,17 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: harness-eval-scan-
+spec:
+  pipelineRef:
+    name: harness-eval-scan
+  params:
+    - name: repo-url
+      value: https://github.com/redhat-community-ai-tools/harness-eval.git
+    - name: revision
+      value: main
+    - name: enforce
+      value: advisory
+  workspaces:
+    - name: shared-workspace
+      emptyDir: {}

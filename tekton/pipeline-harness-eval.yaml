@@ -1,0 +1,64 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: harness-eval-scan
+spec:
+  description: >-
+    Clone a repository and run harness-eval lint + security scan
+    on its AI agent configurations.
+  params:
+    - name: repo-url
+      type: string
+      description: Git repository URL to scan.
+    - name: revision
+      type: string
+      default: main
+      description: Git revision (branch, tag, or commit SHA).
+    - name: path
+      type: string
+      default: "."
+      description: Subdirectory within the repo to scan.
+    - name: enforce
+      type: string
+      default: "strict"
+      description: "Enforcement mode: strict, advisory, off."
+    - name: image
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000/qe-ds-ai--pipeline/harness-eval:dev
+      description: harness-eval container image.
+  workspaces:
+    - name: shared-workspace
+  tasks:
+    - name: fetch-source
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: URL
+          value: $(params.repo-url)
+        - name: REVISION
+          value: $(params.revision)
+    - name: harness-eval
+      runAfter:
+        - fetch-source
+      taskRef:
+        name: harness-eval
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: image
+          value: $(params.image)
+        - name: path
+          value: $(params.path)
+        - name: enforce
+          value: $(params.enforce)
