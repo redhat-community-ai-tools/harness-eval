@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from harness_eval.analysis.component_graph import ComponentGraph, _extract_mcp_tool_calls
+from typing import TYPE_CHECKING
+
 from harness_eval.core.types import ComponentType
 from harness_eval.data import load_capabilities
 from harness_eval.inspection.rules.security._shared import strip_code_blocks
+
+if TYPE_CHECKING:
+    from harness_eval.analysis.component_graph import ComponentGraph
+
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -51,6 +56,8 @@ class CrossComponentFlow:
         if context.scan_state.get("cross_component_flow_checked"):
             return
         context.scan_state["cross_component_flow_checked"] = True
+
+        from harness_eval.analysis.component_graph import ComponentGraph  # noqa: F401
 
         graph: ComponentGraph | None = context.scan_state.get("component_graph")
         if not graph or len(graph.nodes) < 2:
@@ -154,6 +161,8 @@ class CrossComponentFlow:
         for skill in context.all_skills:
             if not skill.body:
                 continue
+            from harness_eval.analysis.component_graph import _extract_mcp_tool_calls
+
             mcp_calls = _extract_mcp_tool_calls(strip_code_blocks(skill.body))
             for server_name, tool_name in mcp_calls:
                 if server_name not in configured_servers:

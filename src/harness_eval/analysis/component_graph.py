@@ -6,12 +6,13 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from harness_eval.core.types import ComponentType
 from harness_eval.data import load_capabilities
-from harness_eval.inspection.rules.content._skill_refs import extract_references
-from harness_eval.inspection.rules.security._shared import strip_code_blocks
-from harness_eval.inspection.types import ParsedAgent, ParsedCommand, ParsedHooks, ParsedSkill
+
+if TYPE_CHECKING:
+    from harness_eval.inspection.types import ParsedAgent, ParsedCommand, ParsedHooks, ParsedSkill
 
 
 @dataclass(frozen=True)
@@ -124,6 +125,9 @@ def build_component_graph(
     mcp_config_path: str | None = None,
 ) -> ComponentGraph:
     """Build a unified component graph from all discovered components."""
+    from harness_eval.inspection.rules.content._skill_refs import extract_references
+    from harness_eval.inspection.rules.security._shared import strip_code_blocks
+
     graph = ComponentGraph()
     agents = agents or []
     skill_names: set[str] = set()

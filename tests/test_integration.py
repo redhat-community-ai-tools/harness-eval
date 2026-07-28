@@ -187,6 +187,7 @@ class TestSelfDogfood:
             ["uv", "run", "harness-eval", "lint", str(REPO_ROOT)],
             capture_output=True,
             text=True,
+            timeout=120,
         )
         assert result.returncode == 0, f"Dogfood crashed:\n{result.stderr}"
         assert "Setup Assessment" in result.stdout
@@ -198,6 +199,7 @@ class TestSelfDogfood:
             ["uv", "run", "harness-eval", "lint", str(REPO_ROOT), "--format", "json"],
             capture_output=True,
             text=True,
+            timeout=120,
         )
         assert result.returncode == 0
         data = json.loads(result.stdout)

@@ -14,7 +14,15 @@ from harness_eval.utils.parsing import parse_frontmatter
 from harness_eval.utils.paths import is_within
 from harness_eval.utils.tokens import count_tokens
 
-_EXCLUDE_DIRS = {".git", "__pycache__", "node_modules", ".venv", "vendor", ".tox"}
+_EXCLUDE_DIRS = {
+    ".git",
+    "__pycache__",
+    "node_modules",
+    ".venv",
+    "vendor",
+    ".tox",
+    "worktrees",
+}
 
 
 def _recursive_glob(root: Path, pattern: str) -> list[Path]:
