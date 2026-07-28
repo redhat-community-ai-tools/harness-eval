@@ -8,7 +8,7 @@
 
 Evaluate AI code agent setups for best practices, redundancy, security, and cross-component issues.
 
-Available as a **CLI tool**, a **GitHub Action**, a **Claude Code plugin**, and **Cursor commands**.
+Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift Pipelines), a **Claude Code plugin**, and **Cursor commands**.
 
 Supports Claude Code, Cursor, Copilot, Gemini CLI, and OpenCode projects. Auto-detects which tool(s) a project uses. Also discovers third-party modules installed via package managers.
 
@@ -49,7 +49,7 @@ Multi-tool projects are fully supported. When a project contains files for multi
 
 ## Install
 
-See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options, CI integration, and configuration (Available as a **CLI tool**, **GitHub Action**, **Claude Code plugin**, and **Cursor commands**)
+See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options, CI integration, and configuration (Available as a **CLI tool**, **GitHub Action**, **Tekton Task**, **Claude Code plugin**, and **Cursor commands**)
 
 ## Inspection Rules (74)
 

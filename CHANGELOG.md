@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- OpenShift Pipelines integration: UBI9-based `Containerfile` and Tekton Task for running harness-eval as a CI gate in OpenShift Pipelines
+- `docs/openshift.md`: full documentation for Tekton Task parameters, air-gapped support, and troubleshooting
+
 ## [6.2.1] - 2026-07-27
 
 ### Added

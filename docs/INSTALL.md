@@ -1,6 +1,6 @@
 # Install
 
-harness-eval is available as a CLI tool, a GitHub Action, a Claude Code plugin, and Cursor commands. Pick whichever fits your workflow.
+harness-eval is available as a CLI tool, a GitHub Action, a Tekton Task (OpenShift Pipelines), a Claude Code plugin, and Cursor commands. Pick whichever fits your workflow.
 
 ## CLI tool
 
@@ -137,6 +137,24 @@ If you prefer manual setup over the action:
   with:
     sarif_file: results.sarif
 ```
+
+## OpenShift Pipelines (Tekton Task)
+
+Run harness-eval as a CI gate in OpenShift Pipelines. Requires the OpenShift Pipelines operator and a container image built from the included `Containerfile`.
+
+```bash
+# Build and push the image
+podman build -t harness-eval:dev -f Containerfile .
+
+# Apply the Task and Pipeline
+oc apply -f tekton/task-harness-eval.yaml
+oc apply -f tekton/pipeline-harness-eval.yaml
+
+# Run a scan
+oc create -f tekton/pipelinerun-example.yaml
+```
+
+Fully offline: no API keys, no egress. See [`docs/openshift.md`](openshift.md) for full documentation including parameters, air-gapped support, and troubleshooting.
 
 ## Claude Code plugin
 
