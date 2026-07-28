@@ -1,0 +1,159 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: harness-eval
+  labels:
+    app.kubernetes.io/version: "6.2.1"
+  annotations:
+    tekton.dev/displayName: "harness-eval"
+    tekton.dev/categories: Security
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  description: >-
+    Static analysis for AI code agent configurations.
+    Scans skills, hooks, MCP configs, and agent definitions
+    for security, quality, and best-practice issues.
+  workspaces:
+    - name: source
+      description: Workspace containing the cloned repository to scan.
+  params:
+    - name: image
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000/qe-ds-ai--pipeline/harness-eval:dev
+      description: Container image for harness-eval.
+    - name: path
+      type: string
+      default: "."
+      description: Subdirectory within the workspace to scan.
+    - name: commands
+      type: string
+      default: "lint,security"
+      description: Comma-separated commands to run (lint, security).
+    - name: enforce
+      type: string
+      default: "strict"
+      description: "Enforcement mode: strict (fail on findings), advisory (report only), off (skip)."
+    - name: format
+      type: string
+      default: "terminal"
+      description: "Output format: terminal, json, sarif."
+    - name: recursive
+      type: string
+      default: "false"
+      description: Recursively search subdirectories for agent configs.
+    - name: exclude
+      type: string
+      default: ""
+      description: "Comma-separated glob patterns to exclude from scanning."
+  results:
+    - name: verdict
+      description: "Overall result: CLEAN, NEEDS_WORK, or BLOCKED."
+    - name: grade
+      description: "Report card grade: A through F."
+  steps:
+    - name: lint
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if ! echo "$(params.commands)" | grep -q "lint"; then
+          echo "Skipping lint (not in commands list)"
+          exit 0
+        fi
+
+        SCAN_PATH="$(workspaces.source.path)/$(params.path)"
+
+        CMD="harness-eval lint ${SCAN_PATH}"
+        CMD="${CMD} --enforce $(params.enforce)"
+        CMD="${CMD} --format $(params.format)"
+        CMD="${CMD} --report-card $(workspaces.source.path)/harness-eval-report-card.json"
+
+        if [ "$(params.recursive)" = "true" ]; then
+          CMD="${CMD} --recursive"
+        fi
+
+        EXCLUDE="$(params.exclude)"
+        if [ -n "${EXCLUDE}" ]; then
+          IFS=',' read -ra PATTERNS <<< "${EXCLUDE}"
+          for pat in "${PATTERNS[@]}"; do
+            CMD="${CMD} --exclude ${pat}"
+          done
+        fi
+
+        echo "Running: ${CMD}"
+        ${CMD}
+      env:
+        - name: HOME
+          value: /tmp
+
+    - name: security
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if ! echo "$(params.commands)" | grep -q "security"; then
+          echo "Skipping security (not in commands list)"
+          exit 0
+        fi
+
+        SCAN_PATH="$(workspaces.source.path)/$(params.path)"
+
+        CMD="harness-eval security ${SCAN_PATH}"
+        CMD="${CMD} --enforce $(params.enforce)"
+        CMD="${CMD} --format $(params.format)"
+
+        if [ "$(params.recursive)" = "true" ]; then
+          CMD="${CMD} --recursive"
+        fi
+
+        EXCLUDE="$(params.exclude)"
+        if [ -n "${EXCLUDE}" ]; then
+          IFS=',' read -ra PATTERNS <<< "${EXCLUDE}"
+          for pat in "${PATTERNS[@]}"; do
+            CMD="${CMD} --exclude ${pat}"
+          done
+        fi
+
+        echo "Running: ${CMD}"
+        ${CMD}
+      env:
+        - name: HOME
+          value: /tmp
+
+    - name: extract-results
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        REPORT="$(workspaces.source.path)/harness-eval-report-card.json"
+
+        if [ -f "${REPORT}" ]; then
+          VERDICT=$(python3 -c "
+        import json, sys
+        r = json.load(open('${REPORT}'))
+        t = r.get('certification_tier', 'unknown')
+        print({'hardened':'CLEAN','verified':'CLEAN','basic':'NEEDS_WORK','unknown':'UNKNOWN'}.get(t.lower(), 'BLOCKED'))
+        " 2>/dev/null || echo "UNKNOWN")
+
+          GRADE=$(python3 -c "
+        import json
+        r = json.load(open('${REPORT}'))
+        print(r.get('grade', 'N/A'))
+        " 2>/dev/null || echo "N/A")
+        else
+          VERDICT="UNKNOWN"
+          GRADE="N/A"
+        fi
+
+        printf "%s" "${VERDICT}" > $(results.verdict.path)
+        printf "%s" "${GRADE}" > $(results.grade.path)
+        echo "Verdict: ${VERDICT} | Grade: ${GRADE}"
+      env:
+        - name: HOME
+          value: /tmp
