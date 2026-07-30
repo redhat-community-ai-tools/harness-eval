@@ -441,7 +441,10 @@ def eval_setup_security(
 
         client = create_client(provider, model)
         checker = RubricChecker(client)
-        checker._ensure_client_safe()
+        try:
+            checker._ensure_client_safe()
+        except ImportError as e:
+            raise click.ClickException(str(e)) from None
 
         components_needing_adjudication = [r for r in results if r.diagnostics]
         if components_needing_adjudication:

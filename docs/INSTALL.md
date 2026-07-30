@@ -71,7 +71,7 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
         with:
           path: "."              # directories to scan, one per line (default: repo root)
           preset: "recommended"  # recommended, strict, security, or pre-workflow
-          security-gate: "true"  # run security checks (15 rules)
+          security-gate: "true"  # run security checks (18 rules)
           lint-gate: "true"      # run lint checks (74 rules)
           lint-fail-on: "error"  # "error" (default) or "warning" (strict)
           sarif: "true"          # inline PR annotations via Code Scanning
