@@ -173,6 +173,13 @@ def _analyze_bash_file_ast(
                             if f"${var_name}" in word or f"${{{var_name}}}" in word:
                                 _report_indirect(line_no, var_name, src_line, "eval")
 
+                # read VAR: user input taints the variable
+                if cmd_name == "read":
+                    for part in parts[1:]:
+                        word = getattr(part, "word", "")
+                        if word and not word.startswith("-"):
+                            tainted_vars[word] = line_no
+
                 # export VAR=$tainted
                 if cmd_name == "export":
                     start, end = node.pos  # type: ignore[union-attr]
@@ -231,6 +238,14 @@ def _analyze_bash_file_ast(
         read_match = _READ_CMD_RE.search(stripped)
         if read_match:
             tainted_vars[read_match.group(1)] = i
+
+        # Track export VAR=$tainted_var
+        export_match = _EXPORT_TAINTED_RE.search(stripped)
+        if export_match:
+            new_var = export_match.group(1)
+            ref_var = export_match.group(2).strip("{}")
+            if ref_var in tainted_vars:
+                tainted_vars[new_var] = i
 
         # Self-contained taint flows
         for pattern, label in _SELF_CONTAINED_PATTERNS:

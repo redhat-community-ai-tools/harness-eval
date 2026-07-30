@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `harness-eval doctor` command: shows installed optional capabilities, env var status, and version info
+
+### Fixed
+- Bash taint tracking: `read VAR; export SECRET=$VAR; eval $SECRET` flow now detected. The AST walker was missing a handler for `read` as a taint source, and the line-by-line supplement was missing `export` taint propagation.
+
 ## [6.3.0] - 2026-07-30
 
 ### Breaking

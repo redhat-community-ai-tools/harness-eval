@@ -8,6 +8,7 @@ cli = click.Group(name="harness-eval", help="Evaluate AI agent setups.")
 click.version_option(package_name="harness-eval")(cli)
 
 from harness_eval.cli import baseline as _baseline  # noqa: E402, F401
+from harness_eval.cli import doctor as _doctor  # noqa: E402, F401
 from harness_eval.cli import lint as _lint  # noqa: E402, F401
 from harness_eval.cli import review as _review  # noqa: E402, F401
 from harness_eval.cli import rules as _rules  # noqa: E402, F401

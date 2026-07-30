@@ -26,7 +26,7 @@ class GeminiClient:
         except ImportError as e:
             raise ImportError(
                 'LLM dependencies not installed. Install with: pip install "harness-eval[llm]"'
-                "  (or: uv sync --extra llm)"
+                "  (or: uv sync --extra llm). Run `harness-eval doctor` to check what is installed."
             ) from e
 
         api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
@@ -68,7 +68,7 @@ class AnthropicClient:
         except ImportError as e:
             raise ImportError(
                 'LLM dependencies not installed. Install with: pip install "harness-eval[llm]"'
-                "  (or: uv sync --extra llm)"
+                "  (or: uv sync --extra llm). Run `harness-eval doctor` to check what is installed."
             ) from e
 
         api_key = os.environ.get("ANTHROPIC_API_KEY")

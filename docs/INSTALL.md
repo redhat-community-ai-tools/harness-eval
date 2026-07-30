@@ -35,6 +35,8 @@ harness-eval rules --format json            # machine-readable rule list
 
 `review`, `security --review`, and `skill --rubric` require the `[llm]` extra and either `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`.
 
+Run `harness-eval doctor` to see which optional capabilities are installed and which env vars are configured.
+
 Optional: YARA malware signature scanning for security: `pip install harness-eval[yara]`
 
 ## GitHub Action
