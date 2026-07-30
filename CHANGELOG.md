@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.3.0] - 2026-07-30
+
 ### Breaking
 - `google-genai` and `anthropic` moved from hard dependencies to optional `[llm]` extras. Users of `review`, `security --review`, or `skill --rubric` via CLI must install with `pip install "harness-eval[llm]"` (or `uv sync --extra llm`). The `lint`, `security` (scan-only), and `rules` commands work without LLM packages. Plugin and Cursor modes are unaffected.
 
