@@ -83,7 +83,10 @@ def eval_setup_review(
     for item in large:
         batches.append([item])
 
-    checker._ensure_client_safe()
+    try:
+        checker._ensure_client_safe()
+    except ImportError as e:
+        raise click.ClickException(str(e)) from None
     click.echo(f"  Reviewing {len(reviewable)} components ({len(batches)} batches)...", err=True)
 
     rubric_results: list[RubricResult] = []

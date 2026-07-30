@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json as json_mod
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import click
@@ -12,8 +13,24 @@ from harness_eval.cli import cli
 from harness_eval.cli._helpers import emit_output
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ParsedComponent
-from harness_eval.inspection.types import AdjudicatedFinding, Finding, Severity
+from harness_eval.inspection.types import AdjudicatedFinding, Finding, InspectionResult, Severity
 from harness_eval.output.metadata import EvalMetadata
+
+
+@dataclass(frozen=True)
+class _SecurityReport:
+    setup_name: str
+    risk: str
+    adjudicated: bool
+    results: list[InspectionResult]
+    adjudication_map: dict[str, list[AdjudicatedFinding]]
+    rubric_results: list
+    skip_notices: list[str]
+    metadata: EvalMetadata
+    effective_errors: int
+    effective_warnings: int
+    false_positive_count: int
+    downgraded_count: int
 
 
 def _parse_adjudication_response(
@@ -63,6 +80,245 @@ def _parse_adjudication_response(
             )
 
     return result
+
+
+def _clean_results(
+    results: list[InspectionResult],
+) -> tuple[list[InspectionResult], list[str]]:
+    """Filter out non-security and skip-notice findings. Returns (cleaned, skip_notices)."""
+    skip_rules = {"security/yara-signatures", "security/cve-lookup"}
+    non_security_rules = {"parser", "frontmatter/format-valid"}
+    skip_notices: list[str] = []
+    seen_skip: set[str] = set()
+
+    for r in results:
+        for d in r.diagnostics:
+            if (
+                d.rule_id in skip_rules
+                and d.severity.value == "info"
+                and d.message not in seen_skip
+            ):
+                seen_skip.add(d.message)
+                skip_notices.append(d.message)
+
+    cleaned: list[InspectionResult] = []
+    for r in results:
+        filtered = [
+            d
+            for d in r.diagnostics
+            if not (d.rule_id in skip_rules and d.severity.value == "info")
+            and d.rule_id not in non_security_rules
+        ]
+        cleaned.append(
+            InspectionResult(
+                target_path=r.target_path,
+                target_name=r.target_name,
+                tokens=r.tokens,
+                target_type=r.target_type,
+                diagnostics=filtered,
+                rules_run=r.rules_run,
+                error_count=sum(1 for d in filtered if d.severity.value == "error"),
+                warning_count=sum(1 for d in filtered if d.severity.value == "warning"),
+                info_count=sum(1 for d in filtered if d.severity.value == "info"),
+                fixable_count=sum(1 for d in filtered if d.fix is not None),
+                suppression_count=r.suppression_count,
+            )
+        )
+    return cleaned, skip_notices
+
+
+def _assess_risk(
+    results: list[InspectionResult],
+    adjudicated: bool,
+    adjudication_map: dict[str, list[AdjudicatedFinding]],
+    total_semantic: int,
+) -> tuple[str, int, int, int, int]:
+    """Compute risk assessment. Returns (risk, effective_errors, effective_warnings, false_positives, downgraded)."""
+    raw_errors = sum(r.error_count for r in results)
+    raw_warnings = sum(r.warning_count for r in results)
+
+    if adjudicated:
+        all_adjudicated = [af for afs in adjudication_map.values() for af in afs]
+        confirmed_errors = sum(
+            1 for af in all_adjudicated if af.is_confirmed and af.finding.severity == Severity.ERROR
+        )
+        confirmed_warnings = sum(
+            1
+            for af in all_adjudicated
+            if af.is_confirmed and af.finding.severity == Severity.WARNING
+        )
+        downgraded_count = sum(1 for af in all_adjudicated if af.verdict == "DOWNGRADED")
+        false_positive_count = sum(1 for af in all_adjudicated if af.is_false_positive)
+
+        effective_errors = confirmed_errors
+        effective_warnings = confirmed_warnings + downgraded_count
+    else:
+        effective_errors = raw_errors
+        effective_warnings = raw_warnings
+        false_positive_count = 0
+        downgraded_count = 0
+
+    if effective_errors == 0 and effective_warnings == 0 and total_semantic == 0:
+        risk = "SAFE"
+    elif effective_errors == 0:
+        risk = "CAUTION"
+    else:
+        risk = "UNSAFE"
+
+    return risk, effective_errors, effective_warnings, false_positive_count, downgraded_count
+
+
+def _format_json_security(report: _SecurityReport) -> str:
+    raw_errors = sum(r.error_count for r in report.results)
+    raw_warnings = sum(r.warning_count for r in report.results)
+    total_semantic = sum(len(rr.issues) for rr in report.rubric_results)
+    components_with_findings = [r for r in report.results if r.diagnostics]
+
+    output: dict[str, object] = {
+        "security_scan": True,
+        "setup": report.setup_name,
+        "risk_assessment": report.risk,
+        "adjudicated": report.adjudicated,
+        "components_scanned": len(report.results),
+        "raw_errors": raw_errors,
+        "raw_warnings": raw_warnings,
+        "semantic_issues": total_semantic,
+    }
+    if report.adjudicated:
+        output["confirmed_errors"] = report.effective_errors
+        output["confirmed_warnings"] = report.effective_warnings
+        output["false_positives"] = report.false_positive_count
+        output["downgraded"] = report.downgraded_count
+
+    findings_list = []
+    for r in components_with_findings:
+        comp_findings: dict[str, object] = {
+            "component": f"{r.target_type}/{r.target_name}",
+            "errors": r.error_count,
+            "warnings": r.warning_count,
+            "details": [],
+        }
+        adj_for_comp = report.adjudication_map.get(r.target_name, [])
+        adj_by_msg = {af.finding.message: af for af in adj_for_comp}
+        details = []
+        for d in r.diagnostics:
+            detail: dict[str, str] = {
+                "rule": d.rule_id,
+                "severity": d.severity.value,
+                "message": d.message,
+            }
+            af = adj_by_msg.get(d.message)
+            if af:
+                detail["verdict"] = af.verdict
+                detail["reasoning"] = af.reasoning
+            details.append(detail)
+        comp_findings["details"] = details
+        findings_list.append(comp_findings)
+
+    output["findings"] = findings_list
+    output["metadata"] = report.metadata.to_dict()
+    if report.skip_notices:
+        output["skipped_checks"] = report.skip_notices
+    if report.rubric_results:
+        output["semantic_review"] = [
+            {
+                "component": rr.component_name,
+                "type": rr.component_type,
+                "issues": [
+                    {
+                        "category": i.category,
+                        "description": i.description,
+                        "evidence": i.evidence,
+                        "suggestion": i.suggestion,
+                        "impact": i.impact,
+                    }
+                    for i in rr.issues
+                ],
+            }
+            for rr in report.rubric_results
+        ]
+    return json_mod.dumps(output, indent=2)
+
+
+def _format_terminal_security(report: _SecurityReport) -> None:
+    raw_errors = sum(r.error_count for r in report.results)
+    raw_warnings = sum(r.warning_count for r in report.results)
+    components_with_findings = [r for r in report.results if r.diagnostics]
+    clean_count = len(report.results) - len(components_with_findings)
+
+    click.echo(f"\n{'=' * 60}")
+    click.echo(f"Security Audit: {report.setup_name}")
+    click.echo(f"{'=' * 60}")
+    click.echo(f"Components scanned: {len(report.results)}")
+    if report.adjudicated:
+        click.echo(f"Scanner:         {raw_errors} errors, {raw_warnings} warnings")
+        click.echo(
+            f"After review:    {report.effective_errors} confirmed errors, "
+            f"{report.false_positive_count} false positives, "
+            f"{report.downgraded_count} downgraded"
+        )
+    else:
+        click.echo(f"Errors: {raw_errors} | Warnings: {raw_warnings}")
+    click.echo(f"Risk Assessment: {report.risk}")
+    click.echo("")
+
+    if components_with_findings:
+        click.echo("Security Findings:")
+        click.echo(f"{'─' * 60}")
+        for r in components_with_findings:
+            parts = []
+            if r.error_count:
+                parts.append(f"{r.error_count} error{'s' if r.error_count != 1 else ''}")
+            if r.warning_count:
+                parts.append(f"{r.warning_count} warning{'s' if r.warning_count != 1 else ''}")
+            status = ", ".join(parts)
+            click.echo(f"  {r.target_type}/{r.target_name:<36} {status}")
+            adj_for_comp = report.adjudication_map.get(r.target_name, [])
+            adj_by_msg = {af.finding.message: af for af in adj_for_comp}
+            for d in r.diagnostics:
+                sev = "FAIL" if d.severity.value == "error" else "WARNING"
+                short_rule = d.rule_id.split("/", 1)[-1]
+                af = adj_by_msg.get(d.message)
+                if af and af.is_false_positive:
+                    click.echo(
+                        f"    {sev:<8} {short_rule}: {d.message}"
+                        f"\n             -> FALSE POSITIVE: {af.reasoning}"
+                    )
+                elif af and af.verdict == "DOWNGRADED":
+                    click.echo(
+                        f"    {sev:<8} {short_rule}: {d.message}"
+                        f"\n             -> DOWNGRADED: {af.reasoning}"
+                    )
+                else:
+                    click.echo(f"    {sev:<8} {short_rule}: {d.message}")
+        click.echo("")
+
+    if clean_count > 0:
+        click.echo(f"{clean_count}/{len(report.results)} components passed all security checks.")
+        click.echo("")
+
+    if report.rubric_results:
+        click.echo("Semantic Security Review:")
+        click.echo(f"{'─' * 60}")
+        for rr in report.rubric_results:
+            click.echo(f"  {rr.component_type}/{rr.component_name}:")
+            for issue in rr.issues:
+                click.echo(f"    [{issue.category}] {issue.description}")
+                click.echo(f"      Evidence: {issue.evidence}")
+                click.echo(f"      Fix: {issue.suggestion}")
+                if issue.impact:
+                    click.echo(f"      Impact: {issue.impact}")
+        click.echo("")
+
+    if report.skip_notices:
+        click.echo("Skipped Checks:")
+        click.echo(f"{'─' * 60}")
+        for notice in report.skip_notices:
+            click.echo(f"  {notice}")
+        click.echo("")
+
+    click.echo(report.metadata.format_terminal())
+    click.echo("")
 
 
 @cli.command("security")
@@ -166,46 +422,7 @@ def eval_setup_security(
         bl_data = _json_bl.loads(Path(baseline_path).read_text())
         results = filter_baselined(results, bl_data)
 
-    skip_rules = {"security/yara-signatures", "security/cve-lookup"}
-    non_security_rules = {"parser", "frontmatter/format-valid"}
-    skip_notices: list[str] = []
-    seen_skip: set[str] = set()
-    for r in results:
-        for d in r.diagnostics:
-            if (
-                d.rule_id in skip_rules
-                and d.severity.value == "info"
-                and d.message not in seen_skip
-            ):
-                seen_skip.add(d.message)
-                skip_notices.append(d.message)
-
-    from harness_eval.inspection.types import InspectionResult
-
-    cleaned_results: list[InspectionResult] = []
-    for r in results:
-        filtered = [
-            d
-            for d in r.diagnostics
-            if not (d.rule_id in skip_rules and d.severity.value == "info")
-            and d.rule_id not in non_security_rules
-        ]
-        cleaned_results.append(
-            InspectionResult(
-                target_path=r.target_path,
-                target_name=r.target_name,
-                tokens=r.tokens,
-                target_type=r.target_type,
-                diagnostics=filtered,
-                rules_run=r.rules_run,
-                error_count=sum(1 for d in filtered if d.severity.value == "error"),
-                warning_count=sum(1 for d in filtered if d.severity.value == "warning"),
-                info_count=sum(1 for d in filtered if d.severity.value == "info"),
-                fixable_count=sum(1 for d in filtered if d.fix is not None),
-                suppression_count=r.suppression_count,
-            )
-        )
-    results = cleaned_results
+    results, skip_notices = _clean_results(results)
 
     rubric_results = []
     adjudication_map: dict[str, list[AdjudicatedFinding]] = {}
@@ -224,7 +441,10 @@ def eval_setup_security(
 
         client = create_client(provider, model)
         checker = RubricChecker(client)
-        checker._ensure_client_safe()
+        try:
+            checker._ensure_client_safe()
+        except ImportError as e:
+            raise click.ClickException(str(e)) from None
 
         components_needing_adjudication = [r for r in results if r.diagnostics]
         if components_needing_adjudication:
@@ -295,41 +515,10 @@ def eval_setup_security(
             if rr.issues:
                 rubric_results.append(rr)
 
-    raw_errors = sum(r.error_count for r in results)
-    raw_warnings = sum(r.warning_count for r in results)
     total_semantic = sum(len(rr.issues) for rr in rubric_results)
-    components_with_findings = [r for r in results if r.diagnostics]
-    clean_count = len(results) - len(components_with_findings)
-
-    if adjudicated:
-        all_adjudicated = [af for afs in adjudication_map.values() for af in afs]
-        confirmed_errors = sum(
-            1 for af in all_adjudicated if af.is_confirmed and af.finding.severity == Severity.ERROR
-        )
-        confirmed_warnings = sum(
-            1
-            for af in all_adjudicated
-            if af.is_confirmed and af.finding.severity == Severity.WARNING
-        )
-        downgraded_count = sum(1 for af in all_adjudicated if af.verdict == "DOWNGRADED")
-        false_positive_count = sum(1 for af in all_adjudicated if af.is_false_positive)
-
-        effective_errors = confirmed_errors
-        effective_warnings = confirmed_warnings + downgraded_count
-
-        if effective_errors == 0 and effective_warnings == 0 and total_semantic == 0:
-            risk = "SAFE"
-        elif effective_errors == 0:
-            risk = "CAUTION"
-        else:
-            risk = "UNSAFE"
-    else:
-        if raw_errors == 0 and raw_warnings == 0 and total_semantic == 0:
-            risk = "SAFE"
-        elif raw_errors == 0:
-            risk = "CAUTION"
-        else:
-            risk = "UNSAFE"
+    risk, effective_errors, effective_warnings, false_positive_count, downgraded_count = (
+        _assess_risk(results, adjudicated, adjudication_map, total_semantic)
+    )
 
     sec_metadata = EvalMetadata(
         version=EvalMetadata.get_version(),
@@ -343,164 +532,41 @@ def eval_setup_security(
         sec_metadata.llm_calls_total = client.calls_total  # type: ignore[attr-defined]
         sec_metadata.llm_calls_succeeded = client.calls_succeeded  # type: ignore[attr-defined]
 
+    report = _SecurityReport(
+        setup_name=setup.name,
+        risk=risk,
+        adjudicated=adjudicated,
+        results=results,
+        adjudication_map=adjudication_map,
+        rubric_results=rubric_results,
+        skip_notices=skip_notices,
+        metadata=sec_metadata,
+        effective_errors=effective_errors,
+        effective_warnings=effective_warnings,
+        false_positive_count=false_positive_count,
+        downgraded_count=downgraded_count,
+    )
+
     if fmt == "sarif":
         from harness_eval.output.sarif import format_sarif
 
         sarif_doc = format_sarif(results, sec_metadata)
         emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
     elif fmt == "json":
-        output: dict[str, object] = {
-            "security_scan": True,
-            "setup": setup.name,
-            "risk_assessment": risk,
-            "adjudicated": adjudicated,
-            "components_scanned": len(results),
-            "raw_errors": raw_errors,
-            "raw_warnings": raw_warnings,
-            "semantic_issues": total_semantic,
-        }
-        if adjudicated:
-            output["confirmed_errors"] = confirmed_errors
-            output["confirmed_warnings"] = confirmed_warnings + downgraded_count
-            output["false_positives"] = false_positive_count
-            output["downgraded"] = downgraded_count
-        findings_list = []
-        for r in components_with_findings:
-            comp_findings: dict[str, object] = {
-                "component": f"{r.target_type}/{r.target_name}",
-                "errors": r.error_count,
-                "warnings": r.warning_count,
-                "details": [],
-            }
-            adj_for_comp = adjudication_map.get(r.target_name, [])
-            adj_by_msg = {af.finding.message: af for af in adj_for_comp}
-            details = []
-            for d in r.diagnostics:
-                detail: dict[str, str] = {
-                    "rule": d.rule_id,
-                    "severity": d.severity.value,
-                    "message": d.message,
-                }
-                af = adj_by_msg.get(d.message)
-                if af:
-                    detail["verdict"] = af.verdict
-                    detail["reasoning"] = af.reasoning
-                details.append(detail)
-            comp_findings["details"] = details
-            findings_list.append(comp_findings)
-        output["findings"] = findings_list
-        output["metadata"] = sec_metadata.to_dict()
-        if skip_notices:
-            output["skipped_checks"] = skip_notices
-        if rubric_results:
-            output["semantic_review"] = [
-                {
-                    "component": rr.component_name,
-                    "type": rr.component_type,
-                    "issues": [
-                        {
-                            "category": i.category,
-                            "description": i.description,
-                            "evidence": i.evidence,
-                            "suggestion": i.suggestion,
-                            "impact": i.impact,
-                        }
-                        for i in rr.issues
-                    ],
-                }
-                for rr in rubric_results
-            ]
-        click.echo(json_mod.dumps(output, indent=2))
+        emit_output(_format_json_security(report), output_path)
     else:
-        click.echo(f"\n{'=' * 60}")
-        click.echo(f"Security Audit: {setup.name}")
-        click.echo(f"{'=' * 60}")
-        click.echo(f"Components scanned: {len(results)}")
-        if adjudicated:
-            click.echo(f"Scanner:         {raw_errors} errors, {raw_warnings} warnings")
-            click.echo(
-                f"After review:    {confirmed_errors} confirmed errors, "
-                f"{false_positive_count} false positives, "
-                f"{downgraded_count} downgraded"
-            )
-        else:
-            click.echo(f"Errors: {raw_errors} | Warnings: {raw_warnings}")
-        click.echo(f"Risk Assessment: {risk}")
-        click.echo("")
-
-        if components_with_findings:
-            click.echo("Security Findings:")
-            click.echo(f"{'─' * 60}")
-            for r in components_with_findings:
-                parts = []
-                if r.error_count:
-                    parts.append(f"{r.error_count} error{'s' if r.error_count != 1 else ''}")
-                if r.warning_count:
-                    parts.append(f"{r.warning_count} warning{'s' if r.warning_count != 1 else ''}")
-                status = ", ".join(parts)
-                click.echo(f"  {r.target_type}/{r.target_name:<36} {status}")
-                adj_for_comp = adjudication_map.get(r.target_name, [])
-                adj_by_msg = {af.finding.message: af for af in adj_for_comp}
-                for d in r.diagnostics:
-                    sev = "FAIL" if d.severity.value == "error" else "WARNING"
-                    short_rule = d.rule_id.split("/", 1)[-1]
-                    af = adj_by_msg.get(d.message)
-                    if af and af.is_false_positive:
-                        click.echo(
-                            f"    {sev:<8} {short_rule}: {d.message}"
-                            f"\n             -> FALSE POSITIVE: {af.reasoning}"
-                        )
-                    elif af and af.verdict == "DOWNGRADED":
-                        click.echo(
-                            f"    {sev:<8} {short_rule}: {d.message}"
-                            f"\n             -> DOWNGRADED: {af.reasoning}"
-                        )
-                    else:
-                        click.echo(f"    {sev:<8} {short_rule}: {d.message}")
-            click.echo("")
-
-        if clean_count > 0:
-            click.echo(f"{clean_count}/{len(results)} components passed all security checks.")
-            click.echo("")
-
-        if rubric_results:
-            click.echo("Semantic Security Review:")
-            click.echo(f"{'─' * 60}")
-            for rr in rubric_results:
-                click.echo(f"  {rr.component_type}/{rr.component_name}:")
-                for issue in rr.issues:
-                    click.echo(f"    [{issue.category}] {issue.description}")
-                    click.echo(f"      Evidence: {issue.evidence}")
-                    click.echo(f"      Fix: {issue.suggestion}")
-                    if issue.impact:
-                        click.echo(f"      Impact: {issue.impact}")
-            click.echo("")
-
-        if skip_notices:
-            click.echo("Skipped Checks:")
-            click.echo(f"{'─' * 60}")
-            for notice in skip_notices:
-                click.echo(f"  {notice}")
-            click.echo("")
-
-        click.echo(sec_metadata.format_terminal())
-        click.echo("")
-
-    effective_error_count = confirmed_errors if adjudicated else raw_errors
-    effective_warning_count = (
-        (confirmed_warnings + downgraded_count) if adjudicated else raw_warnings
-    )
+        _format_terminal_security(report)
 
     if enforce == "off":
         return
     if enforce == "strict":
-        if effective_error_count + effective_warning_count > 0:
+        if effective_errors + effective_warnings > 0:
             raise SystemExit(1)
         return
     if enforce == "advisory":
         return
 
-    if fail_on_error and effective_error_count > 0:
+    if fail_on_error and effective_errors > 0:
         raise SystemExit(1)
-    if fail_on_warning and (effective_error_count + effective_warning_count) > 0:
+    if fail_on_warning and (effective_errors + effective_warnings) > 0:
         raise SystemExit(1)

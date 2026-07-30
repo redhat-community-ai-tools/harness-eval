@@ -146,10 +146,13 @@ def parse_command(command_path: str) -> ParsedCommand:
     """Parse a command directory or command.md file."""
     cmd_dir, cmd_md, errors = _resolve_command_path(command_path)
 
+    is_single_file = cmd_md is not None and cmd_md.name.lower() != "command.md"
+    resolved_name = cmd_md.stem if is_single_file else cmd_dir.name
+
     if cmd_md is None:
         return ParsedCommand(
             dir_path=str(cmd_dir),
-            dir_name=cmd_dir.name,
+            dir_name=resolved_name,
             command_md_path=str(cmd_dir / "command.md"),
             raw_content="",
             frontmatter={},
@@ -165,7 +168,7 @@ def parse_command(command_path: str) -> ParsedCommand:
 
     return ParsedCommand(
         dir_path=str(cmd_dir),
-        dir_name=cmd_dir.name,
+        dir_name=resolved_name,
         command_md_path=str(cmd_md),
         raw_content=raw_content,
         frontmatter=fm.frontmatter,

@@ -75,6 +75,10 @@ def eval_skill(
 
         client = create_client(provider, model)
         checker = RubricChecker(client)
+        try:
+            checker._ensure_client_safe()
+        except ImportError as e:
+            raise click.ClickException(str(e)) from None
 
         context_text = None
         if context_path:
