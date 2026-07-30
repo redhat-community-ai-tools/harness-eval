@@ -22,11 +22,11 @@ harness-eval lint . --fail-on-error         # exit code 1 on errors (CI gate)
 harness-eval lint . --fail-on-warning       # exit code 1 on any finding (strict)
 harness-eval lint . --format sarif          # SARIF output for GitHub code scanning
 harness-eval lint . --format json           # JSON output for scripts
-harness-eval review . --provider gemini     # LLM-based rubric review
+harness-eval review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
 harness-eval security .                     # deterministic security scan
-harness-eval security . --review            # security scan + LLM semantic review
+harness-eval security . --review            # security scan + LLM semantic review (requires [llm] extra)
 harness-eval security . --fail-on-warning   # exit code 1 on any security finding
-harness-eval skill ./skills/my-skill --context . --rubric   # deep-evaluate one skill
+harness-eval skill ./skills/my-skill --context . --rubric   # deep-evaluate one skill (requires [llm] extra)
 harness-eval rules                          # list all 74 rules
 harness-eval rules --category security      # list security rules only
 harness-eval rules --target hooks           # list rules that apply to hooks

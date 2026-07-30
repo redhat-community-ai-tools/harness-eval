@@ -27,9 +27,9 @@ Five commands, same engine:
 | Command | What it does | LLM in CLI | LLM in Claude Code / Cursor |
 |---------|-------------|-----------|----------------------------|
 | `lint` | 74 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif` for GitHub code scanning. | No | No |
-| `review` | Per-component rubric review with 0-3 scoring per dimension, 21 cross-type checks. KEEP/REVIEW/REMOVE verdicts. | Yes (API key) | Yes (in-session) |
-| `security` | All security rules + YARA + CVE lookups + semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. Semantic review: `--review` flag | Yes (in-session) |
-| `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. Rubric: `--rubric` flag | Yes (in-session) |
+| `review` | Per-component rubric review with 0-3 scoring per dimension, 21 cross-type checks. KEEP/REVIEW/REMOVE verdicts. | Yes (`[llm]` extra + API key) | Yes (in-session) |
+| `security` | All security rules + YARA + CVE lookups + semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: yes (`[llm]` extra) | Yes (in-session) |
+| `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: yes (`[llm]` extra) | Yes (in-session) |
 | `rules` | List all available rules with ID, severity, target type, and description. Filter by `--category` or `--target`. | No | No |
 
 ## Supported AI Assistants
