@@ -62,6 +62,20 @@ class TestParseCommand:
         cmd = parse_command(str(empty_dir))
         assert "command.md not found" in cmd.parse_errors[0]
 
+    def test_single_file_command_uses_stem_as_name(self, tmp_path: Path) -> None:
+        cmd_dir = tmp_path / "commands"
+        cmd_dir.mkdir()
+        (cmd_dir / "deploy.md").write_text("Deploy the application.")
+        cmd = parse_command(str(cmd_dir / "deploy.md"))
+        assert cmd.dir_name == "deploy"
+
+    def test_directory_command_uses_dir_name(self, tmp_path: Path) -> None:
+        cmd_dir = tmp_path / "commands" / "review"
+        cmd_dir.mkdir(parents=True)
+        (cmd_dir / "command.md").write_text("Review the PR.")
+        cmd = parse_command(str(cmd_dir))
+        assert cmd.dir_name == "review"
+
 
 class TestParseClaudeMd:
     def test_valid_claude_md(self) -> None:

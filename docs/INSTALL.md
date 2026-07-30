@@ -7,14 +7,16 @@ harness-eval is available as a CLI tool, a GitHub Action, a Tekton Task (OpenShi
 Install from PyPI:
 
 ```bash
-pip install harness-eval                # core (token counting via chars/4 heuristic)
+pip install harness-eval                # core: lint, security scan, rules (no LLM)
+pip install harness-eval[llm]           # adds LLM support for review, security --review, skill --rubric
 pip install harness-eval[tiktoken]      # exact token counting via tiktoken
+pip install harness-eval[llm,tiktoken]  # everything
 ```
 
 Run:
 
 ```bash
-harness-eval lint .                         # deterministic lint (68 rules)
+harness-eval lint .                         # deterministic lint (74 rules)
 harness-eval lint . --watch                 # re-run automatically on file changes
 harness-eval lint . --fail-on-error         # exit code 1 on errors (CI gate)
 harness-eval lint . --fail-on-warning       # exit code 1 on any finding (strict)
@@ -25,13 +27,13 @@ harness-eval security .                     # deterministic security scan
 harness-eval security . --review            # security scan + LLM semantic review
 harness-eval security . --fail-on-warning   # exit code 1 on any security finding
 harness-eval skill ./skills/my-skill --context . --rubric   # deep-evaluate one skill
-harness-eval rules                          # list all 68 rules
+harness-eval rules                          # list all 74 rules
 harness-eval rules --category security      # list security rules only
 harness-eval rules --target hooks           # list rules that apply to hooks
 harness-eval rules --format json            # machine-readable rule list
 ```
 
-`review`, `security --review`, and `skill --rubric` require `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`.
+`review`, `security --review`, and `skill --rubric` require the `[llm]` extra and either `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`.
 
 Optional: YARA malware signature scanning for security: `pip install harness-eval[yara]`
 
@@ -70,7 +72,7 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
           path: "."              # directories to scan, one per line (default: repo root)
           preset: "recommended"  # recommended, strict, security, or pre-workflow
           security-gate: "true"  # run security checks (15 rules)
-          lint-gate: "true"      # run lint checks (68 rules)
+          lint-gate: "true"      # run lint checks (74 rules)
           lint-fail-on: "error"  # "error" (default) or "warning" (strict)
           sarif: "true"          # inline PR annotations via Code Scanning
           comment: "true"        # post summary comment on PRs

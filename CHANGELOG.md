@@ -8,6 +8,21 @@ All notable changes to this project will be documented in this file.
 - OpenShift Pipelines integration: UBI9-based `Containerfile` and Tekton Task for running harness-eval as a CI gate in OpenShift Pipelines
 - `docs/openshift.md`: full documentation for Tekton Task parameters, air-gapped support, and troubleshooting
 
+### Changed
+- **Breaking:** `google-genai` and `anthropic` moved from hard dependencies to optional `[llm]` extras. Users of `review`, `security --review`, or `skill --rubric` must install with `pip install harness-eval[llm]`. The `lint`, `security` (without `--review`), and `rules` commands work without LLM packages.
+- GitHub Action reduced from 6 `harness-eval` invocations per scanned directory to 4
+
+### Fixed
+- Single-file commands (e.g., `.cursor/commands/foo.md`) now display their actual name instead of "commands". This also fixes incorrect results in duplicate detection, circular reference, and skill overlap rules for single-file commands.
+- Stale rule counts in GitHub Action: updated from 68 to 74 total rules, 15 to 18 security rules
+- Version consistency: `__init__.py` now stays in sync with `pyproject.toml`. The release script (`scripts/release.py`) now updates `__init__.py` and Tekton task version labels automatically.
+
+### Removed
+- `python-dotenv` dependency (was never imported)
+
+### Internal
+- Refactored `cli/security.py`: extracted `_clean_results`, `_assess_risk`, `_format_json_security`, `_format_terminal_security` from 381-line monolith function
+
 ## [6.2.1] - 2026-07-27
 
 ### Added

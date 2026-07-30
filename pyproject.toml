@@ -1,6 +1,6 @@
 [project]
 name = "harness-eval"
-version = "6.2.1"
+version = "6.3.0"
 description = "Evaluate and compare AI agent setups through experiments, inspections, and rubric scoring."
 readme = "README.md"
 license = "Apache-2.0"
@@ -10,15 +10,16 @@ dependencies = [
     "pydantic>=2.0",
     "pyyaml>=6.0",
     "scikit-learn>=1.0",
-    "google-genai>=1.0",
-    "anthropic>=0.40",
-    "python-dotenv>=1.0",
 ]
 
 [project.scripts]
 harness-eval = "harness_eval.cli:cli"
 
 [project.optional-dependencies]
+llm = [
+    "google-genai>=1.0",
+    "anthropic>=0.40",
+]
 watch = [
     "watchfiles>=1.0",
 ]
@@ -32,6 +33,7 @@ bash-ast = [
     "bashlex>=0.18",
 ]
 dev = [
+    "harness-eval[llm]",
     "pytest>=8.0",
     "pytest-cov>=4.0",
     "ruff>=0.4",

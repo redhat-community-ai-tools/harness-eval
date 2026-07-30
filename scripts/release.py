@@ -26,6 +26,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PYPROJECT = ROOT / "pyproject.toml"
 CHANGELOG = ROOT / "CHANGELOG.md"
+INIT_PY = ROOT / "src" / "harness_eval" / "__init__.py"
+TEKTON_TASK = ROOT / "tekton" / "task-harness-eval.yaml"
 PLUGIN_MANIFESTS = [
     ROOT / ".claude-plugin" / "marketplace.json",
     ROOT / ".claude-plugin" / "plugin.json",
@@ -119,6 +121,38 @@ def update_changelog(new_version: str, dry_run: bool) -> bool:
     return True
 
 
+def update_init_py(new_version: str, dry_run: bool) -> None:
+    if not INIT_PY.exists():
+        return
+    text = INIT_PY.read_text()
+    updated = re.sub(
+        r'__version__\s*=\s*"[^"]+"',
+        f'__version__ = "{new_version}"',
+        text,
+        count=1,
+    )
+    if dry_run:
+        print(f"  [dry-run] Would update __init__.py version to {new_version}")
+        return
+    INIT_PY.write_text(updated)
+
+
+def update_tekton_task(new_version: str, dry_run: bool) -> None:
+    if not TEKTON_TASK.exists():
+        return
+    text = TEKTON_TASK.read_text()
+    updated = re.sub(
+        r'(app\.kubernetes\.io/version:\s*)"[^"]+"',
+        rf'\g<1>"{new_version}"',
+        text,
+        count=1,
+    )
+    if dry_run:
+        print(f"  [dry-run] Would update tekton task version to {new_version}")
+        return
+    TEKTON_TASK.write_text(updated)
+
+
 def update_plugin_manifests(new_version: str, dry_run: bool) -> None:
     for manifest in PLUGIN_MANIFESTS:
         if not manifest.exists():
@@ -145,7 +179,9 @@ def git_commit_and_tag(new_version: str, dry_run: bool) -> None:
         print(f"  [dry-run] Would create tag: {tag}")
         return
 
-    files_to_add = [str(PYPROJECT), str(CHANGELOG)]
+    files_to_add = [str(PYPROJECT), str(CHANGELOG), str(INIT_PY)]
+    if TEKTON_TASK.exists():
+        files_to_add.append(str(TEKTON_TASK))
     for manifest in PLUGIN_MANIFESTS:
         if manifest.exists():
             files_to_add.append(str(manifest))
@@ -198,17 +234,23 @@ def main() -> None:
     print("2. Updating CHANGELOG.md...")
     changelog_updated = update_changelog(new_version, args.dry_run)
 
-    print("3. Updating plugin manifests...")
+    print("3. Updating __init__.py...")
+    update_init_py(new_version, args.dry_run)
+
+    print("4. Updating tekton task...")
+    update_tekton_task(new_version, args.dry_run)
+
+    print("5. Updating plugin manifests...")
     update_plugin_manifests(new_version, args.dry_run)
 
     if not changelog_updated and not args.dry_run:
         print("\n  Warning: No changelog entries moved. Consider adding entries before releasing.")
 
     if not args.no_commit:
-        print("4. Committing and tagging...")
+        print("6. Committing and tagging...")
         git_commit_and_tag(new_version, args.dry_run)
     else:
-        print("4. Skipping git commit/tag (--no-commit).")
+        print("6. Skipping git commit/tag (--no-commit).")
 
     print("\nDone.")
 

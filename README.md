@@ -89,9 +89,9 @@ For a full overview of how this tool protects your code, your credentials, and y
 | Command | Sends data externally? | What is sent | Where |
 |---------|----------------------|--------------|-------|
 | `lint` | No | Nothing. Fully offline. | N/A |
-| `review` | Yes (CLI only) | Code snippets from your setup files | Gemini or Anthropic API (your choice via `--provider`) |
-| `security` | Scan: No. `--review`: Yes (CLI only) | Code snippets from flagged files | Gemini or Anthropic API |
-| `skill` | Lint: No. `--rubric`: Yes (CLI only) | The skill content being evaluated | Gemini or Anthropic API |
+| `review` | Yes (CLI only, requires `[llm]` extra) | Code snippets from your setup files | Gemini or Anthropic API (your choice via `--provider`) |
+| `security` | Scan: No. `--review`: Yes (CLI only, requires `[llm]` extra) | Code snippets from flagged files | Gemini or Anthropic API |
+| `skill` | Lint: No. `--rubric`: Yes (CLI only, requires `[llm]` extra) | The skill content being evaluated | Gemini or Anthropic API |
 
 When used as a **Claude Code plugin**, review/security/skill commands use the existing Claude session. No additional API calls are made.
 
