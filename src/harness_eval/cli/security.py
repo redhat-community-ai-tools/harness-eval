@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json as json_mod
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import click
@@ -14,6 +15,22 @@ from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ParsedComponent
 from harness_eval.inspection.types import AdjudicatedFinding, Finding, InspectionResult, Severity
 from harness_eval.output.metadata import EvalMetadata
+
+
+@dataclass(frozen=True)
+class _SecurityReport:
+    setup_name: str
+    risk: str
+    adjudicated: bool
+    results: list[InspectionResult]
+    adjudication_map: dict[str, list[AdjudicatedFinding]]
+    rubric_results: list
+    skip_notices: list[str]
+    metadata: EvalMetadata
+    effective_errors: int
+    effective_warnings: int
+    false_positive_count: int
+    downgraded_count: int
 
 
 def _parse_adjudication_response(
@@ -151,40 +168,27 @@ def _assess_risk(
     return risk, effective_errors, effective_warnings, false_positive_count, downgraded_count
 
 
-def _format_json_security(
-    setup_name: str,
-    risk: str,
-    adjudicated: bool,
-    results: list[InspectionResult],
-    adjudication_map: dict[str, list[AdjudicatedFinding]],
-    rubric_results: list,
-    skip_notices: list[str],
-    metadata: EvalMetadata,
-    effective_errors: int,
-    effective_warnings: int,
-    false_positive_count: int,
-    downgraded_count: int,
-) -> str:
-    raw_errors = sum(r.error_count for r in results)
-    raw_warnings = sum(r.warning_count for r in results)
-    total_semantic = sum(len(rr.issues) for rr in rubric_results)
-    components_with_findings = [r for r in results if r.diagnostics]
+def _format_json_security(report: _SecurityReport) -> str:
+    raw_errors = sum(r.error_count for r in report.results)
+    raw_warnings = sum(r.warning_count for r in report.results)
+    total_semantic = sum(len(rr.issues) for rr in report.rubric_results)
+    components_with_findings = [r for r in report.results if r.diagnostics]
 
     output: dict[str, object] = {
         "security_scan": True,
-        "setup": setup_name,
-        "risk_assessment": risk,
-        "adjudicated": adjudicated,
-        "components_scanned": len(results),
+        "setup": report.setup_name,
+        "risk_assessment": report.risk,
+        "adjudicated": report.adjudicated,
+        "components_scanned": len(report.results),
         "raw_errors": raw_errors,
         "raw_warnings": raw_warnings,
         "semantic_issues": total_semantic,
     }
-    if adjudicated:
-        output["confirmed_errors"] = effective_errors
-        output["confirmed_warnings"] = effective_warnings
-        output["false_positives"] = false_positive_count
-        output["downgraded"] = downgraded_count
+    if report.adjudicated:
+        output["confirmed_errors"] = report.effective_errors
+        output["confirmed_warnings"] = report.effective_warnings
+        output["false_positives"] = report.false_positive_count
+        output["downgraded"] = report.downgraded_count
 
     findings_list = []
     for r in components_with_findings:
@@ -194,7 +198,7 @@ def _format_json_security(
             "warnings": r.warning_count,
             "details": [],
         }
-        adj_for_comp = adjudication_map.get(r.target_name, [])
+        adj_for_comp = report.adjudication_map.get(r.target_name, [])
         adj_by_msg = {af.finding.message: af for af in adj_for_comp}
         details = []
         for d in r.diagnostics:
@@ -212,10 +216,10 @@ def _format_json_security(
         findings_list.append(comp_findings)
 
     output["findings"] = findings_list
-    output["metadata"] = metadata.to_dict()
-    if skip_notices:
-        output["skipped_checks"] = skip_notices
-    if rubric_results:
+    output["metadata"] = report.metadata.to_dict()
+    if report.skip_notices:
+        output["skipped_checks"] = report.skip_notices
+    if report.rubric_results:
         output["semantic_review"] = [
             {
                 "component": rr.component_name,
@@ -231,44 +235,31 @@ def _format_json_security(
                     for i in rr.issues
                 ],
             }
-            for rr in rubric_results
+            for rr in report.rubric_results
         ]
     return json_mod.dumps(output, indent=2)
 
 
-def _format_terminal_security(
-    setup_name: str,
-    risk: str,
-    adjudicated: bool,
-    results: list[InspectionResult],
-    adjudication_map: dict[str, list[AdjudicatedFinding]],
-    rubric_results: list,
-    skip_notices: list[str],
-    metadata: EvalMetadata,
-    effective_errors: int,
-    effective_warnings: int,
-    false_positive_count: int,
-    downgraded_count: int,
-) -> None:
-    raw_errors = sum(r.error_count for r in results)
-    raw_warnings = sum(r.warning_count for r in results)
-    components_with_findings = [r for r in results if r.diagnostics]
-    clean_count = len(results) - len(components_with_findings)
+def _format_terminal_security(report: _SecurityReport) -> None:
+    raw_errors = sum(r.error_count for r in report.results)
+    raw_warnings = sum(r.warning_count for r in report.results)
+    components_with_findings = [r for r in report.results if r.diagnostics]
+    clean_count = len(report.results) - len(components_with_findings)
 
     click.echo(f"\n{'=' * 60}")
-    click.echo(f"Security Audit: {setup_name}")
+    click.echo(f"Security Audit: {report.setup_name}")
     click.echo(f"{'=' * 60}")
-    click.echo(f"Components scanned: {len(results)}")
-    if adjudicated:
+    click.echo(f"Components scanned: {len(report.results)}")
+    if report.adjudicated:
         click.echo(f"Scanner:         {raw_errors} errors, {raw_warnings} warnings")
         click.echo(
-            f"After review:    {effective_errors} confirmed errors, "
-            f"{false_positive_count} false positives, "
-            f"{downgraded_count} downgraded"
+            f"After review:    {report.effective_errors} confirmed errors, "
+            f"{report.false_positive_count} false positives, "
+            f"{report.downgraded_count} downgraded"
         )
     else:
         click.echo(f"Errors: {raw_errors} | Warnings: {raw_warnings}")
-    click.echo(f"Risk Assessment: {risk}")
+    click.echo(f"Risk Assessment: {report.risk}")
     click.echo("")
 
     if components_with_findings:
@@ -282,7 +273,7 @@ def _format_terminal_security(
                 parts.append(f"{r.warning_count} warning{'s' if r.warning_count != 1 else ''}")
             status = ", ".join(parts)
             click.echo(f"  {r.target_type}/{r.target_name:<36} {status}")
-            adj_for_comp = adjudication_map.get(r.target_name, [])
+            adj_for_comp = report.adjudication_map.get(r.target_name, [])
             adj_by_msg = {af.finding.message: af for af in adj_for_comp}
             for d in r.diagnostics:
                 sev = "FAIL" if d.severity.value == "error" else "WARNING"
@@ -303,13 +294,13 @@ def _format_terminal_security(
         click.echo("")
 
     if clean_count > 0:
-        click.echo(f"{clean_count}/{len(results)} components passed all security checks.")
+        click.echo(f"{clean_count}/{len(report.results)} components passed all security checks.")
         click.echo("")
 
-    if rubric_results:
+    if report.rubric_results:
         click.echo("Semantic Security Review:")
         click.echo(f"{'─' * 60}")
-        for rr in rubric_results:
+        for rr in report.rubric_results:
             click.echo(f"  {rr.component_type}/{rr.component_name}:")
             for issue in rr.issues:
                 click.echo(f"    [{issue.category}] {issue.description}")
@@ -319,14 +310,14 @@ def _format_terminal_security(
                     click.echo(f"      Impact: {issue.impact}")
         click.echo("")
 
-    if skip_notices:
+    if report.skip_notices:
         click.echo("Skipped Checks:")
         click.echo(f"{'─' * 60}")
-        for notice in skip_notices:
+        for notice in report.skip_notices:
             click.echo(f"  {notice}")
         click.echo("")
 
-    click.echo(metadata.format_terminal())
+    click.echo(report.metadata.format_terminal())
     click.echo("")
 
 
@@ -538,42 +529,30 @@ def eval_setup_security(
         sec_metadata.llm_calls_total = client.calls_total  # type: ignore[attr-defined]
         sec_metadata.llm_calls_succeeded = client.calls_succeeded  # type: ignore[attr-defined]
 
+    report = _SecurityReport(
+        setup_name=setup.name,
+        risk=risk,
+        adjudicated=adjudicated,
+        results=results,
+        adjudication_map=adjudication_map,
+        rubric_results=rubric_results,
+        skip_notices=skip_notices,
+        metadata=sec_metadata,
+        effective_errors=effective_errors,
+        effective_warnings=effective_warnings,
+        false_positive_count=false_positive_count,
+        downgraded_count=downgraded_count,
+    )
+
     if fmt == "sarif":
         from harness_eval.output.sarif import format_sarif
 
         sarif_doc = format_sarif(results, sec_metadata)
         emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
     elif fmt == "json":
-        json_output = _format_json_security(
-            setup.name,
-            risk,
-            adjudicated,
-            results,
-            adjudication_map,
-            rubric_results,
-            skip_notices,
-            sec_metadata,
-            effective_errors,
-            effective_warnings,
-            false_positive_count,
-            downgraded_count,
-        )
-        emit_output(json_output, output_path)
+        emit_output(_format_json_security(report), output_path)
     else:
-        _format_terminal_security(
-            setup.name,
-            risk,
-            adjudicated,
-            results,
-            adjudication_map,
-            rubric_results,
-            skip_notices,
-            sec_metadata,
-            effective_errors,
-            effective_warnings,
-            false_positive_count,
-            downgraded_count,
-        )
+        _format_terminal_security(report)
 
     if enforce == "off":
         return

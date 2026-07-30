@@ -147,7 +147,7 @@ def parse_command(command_path: str) -> ParsedCommand:
     cmd_dir, cmd_md, errors = _resolve_command_path(command_path)
 
     is_single_file = cmd_md is not None and cmd_md.name.lower() != "command.md"
-    resolved_name = cmd_md.stem if is_single_file and cmd_md else cmd_dir.name
+    resolved_name = cmd_md.stem if is_single_file else cmd_dir.name
 
     if cmd_md is None:
         return ParsedCommand(
