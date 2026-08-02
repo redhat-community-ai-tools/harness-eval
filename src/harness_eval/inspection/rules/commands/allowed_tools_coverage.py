@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules.security._shared import TOOL_DIRECTIVE_RE
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -11,8 +12,6 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-
-_TOOL_DIRECTIVE_RE = re.compile(r"(?:use the|run|call|invoke)\s+(\w+)\s+tool", re.IGNORECASE)
 
 
 def _extract_used_tools(body: str) -> tuple[list[str], list[str]]:
@@ -42,7 +41,7 @@ def _extract_used_tools(body: str) -> tuple[list[str], list[str]]:
                 tools.append("Bash")
 
     # Explicit tool directives
-    for m in _TOOL_DIRECTIVE_RE.finditer(body):
+    for m in TOOL_DIRECTIVE_RE.finditer(body):
         tool = m.group(1)
         if tool not in tools:
             tools.append(tool)

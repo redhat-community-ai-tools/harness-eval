@@ -13,7 +13,6 @@ All notable changes to this project will be documented in this file.
 - `cross/config-instruction-conflict` rule (WARNING): flags when settings.json permissions.deny blocks tools that instructions direct to use
 - `cross/multi-assistant-drift` rule (WARNING): detects diverged copies of CLAUDE.md/AGENTS.md/GEMINI.md using TF-IDF similarity
 - `command/allowed-tools-coverage` rule (WARNING): checks that command allowed-tools covers tools actually used (under-grant and over-grant)
-- `content/undeclared-env-var` rule (WARNING, strict preset only): flags env vars used but not documented
 - CI test matrix: `core` and `full` legs ensure optional-dependency code paths (bashlex, yara) are tested
 
 ### Changed

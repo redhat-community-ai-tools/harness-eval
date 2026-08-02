@@ -3,7 +3,7 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-82-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules-74)
+[![Rules](https://img.shields.io/badge/rules-81-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules-81)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Evaluate AI code agent setups for best practices, redundancy, security, and cross-component issues.
@@ -26,7 +26,7 @@ Five commands, same engine:
 
 | Command | What it does | LLM in CLI | LLM in Claude Code / Cursor |
 |---------|-------------|-----------|----------------------------|
-| `lint` | 82 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif` for GitHub code scanning. | No | No |
+| `lint` | 81 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif` for GitHub code scanning. | No | No |
 | `review` | Per-component rubric review with 0-3 scoring per dimension, 21 cross-type checks. KEEP/REVIEW/REMOVE verdicts. | Yes (`[llm]` extra + API key) | Yes (in-session) |
 | `security` | All security rules + YARA + CVE lookups + semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: yes (`[llm]` extra) | Yes (in-session) |
 | `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: yes (`[llm]` extra) | Yes (in-session) |
@@ -51,13 +51,13 @@ Multi-tool projects are fully supported. When a project contains files for multi
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options, CI integration, and configuration (Available as a **CLI tool**, **GitHub Action**, **Tekton Task**, **Claude Code plugin**, and **Cursor commands**)
 
-## Inspection Rules (82)
+## Inspection Rules (81)
 
 | Category | Rules | What they check |
 |----------|-------|-----------------|
 | Structural | 1 | SKILL.md exists |
 | Frontmatter | 3 | Description required/quality, format valid |
-| Content | 10 | Duplicate detection (TF-IDF), broken references, circular references, token budget, orphan skills, MCP-skill alignment, total context budget, permission escalation, hardcoded machine paths, undeclared env vars |
+| Content | 9 | Duplicate detection (TF-IDF), broken references, circular references, token budget, orphan skills, MCP-skill alignment, total context budget, permission escalation, hardcoded machine paths |
 | Quality | 8 | Imprecise instructions, redundant guidance, unfinished content, example gap, stale references, negative-only prohibitions, scope overreach, trigger manipulation |
 | Security | 15 | Credential access, prompt injection, data exfiltration, obfuscation, reverse shells, AST analysis, Python taint tracking, bash taint tracking, MCP least-privilege, tool poisoning, coercive override, stealth persistence, prompt exfiltration, memory-write-unscoped, unbounded-delegation |
 | Security (opt-in) | 2 | YARA signatures, CVE lookups via OSV.dev |

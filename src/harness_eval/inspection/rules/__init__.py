@@ -85,7 +85,6 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.content.permission_escalation import PermissionEscalation
     from harness_eval.inspection.rules.content.token_budget import TokenBudget
     from harness_eval.inspection.rules.content.total_context_budget import TotalContextBudget
-    from harness_eval.inspection.rules.content.undeclared_env_var import UndeclaredEnvVar
     from harness_eval.inspection.rules.cross.config_instruction_conflict import (
         ConfigInstructionConflict,
     )
@@ -227,6 +226,5 @@ def register_all_rules() -> None:
         ConfigInstructionConflict,
         MultiAssistantDrift,
         CommandAllowedToolsCoverage,
-        UndeclaredEnvVar,
     ]:
         register_rule(rule_cls())

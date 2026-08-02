@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules.security._shared import TOOL_DIRECTIVE_RE
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -13,8 +14,6 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-
-_TOOL_DIRECTIVE_RE = re.compile(r"(?:use the|run|call|invoke)\s+(\w+)\s+tool", re.IGNORECASE)
 
 
 def _find_settings_files(search_paths: list[str]) -> list[Path]:
@@ -82,7 +81,7 @@ def _extract_instructed_tools(content: str) -> list[str]:
                 tools.append(f"Bash({code})")
 
     # Extract explicit tool-use directives like "use the WebFetch tool"
-    for m in _TOOL_DIRECTIVE_RE.finditer(content):
+    for m in TOOL_DIRECTIVE_RE.finditer(content):
         tools.append(m.group(1))
 
     return tools

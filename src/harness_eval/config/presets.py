@@ -120,7 +120,6 @@ STRICT: dict[str, str] = {
     "cross/config-instruction-conflict": "error",
     "cross/multi-assistant-drift": "error",
     "command/allowed-tools-coverage": "error",
-    "content/undeclared-env-var": "warning",
     # Quality rules
     "quality/imprecise-instruction": "error",
     "quality/redundant-guidance": "error",
