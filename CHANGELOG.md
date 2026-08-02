@@ -6,9 +6,22 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - `harness-eval doctor` command: shows installed optional capabilities, env var status, and version info
+- `mcp/no-plaintext-secrets` rule (ERROR): flags literal secrets in MCP config env/headers using prefix matching and Shannon entropy
+- `mcp/unpinned-package` rule (WARNING): flags npx/uvx/pipx/docker MCP servers running floating third-party code
+- `hooks/matcher-matches-no-tool` rule (WARNING): flags hook matchers that match no known tool name, with case-sensitivity suggestions
+- `content/hardcoded-machine-path` rule (WARNING): flags machine-specific absolute paths in code blocks that break portability
+- `cross/config-instruction-conflict` rule (WARNING): flags when settings.json permissions.deny blocks tools that instructions direct to use
+- `cross/multi-assistant-drift` rule (WARNING): detects diverged copies of CLAUDE.md/AGENTS.md/GEMINI.md using TF-IDF similarity
+- `command/allowed-tools-coverage` rule (WARNING): checks that command allowed-tools covers tools actually used (under-grant and over-grant)
+- `content/undeclared-env-var` rule (WARNING, strict preset only): flags env vars used but not documented
+- CI test matrix: `core` and `full` legs ensure optional-dependency code paths (bashlex, yara) are tested
+
+### Changed
+- Removed decorative mypy CI step (had continue-on-error: true); tracking issue #54 to re-add enforced
 
 ### Fixed
 - Bash taint tracking: `read VAR; export SECRET=$VAR; eval $SECRET` flow now detected. The AST walker was missing a handler for `read` as a taint source, and the line-by-line supplement was missing `export` taint propagation.
+- Doctor test `test_shows_set_unset_status` had a vacuous assertion (`"set" in "unset"` is always true); split into two non-vacuous tests
 
 ## [6.3.0] - 2026-07-30
 

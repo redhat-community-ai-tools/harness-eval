@@ -38,10 +38,18 @@ class TestDoctor:
         for var in ["GEMINI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]:
             assert var in result.output, f"Missing env var: {var}"
 
-    def test_shows_set_unset_status(self) -> None:
+    def test_shows_set_status_when_var_present(self) -> None:
         runner = CliRunner(env={"GEMINI_API_KEY": "test-key"})
         result = runner.invoke(cli, ["doctor"])
-        lines = result.output.splitlines()
-        gemini_line = next(line for line in lines if "GEMINI_API_KEY" in line)
-        assert "set" in gemini_line
+        gemini_line = next(line for line in result.output.splitlines() if "GEMINI_API_KEY" in line)
+        assert "unset" not in gemini_line
+        assert gemini_line.rstrip().endswith("set")
         assert "test-key" not in result.output
+
+    def test_shows_unset_status_when_var_absent(self) -> None:
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["doctor"], env={"GEMINI_API_KEY": None, "GOOGLE_API_KEY": None}
+        )
+        gemini_line = next(line for line in result.output.splitlines() if "GEMINI_API_KEY" in line)
+        assert "unset" in gemini_line

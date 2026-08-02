@@ -28,6 +28,8 @@ RECOMMENDED: dict[str, str] = {
     "mcp/duplicate-server": "warning",
     "mcp/suspicious-endpoint": "warning",
     "mcp/no-wildcard-tools": "info",
+    "mcp/no-plaintext-secrets": "error",
+    "mcp/unpinned-package": "warning",
     # Command rules
     "command/no-prompt-injection": "error",
     "command/no-credential-access": "error",
@@ -40,6 +42,7 @@ RECOMMENDED: dict[str, str] = {
     "hooks/dangerous-command": "error",
     "hooks/env-leakage": "warning",
     "hooks/network-access": "warning",
+    "hooks/matcher-matches-no-tool": "warning",
     # CLAUDE.md rules
     "claude-md/exists": "warning",
     # Agent rules
@@ -71,6 +74,13 @@ RECOMMENDED: dict[str, str] = {
     "agent/memory-write-unscoped": "warning",
     "security/unbounded-delegation": "warning",
     "agent/unbounded-delegation": "warning",
+    # Content rules (new)
+    "content/hardcoded-machine-path": "warning",
+    # Cross-component rules (new)
+    "cross/config-instruction-conflict": "warning",
+    "cross/multi-assistant-drift": "warning",
+    # Command rules (new)
+    "command/allowed-tools-coverage": "warning",
 }
 
 STRICT: dict[str, str] = {
@@ -102,7 +112,15 @@ STRICT: dict[str, str] = {
     "mcp/duplicate-server": "error",
     "mcp/suspicious-endpoint": "error",
     "mcp/no-wildcard-tools": "warning",
+    "mcp/no-plaintext-secrets": "error",
+    "mcp/unpinned-package": "error",
     "agent/model-specified": "info",
+    "hooks/matcher-matches-no-tool": "error",
+    "content/hardcoded-machine-path": "error",
+    "cross/config-instruction-conflict": "error",
+    "cross/multi-assistant-drift": "error",
+    "command/allowed-tools-coverage": "error",
+    "content/undeclared-env-var": "warning",
     # Quality rules
     "quality/imprecise-instruction": "error",
     "quality/redundant-guidance": "error",
@@ -139,6 +157,8 @@ SECURITY: dict[str, str] = {
     "mcp/duplicate-server": "off",
     "mcp/suspicious-endpoint": "warning",
     "mcp/no-wildcard-tools": "off",
+    "mcp/no-plaintext-secrets": "error",
+    "mcp/unpinned-package": "warning",
     "security/yara-signatures": "error",
     "security/cve-lookup": "error",
     # Command security rules

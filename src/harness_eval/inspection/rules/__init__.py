@@ -46,6 +46,9 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.claude_md.skill_duplication import (
         ClaudeMdSkillDuplication,
     )
+    from harness_eval.inspection.rules.commands.allowed_tools_coverage import (
+        CommandAllowedToolsCoverage,
+    )
     from harness_eval.inspection.rules.commands.data_exfiltration import CommandDataExfiltration
 
     # Command rules
@@ -76,11 +79,17 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.content.broken_references import BrokenReferences
     from harness_eval.inspection.rules.content.circular_references import CircularReferences
     from harness_eval.inspection.rules.content.duplicate_detection import DuplicateDetection
+    from harness_eval.inspection.rules.content.hardcoded_machine_path import HardcodedMachinePath
     from harness_eval.inspection.rules.content.mcp_skill_alignment import McpSkillAlignment
     from harness_eval.inspection.rules.content.orphan_skills import OrphanSkills
     from harness_eval.inspection.rules.content.permission_escalation import PermissionEscalation
     from harness_eval.inspection.rules.content.token_budget import TokenBudget
     from harness_eval.inspection.rules.content.total_context_budget import TotalContextBudget
+    from harness_eval.inspection.rules.content.undeclared_env_var import UndeclaredEnvVar
+    from harness_eval.inspection.rules.cross.config_instruction_conflict import (
+        ConfigInstructionConflict,
+    )
+    from harness_eval.inspection.rules.cross.multi_assistant_drift import MultiAssistantDrift
     from harness_eval.inspection.rules.frontmatter.description_quality import DescriptionQuality
     from harness_eval.inspection.rules.frontmatter.description_required import (
         DescriptionRequired,
@@ -90,14 +99,19 @@ def register_all_rules() -> None:
     # Hooks rules
     from harness_eval.inspection.rules.hooks.dangerous_command import HooksDangerousCommand
     from harness_eval.inspection.rules.hooks.env_leakage import HooksEnvLeakage
+    from harness_eval.inspection.rules.hooks.matcher_matches_no_tool import (
+        HooksMatcherMatchesNoTool,
+    )
     from harness_eval.inspection.rules.hooks.network_access import HooksNetworkAccess
     from harness_eval.inspection.rules.hooks.script_boundary import HooksScriptBoundary
     from harness_eval.inspection.rules.hooks.valid_structure import HooksValidStructure
 
     # MCP rules
     from harness_eval.inspection.rules.mcp.duplicate_server import McpDuplicateServer
+    from harness_eval.inspection.rules.mcp.no_plaintext_secrets import McpNoPlaintextSecrets
     from harness_eval.inspection.rules.mcp.no_wildcard_tools import McpNoWildcardTools
     from harness_eval.inspection.rules.mcp.suspicious_endpoint import McpSuspiciousEndpoint
+    from harness_eval.inspection.rules.mcp.unpinned_package import McpUnpinnedPackage
     from harness_eval.inspection.rules.mcp.valid_config import McpValidConfig
     from harness_eval.inspection.rules.quality.example_gap import ExampleGap
     from harness_eval.inspection.rules.quality.imprecise_instruction import ImpreciseInstruction
@@ -206,5 +220,13 @@ def register_all_rules() -> None:
         AgentMemoryWriteUnscoped,
         UnboundedDelegation,
         AgentUnboundedDelegation,
+        McpNoPlaintextSecrets,
+        McpUnpinnedPackage,
+        HooksMatcherMatchesNoTool,
+        HardcodedMachinePath,
+        ConfigInstructionConflict,
+        MultiAssistantDrift,
+        CommandAllowedToolsCoverage,
+        UndeclaredEnvVar,
     ]:
         register_rule(rule_cls())

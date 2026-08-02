@@ -38,7 +38,7 @@ The most common CI failure is forgetting `ruff format`. The security gate blocks
   - `config/` - rule presets (recommended/strict/security/pre-workflow)
   - `core/` - setup discovery, fingerprinting, component types
     - `discoverers/` - per-tool discoverer classes (`ToolDiscoverer` ABC); add new assistants here
-  - `inspection/` - static analysis: parsers, lint engine, 74 rules, suppression, auto-fix
+  - `inspection/` - static analysis: parsers, lint engine, 82 rules, suppression, auto-fix
     - `rules/security/_shared.py` - shared scanning logic used by security rules across component types
   - `rubric/` - LLM-based issue detection; prompts in `rubric/prompts/`
   - `analysis/` - system-level analysis (budget, triggers, dependencies, context utilization)

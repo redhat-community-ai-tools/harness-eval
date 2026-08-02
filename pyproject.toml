@@ -39,6 +39,7 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "pre-commit>=4.0",
+    "types-PyYAML>=6.0",
 ]
 
 [build-system]
@@ -70,6 +71,17 @@ python_version = "3.11"
 strict = true
 packages = ["harness_eval"]
 mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = [
+    "bashlex",
+    "bashlex.*",
+    "yara",
+    "tiktoken",
+    "watchfiles",
+    "sklearn.*",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
