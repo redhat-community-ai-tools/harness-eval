@@ -11,7 +11,9 @@ from pathlib import Path
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print(json.dumps({"error": "Usage: run_skill_eval.py <skill-path> [context-path] [preset]"}))
+        print(
+            json.dumps({"error": "Usage: run_skill_eval.py <skill-path> [context-path] [preset]"})
+        )
         sys.exit(1)
 
     skill_path = sys.argv[1]
@@ -20,7 +22,7 @@ def main() -> None:
     user_config = sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] != "-" else None
 
     from harness_eval.analysis.triggers import analyze_triggers
-    from harness_eval.config.presets import PRESETS
+    from harness_eval.config.presets import PRESETS, SECURITY
     from harness_eval.core.setup import discover_setup
     from harness_eval.core.types import ComponentType
     from harness_eval.inspection.engine import lint
@@ -36,17 +38,36 @@ def main() -> None:
     skill = parse_skill(str(target))
     result = lint(str(target), config_rules)
 
+    security_result = lint(str(target), SECURITY)
+    security_findings = [
+        d
+        for d in security_result.diagnostics
+        if d.rule_id not in {r.rule_id for r in result.diagnostics}
+    ]
+
+    all_diagnostics = list(result.diagnostics) + security_findings
+    security_errors = sum(1 for d in security_findings if d.severity.value == "error")
+    security_warnings = sum(1 for d in security_findings if d.severity.value == "warning")
+
     output = {
         "skill": skill.dir_name,
         "tokens": skill.tokens,
         "files": skill.files,
         "frontmatter": dict(skill.frontmatter) if skill.frontmatter else {},
-        "errors": result.error_count,
-        "warnings": result.warning_count,
+        "errors": result.error_count + security_errors,
+        "warnings": result.warning_count + security_warnings,
         "findings": [
             {"rule": d.rule_id, "severity": d.severity.value, "message": d.message}
-            for d in result.diagnostics
+            for d in all_diagnostics
         ],
+        "security": {
+            "errors": security_errors,
+            "warnings": security_warnings,
+            "findings": [
+                {"rule": d.rule_id, "severity": d.severity.value, "message": d.message}
+                for d in security_findings
+            ],
+        },
         "context_findings": [],
     }
 
@@ -69,9 +90,7 @@ def main() -> None:
                     continue
                 sim = tfidf_similarity(skill.body, section)
                 if sim >= 0.50:
-                    context_findings.append(
-                        f"Overlaps with CLAUDE.md content ({sim:.0%} similar)"
-                    )
+                    context_findings.append(f"Overlaps with CLAUDE.md content ({sim:.0%} similar)")
                     break
 
         triggers = analyze_triggers(setup)
@@ -86,10 +105,10 @@ def main() -> None:
             desc = skill.frontmatter.get("description", "")
             if isinstance(desc, str):
                 desc_lower = desc.lower()
-                if not any(p in desc_lower for p in ["use when", "use for", "applies to", "relevant for"]):
-                    context_findings.append(
-                        "Missing activation context (no 'use when' phrasing)"
-                    )
+                if not any(
+                    p in desc_lower for p in ["use when", "use for", "applies to", "relevant for"]
+                ):
+                    context_findings.append("Missing activation context (no 'use when' phrasing)")
 
         output["context_findings"] = context_findings
 
