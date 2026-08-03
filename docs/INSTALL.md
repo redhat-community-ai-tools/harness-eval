@@ -27,8 +27,6 @@ harness-eval security .                     # deterministic security scan
 harness-eval security . --review            # security scan + LLM semantic review (requires [llm] extra)
 harness-eval security . --fail-on-warning   # exit code 1 on any security finding
 harness-eval skill ./skills/my-skill --context . --rubric   # deep-evaluate one skill (requires [llm] extra)
-harness-eval scan ./path/to/skill           # vet a skill before installing (local path)
-harness-eval scan https://github.com/user/skill-repo  # vet a skill before installing (git URL)
 harness-eval rules                          # list all 81 rules
 harness-eval rules --category security      # list security rules only
 harness-eval rules --target hooks           # list rules that apply to hooks

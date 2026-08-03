@@ -22,14 +22,13 @@ Cross-component analysis is the core differentiator. Most linters check files in
 
 Beyond cross-component analysis, the security engine includes Python taint tracking, bash taint analysis, YARA signature scanning, CVE lookups via OSV.dev, and optional LLM-based semantic review.
 
-Six commands, same engine:
+Five commands, same engine:
 
 | Command | What it does | LLM in CLI | LLM in Claude Code / Cursor |
 |---------|-------------|-----------|----------------------------|
 | `lint` | 81 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif` for GitHub code scanning. | No | No |
 | `review` | Per-component rubric review with 0-3 scoring per dimension, 21 cross-type checks. KEEP/REVIEW/REMOVE verdicts. | Yes (`[llm]` extra + API key) | Yes (in-session) |
 | `security` | All security rules + YARA + CVE lookups + semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: yes (`[llm]` extra) | Yes (in-session) |
-| `scan` | Vet a skill or setup from a git URL or local path before installing. Runs security + structural rules. SAFE/CAUTION/UNSAFE. | No | No |
 | `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: yes (`[llm]` extra) | Yes (in-session) |
 | `rules` | List all available rules with ID, severity, target type, and description. Filter by `--category` or `--target`. | No | No |
 
