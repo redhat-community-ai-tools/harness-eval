@@ -34,8 +34,8 @@ The most common CI failure is forgetting `ruff format`. The security gate blocks
 ## Project structure
 
 - `src/harness_eval/` - main package
-  - `cli/` - Click CLI package (4 commands split into `lint.py`, `review.py`, `security.py`, `skill.py`)
-  - `config/` - rule presets (recommended/strict/security/pre-workflow)
+  - `cli/` - Click CLI package (6 commands: `lint.py`, `review.py`, `security.py`, `scan.py`, `skill.py`, `doctor.py`)
+  - `config/` - rule presets (recommended/strict/security/scan/pre-workflow)
   - `core/` - setup discovery, fingerprinting, component types
     - `discoverers/` - per-tool discoverer classes (`ToolDiscoverer` ABC); add new assistants here
   - `inspection/` - static analysis: parsers, lint engine, 81 rules, suppression, auto-fix

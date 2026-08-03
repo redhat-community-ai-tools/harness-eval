@@ -249,6 +249,46 @@ PRE_WORKFLOW: dict[str, str] = {
     "quality/stale-references": "off",
 }
 
+SCAN: dict[str, str] = {
+    # Structural + frontmatter (catch broken skills)
+    "structural/skill-md-exists": "error",
+    "frontmatter/description-required": "warning",
+    "frontmatter/format-valid": "warning",
+    # All security rules
+    "security/no-prompt-injection": "error",
+    "security/no-credential-access": "error",
+    "security/reverse-shell": "error",
+    "security/obfuscation": "error",
+    "security/data-exfiltration": "error",
+    "security/ast-behavioral": "error",
+    "security/taint-flow": "error",
+    "security/bash-taint-flow": "error",
+    "security/coercive-override": "error",
+    "security/stealth-persistence": "error",
+    "security/prompt-exfiltration": "error",
+    "security/mcp-tool-poisoning": "error",
+    "security/memory-write-unscoped": "warning",
+    "security/unbounded-delegation": "warning",
+    # Command security
+    "command/no-prompt-injection": "error",
+    "command/no-credential-access": "error",
+    "command/reverse-shell": "error",
+    "command/obfuscation": "error",
+    "command/data-exfiltration": "error",
+    # Agent security
+    "agent/no-prompt-injection": "error",
+    "agent/no-credential-access": "error",
+    "agent/reverse-shell": "error",
+    "agent/obfuscation": "error",
+    "agent/data-exfiltration": "error",
+    # MCP security
+    "mcp/no-plaintext-secrets": "error",
+    "mcp/unpinned-package": "warning",
+    # Hooks security
+    "hooks/script-boundary": "error",
+    "hooks/dangerous-command": "error",
+}
+
 PRESETS: dict[str, dict[str, str]] = {
     "recommended": RECOMMENDED,
     "strict": STRICT,

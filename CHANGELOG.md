@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- `harness-eval scan` command: vet a skill or setup from a git URL or local path before installing. Runs security + structural rules, reports SAFE/CAUTION/UNSAFE verdict.
 - `harness-eval doctor` command: shows installed optional capabilities, env var status, and version info
 - `mcp/no-plaintext-secrets` rule (ERROR): flags literal secrets in MCP config env/headers using prefix matching and Shannon entropy
 - `mcp/unpinned-package` rule (WARNING): flags npx/uvx/pipx/docker MCP servers running floating third-party code
