@@ -274,6 +274,34 @@ class TestPermissionEscalation:
         ]
         assert len(escalation_findings) == 0
 
+    def test_no_escalation_source_has_more(self, tmp_path: Path) -> None:
+        """Source skill having MORE tools than target is not escalation."""
+        _make_skill(
+            tmp_path,
+            "admin-skill",
+            body="This skill calls helper-skill.",
+            frontmatter_extra="allowed-tools:\n  - Bash\n  - Edit\n",
+        )
+        _make_skill(tmp_path, "helper-skill", body="Helper logic here.")
+
+        all_skills = [
+            parse_skill(str(tmp_path / "admin-skill")),
+            parse_skill(str(tmp_path / "helper-skill")),
+        ]
+        scan_state: dict = {}
+
+        result = lint(
+            str(tmp_path / "admin-skill"),
+            all_skills=all_skills,
+            all_commands=[],
+            scan_state=scan_state,
+        )
+
+        escalation_findings = [
+            d for d in result.diagnostics if d.rule_id == "content/permission-escalation"
+        ]
+        assert len(escalation_findings) == 0
+
     def test_no_escalation_single_skill(self, tmp_path: Path) -> None:
         """Single skill should not trigger escalation check."""
         _make_skill(

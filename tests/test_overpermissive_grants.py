@@ -194,6 +194,21 @@ class TestOverpermissiveGrants:
         diags = _lint(tmp_path, skill_dir)
         assert len(diags) == 0
 
+    def test_flags_colon_star_short_prefix(self, tmp_path: Path) -> None:
+        """Bash(g:*) should be flagged as too broad."""
+        skill_dir = _make_skill(tmp_path)
+        _make_settings(tmp_path, allow_list=["Bash(g:*)"])
+        diags = _lint(tmp_path, skill_dir)
+        assert len(diags) == 1
+        assert "too broad" in diags[0].message
+
+    def test_no_flag_colon_star_long_prefix(self, tmp_path: Path) -> None:
+        """Bash(npm test:*) with colon-star should not flag."""
+        skill_dir = _make_skill(tmp_path)
+        _make_settings(tmp_path, allow_list=["Bash(npm test:*)"])
+        diags = _lint(tmp_path, skill_dir)
+        assert len(diags) == 0
+
     def test_malformed_settings_ignored(self, tmp_path: Path) -> None:
         """Malformed JSON should not crash."""
         skill_dir = _make_skill(tmp_path)

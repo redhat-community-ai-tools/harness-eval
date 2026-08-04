@@ -63,3 +63,26 @@ class TestSilentFailureMasking:
         result = lint_hooks(path, RULE_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
         assert len(diags) == 0
+
+    def test_flags_trap_err(self, tmp_path: Path) -> None:
+        """trap '' ERR should be flagged."""
+        path = _make_hooks(tmp_path, "PreToolUse", "trap '' ERR; do_stuff")
+        result = lint_hooks(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
+        assert len(diags) == 1
+        assert "trap" in diags[0].message.lower() or "ERR" in diags[0].message
+
+    def test_sensitive_op_without_suppression_not_flagged(self, tmp_path: Path) -> None:
+        """curl without error suppression should not fire this rule."""
+        path = _make_hooks(tmp_path, "PostToolUse", "curl https://example.com/api")
+        result = lint_hooks(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
+        assert len(diags) == 0
+
+    def test_only_reports_once_per_hook(self, tmp_path: Path) -> None:
+        """Multiple suppression patterns in same command should report once (break)."""
+        # This command has both "2>/dev/null" and "|| true"
+        path = _make_hooks(tmp_path, "PostToolUse", "run.sh 2>/dev/null || true")
+        result = lint_hooks(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
+        assert len(diags) == 1
