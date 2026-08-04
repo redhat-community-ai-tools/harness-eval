@@ -16,12 +16,18 @@ from harness_eval.inspection.types import (
 )
 
 MEMORY_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("save to memory", re.compile(r"\b(save|write|store)\b.*\bmemory\b", re.I)),
-    ("persist to memory", re.compile(r"\bpersist\b.*\bmemory\b", re.I)),
-    ("cross-session persistence", re.compile(r"\bremember\b.*\bacross\b.*\bsession", re.I)),
-    ("store for later", re.compile(r"\bstore\b.*\bfor\s+later\b", re.I)),
-    ("persist between sessions", re.compile(r"\bpersist\b.*\bbetween\b.*\bsession", re.I)),
-    ("scratchpad write", re.compile(r"\b(write|update|save)\b.*\bscratchpad\b", re.I)),
+    ("save to memory", re.compile(r"\b(save|write|store)\b[^.!?\n]*\bmemory\b", re.I)),
+    ("persist to memory", re.compile(r"\bpersist\b[^.!?\n]*\bmemory\b", re.I)),
+    (
+        "cross-session persistence",
+        re.compile(r"\bremember\b[^.!?\n]*\bacross\b[^.!?\n]*\bsession", re.I),
+    ),
+    ("store for later", re.compile(r"\bstore\b[^.!?\n]*\bfor\s+later\b", re.I)),
+    (
+        "persist between sessions",
+        re.compile(r"\bpersist\b[^.!?\n]*\bbetween\b[^.!?\n]*\bsession", re.I),
+    ),
+    ("scratchpad write", re.compile(r"\b(write|update|save)\b[^.!?\n]*\bscratchpad\b", re.I)),
     ("memory MCP tool", re.compile(r"\bmcp__memory\b", re.I)),
 ]
 

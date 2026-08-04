@@ -89,6 +89,7 @@ def register_all_rules() -> None:
         ConfigInstructionConflict,
     )
     from harness_eval.inspection.rules.cross.multi_assistant_drift import MultiAssistantDrift
+    from harness_eval.inspection.rules.cross.overpermissive_grants import OverpermissiveGrants
     from harness_eval.inspection.rules.frontmatter.description_quality import DescriptionQuality
     from harness_eval.inspection.rules.frontmatter.description_required import (
         DescriptionRequired,
@@ -103,9 +104,13 @@ def register_all_rules() -> None:
     )
     from harness_eval.inspection.rules.hooks.network_access import HooksNetworkAccess
     from harness_eval.inspection.rules.hooks.script_boundary import HooksScriptBoundary
+    from harness_eval.inspection.rules.hooks.silent_failure_masking import (
+        HooksSilentFailureMasking,
+    )
     from harness_eval.inspection.rules.hooks.valid_structure import HooksValidStructure
 
     # MCP rules
+    from harness_eval.inspection.rules.mcp.auto_approve_risk import McpAutoApproveRisk
     from harness_eval.inspection.rules.mcp.duplicate_server import McpDuplicateServer
     from harness_eval.inspection.rules.mcp.no_plaintext_secrets import McpNoPlaintextSecrets
     from harness_eval.inspection.rules.mcp.no_wildcard_tools import McpNoWildcardTools
@@ -226,5 +231,8 @@ def register_all_rules() -> None:
         ConfigInstructionConflict,
         MultiAssistantDrift,
         CommandAllowedToolsCoverage,
+        OverpermissiveGrants,
+        HooksSilentFailureMasking,
+        McpAutoApproveRisk,
     ]:
         register_rule(rule_cls())

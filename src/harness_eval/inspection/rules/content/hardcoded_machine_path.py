@@ -20,9 +20,6 @@ _WIN_PATH_RE = re.compile(r"[Cc]:[/\\]Users[/\\]([A-Za-z][\w.-]*)[/\\]")
 # Names that are variables/placeholders, not real usernames
 _SKIP_NAMES = {"runner", "user", "username", "USER", "USERNAME"}
 
-# Variable patterns that make a name a placeholder
-_VARIABLE_PATTERNS = re.compile(r"^[\$%\{<]|^\$\(|^\$\{")
-
 
 def _extract_code_regions(content: str) -> list[str]:
     """Extract text from fenced code blocks, inline code spans, and YAML frontmatter."""

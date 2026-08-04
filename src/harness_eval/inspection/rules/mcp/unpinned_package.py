@@ -159,9 +159,30 @@ class McpUnpinnedPackage:
     def _check_docker(
         self, context: RuleContext, loc: Location, server: str, args: list[str]
     ) -> None:
+        skip_next = False
         for arg in args:
-            if arg.startswith("-"):
-                # Skip flags and their values (like --rm, -p 8080:8080)
+            if skip_next:
+                skip_next = False
+                continue
+            if arg.startswith("--") and "=" in arg:
+                continue  # --name=foo style
+            if arg.startswith("-") and not arg.startswith("--"):
+                # Short flags: some take values (-p, -e, -v, -u, -w, -l)
+                skip_next = len(arg) == 2 and arg[1] in "pevuwl"
+                continue
+            if arg.startswith("--"):
+                skip_next = arg in (
+                    "--name",
+                    "--network",
+                    "--env",
+                    "--volume",
+                    "--publish",
+                    "--workdir",
+                    "--entrypoint",
+                    "--user",
+                    "--platform",
+                    "--label",
+                )
                 continue
             image = arg
             if not _is_docker_pinned(image):

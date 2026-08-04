@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 81 deterministic lint rules and the LLM-based review system.
+Complete reference for all 84 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -136,6 +136,7 @@ These rules analyze relationships between multiple components. They run once per
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
 | `security/cross-component-flow` | security | Builds a graph of all components and traces data flows across boundaries. Catches three things: (1) **exfiltration chains** where one skill reads credentials and another has network access; (2) **confused deputy attacks** where an agent disallows a tool but delegates to a skill that has the equivalent capability; (3) **phantom MCP calls** where a skill references an MCP server that isn't configured. | Skill A has `os.environ.get("API_KEY")` in its scripts, references skill B, and skill B has `requests.post()` in its scripts. The credentials could flow from A to B and out to the network. | Component graph + capability analysis |
+| `cross/overpermissive-grants` | security | Flags `permissions.allow` entries in settings.json that grant broad or unrestricted tool access. `Bash(*)` gives unrestricted shell, bare tool names like `Bash` or `Edit` cover all invocations, and very short Bash wildcard prefixes are too broad to be meaningful. | `permissions.allow` contains `Bash(*)` or bare `Edit`, granting the agent unrestricted access to those tools | Grant-breadth classification |
 
 ---
 

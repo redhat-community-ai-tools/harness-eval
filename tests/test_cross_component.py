@@ -208,14 +208,18 @@ class TestTotalContextBudget:
 
 class TestPermissionEscalation:
     def test_escalation_detected(self, tmp_path: Path) -> None:
-        """Skill with Bash access referencing one without should flag."""
+        """Skill without Bash referencing one with Bash should flag (transitive escalation)."""
         _make_skill(
             tmp_path,
             "admin-skill",
             body="This skill calls deploy-skill to deploy.",
+        )
+        _make_skill(
+            tmp_path,
+            "deploy-skill",
+            body="Deploy logic here.",
             frontmatter_extra="allowed-tools:\n  - Bash\n",
         )
-        _make_skill(tmp_path, "deploy-skill", body="Deploy logic here.")
 
         all_skills = [
             parse_skill(str(tmp_path / "admin-skill")),

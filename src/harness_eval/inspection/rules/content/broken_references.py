@@ -83,12 +83,16 @@ def _is_not_a_file_ref(ref: str) -> bool:
     return bool(ext and ext not in _KNOWN_EXTENSIONS)
 
 
-def _is_in_code_fence(lines: list[str], line_idx: int) -> bool:
+def _fenced_lines(lines: list[str]) -> set[int]:
+    """Return set of line indices that are inside fenced code blocks."""
+    fenced: set[int] = set()
     in_fence = False
-    for j in range(line_idx):
-        if lines[j].strip().startswith("```"):
+    for i, line in enumerate(lines):
+        if line.strip().startswith("```"):
             in_fence = not in_fence
-    return in_fence
+        elif in_fence:
+            fenced.add(i)
+    return fenced
 
 
 class BrokenReferences:
@@ -113,10 +117,11 @@ class BrokenReferences:
         project_root_path = Path(project_root) if project_root else None
 
         lines = skill.body.split("\n")
+        fenced = _fenced_lines(lines)
         checked: set[str] = set()
 
         for i, line in enumerate(lines):
-            if _is_in_code_fence(lines, i):
+            if i in fenced:
                 continue
 
             refs_on_line: list[str] = []

@@ -325,6 +325,7 @@ def _analyze_bash_file_regex(
                 tainted_vars[new_var] = i
 
         # Self-contained taint flows (e.g., curl | bash)
+        matched_self_contained = False
         for pattern, label in _SELF_CONTAINED_PATTERNS:
             if pattern.search(stripped):
                 context.report(
@@ -338,7 +339,10 @@ def _analyze_bash_file_regex(
                         location=Location(file=skill_md_path, start_line=i),
                     )
                 )
-                continue
+                matched_self_contained = True
+                break
+        if matched_self_contained:
+            continue
 
         # Check if this line has a sink
         sink = _find_sink(stripped)

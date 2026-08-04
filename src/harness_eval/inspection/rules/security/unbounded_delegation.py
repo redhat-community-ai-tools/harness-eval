@@ -16,11 +16,11 @@ from harness_eval.inspection.types import (
 )
 
 DELEGATION_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("spawn agent", re.compile(r"\b(spawn|launch|create)\b.*\bagent\b", re.I)),
+    ("spawn agent", re.compile(r"\b(spawn|launch|create)\b[^.!?\n]*\bagent\b", re.I)),
     ("Agent tool", re.compile(r"\bAgent\s+tool\b")),
-    ("delegate to subagent", re.compile(r"\bdelegate\b.*\b(sub)?agent\b", re.I)),
-    ("fork agent", re.compile(r"\bfork\b.*\bagent\b", re.I)),
-    ("fan-out agents", re.compile(r"\bfan.?out\b.*\bagent", re.I)),
+    ("delegate to subagent", re.compile(r"\bdelegate\b[^.!?\n]*\b(sub)?agent\b", re.I)),
+    ("fork agent", re.compile(r"\bfork\b[^.!?\n]*\bagent\b", re.I)),
+    ("fan-out agents", re.compile(r"\bfan.?out\b[^.!?\n]*\bagent", re.I)),
 ]
 
 

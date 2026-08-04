@@ -3,7 +3,7 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-81-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules-81)
+[![Rules](https://img.shields.io/badge/rules-84-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules-84)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Evaluate AI code agent setups for best practices, redundancy, security, and cross-component issues.
@@ -26,7 +26,7 @@ Five commands, same engine:
 
 | Command | What it does | LLM in CLI | LLM in Claude Code / Cursor |
 |---------|-------------|-----------|----------------------------|
-| `lint` | 81 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif` for GitHub code scanning. | No | No |
+| `lint` | 84 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif` for GitHub code scanning. | No | No |
 | `review` | Per-component rubric review with 0-3 scoring per dimension, 21 cross-type checks. KEEP/REVIEW/REMOVE verdicts. | Yes (`[llm]` extra + API key) | Yes (in-session) |
 | `security` | All security rules + YARA + CVE lookups + semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: yes (`[llm]` extra) | Yes (in-session) |
 | `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: yes (`[llm]` extra) | Yes (in-session) |
@@ -51,7 +51,7 @@ Multi-tool projects are fully supported. When a project contains files for multi
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options, CI integration, and configuration (Available as a **CLI tool**, **GitHub Action**, **Tekton Task**, **Claude Code plugin**, and **Cursor commands**)
 
-## Inspection Rules (81)
+## Inspection Rules (84)
 
 | Category | Rules | What they check |
 |----------|-------|-----------------|
@@ -61,11 +61,11 @@ See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options, CI integr
 | Quality | 8 | Imprecise instructions, redundant guidance, unfinished content, example gap, stale references, negative-only prohibitions, scope overreach, trigger manipulation |
 | Security | 15 | Credential access, prompt injection, data exfiltration, obfuscation, reverse shells, AST analysis, Python taint tracking, bash taint tracking, MCP least-privilege, tool poisoning, coercive override, stealth persistence, prompt exfiltration, memory-write-unscoped, unbounded-delegation |
 | Security (opt-in) | 2 | YARA signatures, CVE lookups via OSV.dev |
-| Cross-component | 3 | Cross-component exfiltration chains, confused deputy attacks, phantom MCP tool references, config-instruction conflicts, multi-assistant drift |
+| Cross-component | 4 | Cross-component exfiltration chains, confused deputy attacks, phantom MCP tool references, config-instruction conflicts, multi-assistant drift, overpermissive permission grants |
 | Commands | 12 | Description, script exists, duplicates, credentials, injection, exfiltration, obfuscation, reverse shells, skill overlap, shadows built-in, references nonexistent skill, allowed-tools coverage |
 | CLAUDE.md | 3 | Exists, skill duplication, generic advice detection |
-| MCP | 6 | Configuration structure, duplicate servers, suspicious endpoints (localhost/private IPs), wildcard tool exposure, plaintext secrets, unpinned packages |
-| Hooks | 6 | Structure validation, script boundary, dangerous commands, env variable leakage, network access, matcher-matches-no-tool |
+| MCP | 7 | Configuration structure, duplicate servers, suspicious endpoints (localhost/private IPs), wildcard tool exposure, plaintext secrets, unpinned packages, auto-approve risk |
+| Hooks | 7 | Structure validation, script boundary, dangerous commands, env variable leakage, network access, matcher-matches-no-tool, silent failure masking |
 | Agents | 13 | Description, model specified, skills exist, tool format, constraint matching, credentials, injection, exfiltration, obfuscation, reverse shells, excessive-permissions, memory-write-unscoped, unbounded-delegation |
 
 Four presets: `recommended` (default), `strict`, `security`, `pre-workflow`. For a complete reference with examples, detection techniques, framework mappings, and AI tool coverage per rule, see [`docs/rules-reference.md`](docs/rules-reference.md).

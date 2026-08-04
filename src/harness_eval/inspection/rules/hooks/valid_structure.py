@@ -79,9 +79,9 @@ class HooksValidStructure:
             script_match = re.search(r"[\w./-]+\.(?:py|sh|bash)\b", command)
             if script_match:
                 script_path = Path(script_match.group(0))
-                if not script_path.exists() and not script_path.is_absolute():
-                    settings_dir = Path(hooks_data.file_path).parent
-                    if not (settings_dir / script_path).exists():
+                if not script_path.is_absolute():
+                    project_root = Path(hooks_data.file_path).parent.parent
+                    if not (project_root / script_path).exists():
                         context.report(
                             ReportDescriptor(
                                 message_id="script_missing",

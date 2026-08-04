@@ -162,7 +162,7 @@ def _report_flow(
         suggestion = (
             "Remove the network call or use a secret manager instead of environment variables."
         )
-    elif source_type in ("file_read", "credential") and sink_type == "network_output":
+    elif source_type == "file_read" and sink_type == "network_output":
         msg_id = "taint_data_exfil"
         suggestion = None
     elif sink_type == "code_execution":

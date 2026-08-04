@@ -1,5 +1,5 @@
 ---
-description: "Run deterministic static analysis on the full agent setup (CLAUDE.md, skills, commands, hooks, agents, MCP configs). 81 rules + system-level analysis. No LLM, fast, CI-suitable."
+description: "Run deterministic static analysis on the full agent setup (CLAUDE.md, skills, commands, hooks, agents, MCP configs). 84 rules + system-level analysis. No LLM, fast, CI-suitable."
 ---
 
 # Eval Setup Lint
