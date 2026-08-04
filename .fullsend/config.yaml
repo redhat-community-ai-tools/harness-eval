@@ -14,3 +14,8 @@ roles:
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
+create_issues:
+    allow_targets:
+        repos:
+            - redhat-community-ai-tools/harness-eval
+            - fullsend-ai/fullsend
