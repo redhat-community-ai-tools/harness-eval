@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [7.0.0] - 2026-08-04
 
 ### Added
 - `harness-eval doctor` command: shows installed optional capabilities, env var status, and version info

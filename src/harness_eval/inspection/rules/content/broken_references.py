@@ -15,7 +15,7 @@ from harness_eval.utils.paths import safe_join
 
 _MD_LINK_PATTERN = re.compile(r"\[.*?\]\(([^)]+)\)")
 _BACKTICK_PATH_PATTERN = re.compile(r"`([^`]*/[^`]+\.\w{1,5})`")
-_DIR_REF_PATTERN = re.compile(r"(?:scripts|references|assets)/[\w./-]+")
+_DIR_REF_PATTERN = re.compile(r"(?<![a-zA-Z])(?:scripts|references|assets)/[\w./-]+")
 
 _VERSION_RE = re.compile(r"^\d+(\.\d+)+$")
 _GIT_REF_RE = re.compile(r"(\.\.\.?|@\{|HEAD|upstream|origin|main|master)")
