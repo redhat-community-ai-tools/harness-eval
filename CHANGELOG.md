@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
 ## [7.0.0] - 2026-08-04
 
 ### Added
@@ -38,6 +40,8 @@ All notable changes to this project will be documented in this file.
 - `content/broken-references`: replaced O(n^2) code fence detection with O(n) pre-computed set
 - `security/taint-tracking`: removed unreachable `credential` branch in elif chain
 - Removed unused `_VARIABLE_PATTERNS` regex from `content/hardcoded-machine-path`
+- `security/no-credential-access`: expanded sudo allowlist to include tar, ln, cp, mv, mkdir, tee, systemctl, apparmor_parser, and other legitimate system commands (was only apt/dnf/yum/pip/npm)
+- `content/broken-references`: fixed false positive where `scripts/` matched inside words like `transcripts`
 
 ## [6.3.0] - 2026-07-30
 
