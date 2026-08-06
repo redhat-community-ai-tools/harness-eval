@@ -1,4 +1,4 @@
-"""Shared scanning logic for security rules across component types."""
+"""Shared scanning logic for inspection rules across component types."""
 
 from __future__ import annotations
 
@@ -12,6 +12,8 @@ from harness_eval.inspection.types import (
     RuleContext,
     Severity,
 )
+
+TOOL_DIRECTIVE_RE = re.compile(r"(?:use the|run|call|invoke)\s+(\w+)\s+tool", re.IGNORECASE)
 
 
 def strip_code_blocks(text: str) -> str:

@@ -39,7 +39,20 @@ _SENSITIVE_ENV_VARS = [
 ]
 
 _DANGEROUS_COMMANDS = [
-    (re.compile(r"\bsudo\s+(?!apt\b|dnf\b|yum\b|pip\b|npm\b)"), "sudo (non-install)"),
+    (
+        re.compile(
+            r"\bsudo\s+(?!"
+            r"apt\b|apt-get\b|dnf\b|yum\b|pip\b|npm\b|"
+            r"tar\b|ln\b|cp\b|mv\b|mkdir\b|tee\b|install\b|"
+            r"systemctl\b|service\b|update-alternatives\b|"
+            r"useradd\b|groupadd\b|usermod\b|"
+            r"mount\b|umount\b|modprobe\b|sysctl\b|"
+            r"apparmor_parser\b|aa-enforce\b|"
+            r"make\b|cmake\b"
+            r")"
+        ),
+        "sudo (non-install)",
+    ),
     (re.compile(r"\bchmod\s+777\b"), "chmod 777"),
     (re.compile(r"\bchown\s+root\b"), "chown root"),
 ]

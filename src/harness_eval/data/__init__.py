@@ -80,6 +80,16 @@ def load_builtins() -> set[str]:
     return set(data["claude_code_commands"])
 
 
+def load_secret_prefixes() -> list[str]:
+    data = json.loads((_DATA_DIR / "secret_prefixes.json").read_text())
+    return list(data)
+
+
+def load_tool_names() -> list[str]:
+    data = json.loads((_DATA_DIR / "tool_names.json").read_text())
+    return list(data)
+
+
 def load_tautological_patterns(
     *,
     generic_advice_only: bool = False,

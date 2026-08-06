@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.0.0] - 2026-08-04
+
+### Added
+- `harness-eval doctor` command: shows installed optional capabilities, env var status, and version info
+- `mcp/no-plaintext-secrets` rule (ERROR): flags literal secrets in MCP config env/headers using prefix matching and Shannon entropy
+- `mcp/unpinned-package` rule (WARNING): flags npx/uvx/pipx/docker MCP servers running floating third-party code
+- `hooks/matcher-matches-no-tool` rule (WARNING): flags hook matchers that match no known tool name, with case-sensitivity suggestions
+- `content/hardcoded-machine-path` rule (WARNING): flags machine-specific absolute paths in code blocks that break portability
+- `cross/config-instruction-conflict` rule (WARNING): flags when settings.json permissions.deny blocks tools that instructions direct to use
+- `cross/multi-assistant-drift` rule (WARNING): detects diverged copies of CLAUDE.md/AGENTS.md/GEMINI.md using TF-IDF similarity
+- `command/allowed-tools-coverage` rule (WARNING): checks that command allowed-tools covers tools actually used (under-grant and over-grant)
+- `cross/overpermissive-grants` rule (WARNING): flags permissions.allow entries that grant broad or unrestricted tool access (Bash(*), bare tool names, short wildcard prefixes)
+- `hooks/silent-failure-masking` rule (WARNING): flags hooks that silently suppress errors (2>/dev/null, || true, set +e), escalates to ERROR when combined with security-relevant operations
+- `mcp/auto-approve-risk` rule (WARNING): flags MCP servers with autoApprove lists containing write/execute tools
+- CI test matrix: `core` and `full` legs ensure optional-dependency code paths (bashlex, yara) are tested
+
+### Changed
+- Removed decorative mypy CI step (had continue-on-error: true); tracking issue #54 to re-add enforced
+
+### Fixed
+- Bash taint tracking: `read VAR; export SECRET=$VAR; eval $SECRET` flow now detected. The AST walker was missing a handler for `read` as a taint source, and the line-by-line supplement was missing `export` taint propagation.
+- Doctor test `test_shows_set_unset_status` had a vacuous assertion (`"set" in "unset"` is always true); split into two non-vacuous tests
+- `agent/no-credential-access`: added missing `_DANGEROUS_COMMANDS` check (sudo, chmod 777, chown root) that the command version had
+- `agent/disallowed-tools-parseable`: regex now accepts hyphens and digits in tool names (e.g., MCP tool names)
+- `cross/overpermissive-grants`: regex now correctly matches `Bash(g:*)` colon-wildcard form
+- `security/ast-behavioral`: fixed substring matching false positives (`"get"` no longer matches `"target"`)
+- `security/cve-lookup`: OSV error reporting no longer dead code; single-line pyproject.toml deps now parsed
+- `security/bash-taint-flow`: regex fallback no longer double-reports lines matching both self-contained and sink patterns
+- `security/memory-write-unscoped`, `security/unbounded-delegation`: greedy `.*` replaced with `[^.!?\n]*` to stay within sentence boundaries
+- `mcp/unpinned-package`: Docker flag values (e.g., `-p 8080:8080`) no longer treated as image name
+- `hooks/valid-structure`: script existence check now resolves against project root instead of CWD
+- `content/token-budget`: no longer crashes with ZeroDivisionError when concurrent option is 0
+- `content/permission-escalation`: fixed inverted logic; now correctly detects when referenced skill has capabilities the referencing skill lacks
+- `content/broken-references`: replaced O(n^2) code fence detection with O(n) pre-computed set
+- `security/taint-tracking`: removed unreachable `credential` branch in elif chain
+- Removed unused `_VARIABLE_PATTERNS` regex from `content/hardcoded-machine-path`
+- `security/no-credential-access`: expanded sudo allowlist to include tar, ln, cp, mv, mkdir, tee, systemctl, apparmor_parser, and other legitimate system commands (was only apt/dnf/yum/pip/npm)
+- `content/broken-references`: fixed false positive where `scripts/` matched inside words like `transcripts`
+
 ## [6.3.0] - 2026-07-30
 
 ### Breaking

@@ -94,6 +94,18 @@ class TestMemoryWriteUnscopedSkill:
         diags = [d for d in result.diagnostics if d.rule_id == "security/memory-write-unscoped"]
         assert len(diags) == 0
 
+    def test_no_flag_cross_sentence(self, tmp_path: Path) -> None:
+        """Words in different sentences should not match across sentence boundary."""
+        # "Write" and "memory" are in separate sentences
+        path = _make_skill(
+            tmp_path,
+            "sentence-test",
+            "Write the output to a CSV file. Memory usage is 2GB.",
+        )
+        result = lint(path, MEMORY_SKILL_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "security/memory-write-unscoped"]
+        assert len(diags) == 0
+
     def test_memory_in_code_block_downgraded(self, tmp_path: Path) -> None:
         body = "Example:\n```\nSave this to memory for later.\n```\n"
         path = _make_skill(tmp_path, "code-block-skill", body)
@@ -164,6 +176,17 @@ class TestUnboundedDelegationSkill:
 
     def test_clean_skill_not_flagged(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "safe-skill", "Read the file and return the contents.")
+        result = lint(path, DELEGATION_SKILL_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "security/unbounded-delegation"]
+        assert len(diags) == 0
+
+    def test_no_flag_cross_sentence(self, tmp_path: Path) -> None:
+        """Words in different sentences should not match across boundary."""
+        path = _make_skill(
+            tmp_path,
+            "sentence-test",
+            "Launch the test suite. The agent will handle the rest.",
+        )
         result = lint(path, DELEGATION_SKILL_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == "security/unbounded-delegation"]
         assert len(diags) == 0

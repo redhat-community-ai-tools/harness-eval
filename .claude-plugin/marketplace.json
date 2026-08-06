@@ -10,8 +10,8 @@
     {
       "name": "harness-eval",
       "source": "./",
-      "version": "6.3.0",
-      "description": "Evaluate AI agent setups for best practices, redundancy, security, and cross-component issues. 74 lint rules, cross-component security analysis, per-component rubric review, deep security audit, and single-skill evaluation."
+      "version": "7.0.0",
+      "description": "Evaluate AI agent setups for best practices, redundancy, security, and cross-component issues. 81 lint rules, cross-component security analysis, per-component rubric review, deep security audit, and single-skill evaluation."
     }
   ]
 }

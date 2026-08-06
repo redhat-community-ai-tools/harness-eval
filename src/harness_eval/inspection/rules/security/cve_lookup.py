@@ -37,7 +37,6 @@ def _parse_pyproject_toml(path: Path) -> list[dict[str, str]]:
         stripped = line.strip()
         if stripped == "dependencies = [" or stripped.startswith("dependencies ="):
             in_deps = True
-            continue
         if in_deps:
             if stripped == "]":
                 break
@@ -63,11 +62,11 @@ def _parse_package_json(path: Path) -> list[dict[str, str]]:
     return deps
 
 
-def _query_osv(deps: list[dict[str, str]]) -> list[dict[str, str]]:
+def _query_osv(deps: list[dict[str, str]]) -> list[dict[str, str]] | None:
     try:
         import urllib.request
     except ImportError:
-        return []
+        return None
 
     queries: list[dict[str, object]] = []
     for dep in deps:
@@ -88,7 +87,7 @@ def _query_osv(deps: list[dict[str, str]]) -> list[dict[str, str]]:
         with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
             data = json.loads(resp.read())
     except Exception:
-        return []
+        return None
 
     results: list[dict[str, str]] = []
     for i, result in enumerate(data.get("results", [])):

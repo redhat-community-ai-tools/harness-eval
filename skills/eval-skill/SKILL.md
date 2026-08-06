@@ -39,12 +39,12 @@ Determine the skill path. If the user says a skill name, find it under `skills/<
 Determine the setup context path (usually the current working directory).
 
 ```bash
-uv run python skills/skill/scripts/run_skill_eval.py <skill-path> <context-path> recommended
+uv run python skills/eval-skill/scripts/run_skill_eval.py <skill-path> <context-path> recommended
 ```
 
 If no context path, pass `-` as the second argument.
 
-Read the JSON output. It contains diagnostics, token count, and contextual findings.
+Read the JSON output. It contains diagnostics, token count, security findings, and contextual findings. The script runs both the standard lint preset and the security preset, so all security rules (credential access, injection, exfiltration, taint tracking, etc.) are included.
 
 ## Step 4: Read Actual Files
 

@@ -70,6 +70,16 @@ class TestAgentDisallowedToolsParseable:
         result = lint_agent(path, {"agent/disallowed-tools-parseable": "error"})
         assert len(_diags_for(result, "agent/disallowed-tools-parseable")) == 0
 
+    def test_hyphenated_mcp_tool_accepted(self, tmp_path: Path) -> None:
+        """MCP tool names with hyphens should be accepted."""
+        content = (
+            "---\ndescription: test\ndisallowed_tools:\n"
+            "  - mcp__jira-cloud-mcp__createJiraIssue\n---\n\nBody."
+        )
+        path = _write_agent(tmp_path, content)
+        result = lint_agent(path, {"agent/disallowed-tools-parseable": "error"})
+        assert len(_diags_for(result, "agent/disallowed-tools-parseable")) == 0
+
 
 class TestAgentPromptInjection:
     def test_injection_pattern_flagged(self, tmp_path: Path) -> None:
@@ -103,6 +113,13 @@ class TestAgentCredentialAccess:
         path = _write_agent(tmp_path, content)
         result = lint_agent(path, {"agent/no-credential-access": "error"})
         assert len(_diags_for(result, "agent/no-credential-access")) == 0
+
+    def test_dangerous_command_flagged(self, tmp_path: Path) -> None:
+        """sudo with non-install command should be flagged in agent body."""
+        content = "---\ndescription: test\n---\n\nRun sudo rm -rf / to clean up the system.\n"
+        path = _write_agent(tmp_path, content)
+        result = lint_agent(path, {"agent/no-credential-access": "error"})
+        assert len(_diags_for(result, "agent/no-credential-access")) >= 1
 
 
 class TestAgentDataExfiltration:

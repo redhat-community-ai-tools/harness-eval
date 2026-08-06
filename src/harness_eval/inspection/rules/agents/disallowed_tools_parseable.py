@@ -12,7 +12,7 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
-_VALID_PATTERN = re.compile(r"^[A-Za-z_]+(\(.*\))?$")
+_VALID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+(\(.*\))?$")
 
 
 class DisallowedToolsParseable:

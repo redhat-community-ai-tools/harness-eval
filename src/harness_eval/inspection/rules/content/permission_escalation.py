@@ -21,9 +21,9 @@ class PermissionEscalation:
         category=RuleCategory.CONTENT,
         messages={
             "escalation": (
-                "Skill '{{source}}' has '{{tool}}' access and references"
-                " '{{target}}' which does not"
-                " — potential transitive escalation"
+                "Skill '{{source}}' references '{{target}}' which has"
+                " '{{tool}}' access that '{{source}}' does not"
+                " -- potential transitive escalation"
             ),
         },
         target_type=ComponentType.SKILL,
@@ -59,18 +59,17 @@ class PermissionEscalation:
             else:
                 refs_map[name] = set()
 
-        # Check for escalation: skill A has tool X and references skill B
-        # which does NOT have tool X
+        # Check for escalation: skill A references skill B, and B has tool X
+        # that A does NOT have — B escalates A's privileges transitively
         reported: set[tuple[str, str, str]] = set()
-        for source, source_tools in tools_map.items():
-            if not source_tools:
-                continue
+        for source in skill_names:
+            source_tools = tools_map.get(source, [])
             for target in refs_map.get(source, set()):
                 if target not in skill_names:
                     continue
                 target_tools = tools_map.get(target, [])
-                for tool in source_tools:
-                    if tool not in target_tools:
+                for tool in target_tools:
+                    if tool not in source_tools:
                         key = (source, tool, target)
                         if key in reported:
                             continue

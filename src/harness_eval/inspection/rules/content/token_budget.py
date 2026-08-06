@@ -40,6 +40,7 @@ class TokenBudget:
             with contextlib.suppress(ValueError, IndexError):
                 concurrent = int(context.options[0])
 
+        concurrent = max(concurrent, 1)
         budget = min(DEFAULT_CONTEXT_BUDGET // concurrent, ABSOLUTE_CEILING)
 
         if skill.tokens > budget:

@@ -160,7 +160,7 @@ class TestBashTaintEnhancedFallback:
 class TestBashTaintEnhancedEnvVarFlow:
     """Test env-var flow: export SECRET=$API_KEY propagates taint."""
 
-    def test_export_tainted_var_to_curl(self, tmp_path: Path) -> None:
+    def test_read_export_eval_flow(self, tmp_path: Path) -> None:
         path = _make_skill_with_bash(
             tmp_path,
             "env-flow",
