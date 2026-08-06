@@ -18,7 +18,10 @@ _PERSISTENCE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("write to cursor config", re.compile(r"(?:write|append|modify|update)\s+.*\.cursor/", re.I)),
     (
         "modify settings.json",
-        re.compile(r"(?:write|append|modify|update)\s+.*settings\.json\b", re.I),
+        re.compile(
+            r"(?:write|append|modify|update)\s+(?!.*\b(?:VS\s*Code|vscode|prettier|eslint|editor|IDE)\b).*settings\.json\b",
+            re.I,
+        ),
     ),
     (
         "append to instruction file",

@@ -13,17 +13,19 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
+_HOME_PREFIX = r"(?:~/|\$HOME/|/home/\w+/)"
+
 _SENSITIVE_PATHS = [
-    re.compile(r"~/\.ssh/", re.I),
-    re.compile(r"~/\.aws/credentials", re.I),
-    re.compile(r"~/\.config/gcloud", re.I),
-    re.compile(r"~/\.kube/config", re.I),
+    re.compile(_HOME_PREFIX + r"\.ssh/", re.I),
+    re.compile(_HOME_PREFIX + r"\.aws/credentials", re.I),
+    re.compile(_HOME_PREFIX + r"\.config/gcloud", re.I),
+    re.compile(_HOME_PREFIX + r"\.kube/config", re.I),
     re.compile(r"/etc/shadow", re.I),
-    re.compile(r"~/\.netrc", re.I),
-    re.compile(r"~/\.env\b"),
-    re.compile(r"~/\.docker/config\.json", re.I),
-    re.compile(r"~/\.npmrc\b"),
-    re.compile(r"~/\.pypirc\b"),
+    re.compile(_HOME_PREFIX + r"\.netrc", re.I),
+    re.compile(_HOME_PREFIX + r"\.env\b"),
+    re.compile(_HOME_PREFIX + r"\.docker/config\.json", re.I),
+    re.compile(_HOME_PREFIX + r"\.npmrc\b"),
+    re.compile(_HOME_PREFIX + r"\.pypirc\b"),
 ]
 
 _SENSITIVE_ENV_VARS = [

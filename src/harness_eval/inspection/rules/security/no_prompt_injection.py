@@ -45,7 +45,7 @@ _INJECTION_PATTERNS: list[tuple[str, re.Pattern]] = [
     ),
     (
         "encoding evasion (pipe to shell)",
-        re.compile(r"base64\s+(?:-d|--decode)\s*\|\s*(?:bash|sh|eval)", re.I),
+        re.compile(r"base64\s+(?:-d|--decode).*?\|\s*(?:bash|sh|eval)", re.I),
     ),
     ("repeat after me", re.compile(r"repeat\s+after\s+me", re.I)),
     (
@@ -69,8 +69,9 @@ class NoPromptInjection:
         category=RuleCategory.SECURITY,
         messages={
             "injection_detected": "Line {{line}} contains a word pattern ('{{label}}') that could be used to manipulate the AI assistant. Check if this is intentional content or an actual risk.",
-            "injection_in_code_block": "Line {{line}} contains '{{label}}' inside a code block — likely safe (documentation or example).",
-            "injection_in_example": "Line {{line}} contains '{{label}}' in a quote or example — likely safe.",
+            "injection_in_code_block": "Line {{line}} contains '{{label}}' inside a code block -- likely safe (documentation or example).",
+            "injection_in_example": "Line {{line}} contains '{{label}}' in a quote or example -- likely safe.",
+            "injection_negated": "Line {{line}} contains '{{label}}' preceded by negation (likely a safety guardrail, not injection).",
         },
         frameworks={"owasp_llm": "LLM01", "mitre_atlas": "AML.T0051"},
     )
@@ -85,4 +86,5 @@ class NoPromptInjection:
                 detected_msg="injection_detected",
                 code_block_msg="injection_in_code_block",
                 example_msg="injection_in_example",
+                negation_msg="injection_negated",
             )

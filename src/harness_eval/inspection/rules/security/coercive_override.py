@@ -16,7 +16,10 @@ from harness_eval.inspection.types import (
 _COERCIVE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
         "forced compliance",
-        re.compile(r"\b(?:you\s+must|must\s+always)\s+(?:comply|obey|follow)\b", re.I),
+        re.compile(
+            r"\b(?:you\s+must|must\s+always)\s+(?:comply\s+with\s+(?:all|every|my)|obey|follow\s+(?:all\s+)?(?:my|these|the\s+following)\s+(?:orders?|commands?|instructions?\s+without))\b",
+            re.I,
+        ),
     ),
     (
         "refusal suppression",

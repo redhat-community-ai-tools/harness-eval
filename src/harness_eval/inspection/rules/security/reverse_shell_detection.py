@@ -23,6 +23,7 @@ _REVERSE_SHELL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("php socket shell", re.compile(r"php\s+-r\s+.*fsockopen", re.I)),
     ("socat exec", re.compile(r"\bsocat\s+.*exec:", re.I)),
     ("named pipe shell", re.compile(r"\bmknod\s+.*\bp\b.*(?:/bin/sh|bash)", re.I)),
+    ("named pipe shell (mkfifo)", re.compile(r"\bmkfifo\b.*\bcat\b.*\b(?:sh|bash)\b", re.I)),
     ("powershell reverse shell", re.compile(r"\bpowershell\s+.*(?:Net\.Sockets|TCPClient)", re.I)),
 ]
 

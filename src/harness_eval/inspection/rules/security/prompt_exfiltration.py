@@ -31,7 +31,14 @@ _EXFIL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
         "leak config file",
         re.compile(
-            r"(?:read|cat|print|output)\s+(?:the\s+)?(?:contents?\s+of\s+)?(?:CLAUDE|GEMINI|AGENTS)\.md\b",
+            r"(?:print|output|include|share|send)\s+(?:the\s+)?(?:contents?\s+of\s+)?(?:CLAUDE|GEMINI|AGENTS)\.md\b",
+            re.I,
+        ),
+    ),
+    (
+        "leak config file (read with exfil intent)",
+        re.compile(
+            r"(?:read|cat)\s+(?:the\s+)?(?:contents?\s+of\s+)?(?:CLAUDE|GEMINI|AGENTS)\.md\b.*(?:to\s+the\s+user|in\s+(?:your|the)\s+(?:response|output))",
             re.I,
         ),
     ),

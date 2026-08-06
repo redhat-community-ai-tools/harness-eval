@@ -50,7 +50,7 @@ rule hacktool_indicators {
     strings:
         $mimikatz = "mimikatz" nocase
         $meterpreter = "meterpreter" nocase
-        $cobaltstrike = "cobalt" nocase
+        $cobaltstrike = /cobalt\s*strike/i
         $bloodhound = "bloodhound" nocase
         $lazagne = "lazagne" nocase
         $empire = /Invoke-Empire|Empire\s+listener/i
