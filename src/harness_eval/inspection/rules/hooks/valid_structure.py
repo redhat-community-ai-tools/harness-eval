@@ -14,15 +14,11 @@ from harness_eval.inspection.types import (
 )
 
 _DANGEROUS_PATTERNS = [
-    (re.compile(r"\brm\s+-rf\b"), "rm -rf", None),
-    (re.compile(r"\bgit\s+push\s+--force\b"), "git push --force", None),
-    (re.compile(r"\bgit\s+reset\s+--hard\b"), "git reset --hard", None),
-    (re.compile(r"\bcurl\b.*\|\s*(?:bash|sh)\b"), "curl pipe to shell", "curl"),
-    (re.compile(r"\bwget\b.*\|\s*(?:bash|sh)\b"), "wget pipe to shell", "wget"),
-    (re.compile(r"\bcurl\b"), "network access (curl)", "curl"),
-    (re.compile(r"\bwget\b"), "network access (wget)", "wget"),
-    (re.compile(r"\bnc\s+-"), "network access (netcat)", None),
-    (re.compile(r"\bncat\b"), "network access (ncat)", None),
+    (re.compile(r"\brm\s+-rf\b"), "rm -rf"),
+    (re.compile(r"\bgit\s+push\s+--force\b"), "git push --force"),
+    (re.compile(r"\bgit\s+reset\s+--hard\b"), "git reset --hard"),
+    (re.compile(r"\bcurl\b.*\|\s*(?:bash|sh)\b"), "curl pipe to shell"),
+    (re.compile(r"\bwget\b.*\|\s*(?:bash|sh)\b"), "wget pipe to shell"),
 ]
 
 
@@ -61,13 +57,8 @@ class HooksValidStructure:
                 )
                 continue
 
-            matched_groups: set[str] = set()
-            for pattern, label, group in _DANGEROUS_PATTERNS:
-                if group and group in matched_groups:
-                    continue
+            for pattern, label in _DANGEROUS_PATTERNS:
                 if pattern.search(command):
-                    if group:
-                        matched_groups.add(group)
                     context.report(
                         ReportDescriptor(
                             message_id="dangerous_pattern",

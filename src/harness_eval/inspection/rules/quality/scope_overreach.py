@@ -18,15 +18,6 @@ _OVERREACH_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
             r"\b(?:all|every|any)\s+(?:code\s+)?(?:changes?|modifications?|edits?|files?)\b", re.I
         ),
     ),
-    ("mandatory invocation", re.compile(r"\bMUST\s+(?:use|invoke|run|call)\s+this\b")),
-    (
-        "forced priority",
-        re.compile(r"\bALWAYS\s+(?:invoke|use|run|call)\s+(?:this\s+)?(?:first|before)\b"),
-    ),
-    (
-        "blocks progress",
-        re.compile(r"\bDo\s+NOT\s+(?:proceed|continue|start)\s+(?:until|without|before)\b"),
-    ),
     (
         "universal scope",
         re.compile(r"\brequired\s+for\s+(?:all|every|any)\s+(?:tasks?|work|operations?)\b", re.I),

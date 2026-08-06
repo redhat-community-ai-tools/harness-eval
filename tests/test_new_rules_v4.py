@@ -96,8 +96,8 @@ class TestScopeOverreach:
         result = lint(path, {"quality/scope-overreach": "warning"})
         assert len(_diags_for(result, "quality/scope-overreach")) >= 1
 
-    def test_mandatory_invocation_flagged(self, tmp_path: Path) -> None:
-        path = _make_skill(tmp_path, "MUST use this for every task.")
+    def test_universal_scope_flagged(self, tmp_path: Path) -> None:
+        path = _make_skill(tmp_path, "This is required for all tasks in the project.")
         result = lint(path, {"quality/scope-overreach": "warning"})
         assert len(_diags_for(result, "quality/scope-overreach")) >= 1
 

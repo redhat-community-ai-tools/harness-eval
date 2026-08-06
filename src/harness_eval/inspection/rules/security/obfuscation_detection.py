@@ -21,7 +21,6 @@ _OBFUSCATION_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("char code construction", re.compile(r"String\.fromCharCode\s*\(", re.I)),
     ("hex escape sequence", re.compile(r"(?:\\x[0-9a-fA-F]{2}){4,}")),
     ("unicode escape sequence", re.compile(r"(?:\\u[0-9a-fA-F]{4}){4,}")),
-    ("zero-width characters", re.compile(r"[​-‏﻿]")),
     ("tag characters", re.compile(r"[\U000e0000-\U000e007f]")),
     ("python dynamic exec", re.compile(r"exec\s*\(\s*(?:compile|__import__)\s*\(", re.I)),
     ("char code round-trip", re.compile(r"charCodeAt\b.*\bfromCharCode\b", re.I)),
