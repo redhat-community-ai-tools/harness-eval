@@ -12,6 +12,14 @@ All deterministic rules run in the **CLI** (`harness-eval lint`/`security`), **P
 
 Abbreviations: CC = Claude Code, CU = Cursor, CP = Copilot, GE = Gemini CLI, OC = OpenCode
 
+### Framework mappings
+
+Rules are mapped to industry security frameworks where applicable:
+
+- **OWASP LLM Top 10** (2025): coverage across LLM01 (prompt injection), LLM02 (sensitive data), LLM06 (excessive agency), and others
+- **OWASP Agentic Security**: AG04 (data exfiltration), AG05 (credential access), and related controls
+- **MITRE ATLAS**: AML.T0054 (LLM prompt injection) and related techniques
+
 ---
 
 ## Skills (SKILL.md)
