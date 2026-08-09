@@ -58,15 +58,6 @@ class ComponentGraph:
         visited.discard(node_name)
         return visited
 
-    def node_has_capability(self, node_name: str, capability: str) -> bool:
-        node = self.nodes.get(node_name)
-        if not node:
-            return False
-        return capability in node.detected_capabilities
-
-    def get_mcp_servers(self) -> list[str]:
-        return [n.name for n in self.nodes.values() if n.component_type == ComponentType.MCP_CONFIG]
-
 
 def _detect_capabilities_for_dir(skill_dir: Path) -> dict[str, list[str]]:
     caps = load_capabilities()

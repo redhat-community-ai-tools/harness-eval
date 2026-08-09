@@ -80,6 +80,19 @@ class TestOrphanDetectionScope:
         assert "my-skill" not in orphan_names
         assert "other-skill" not in orphan_names
 
+    def test_referencing_command_still_orphaned_if_not_referenced(self):
+        """A command that references a skill but is itself never referenced is orphaned."""
+        components = [
+            self._make_component("referencing-cmd", ComponentType.COMMAND, "uses skill 'my-skill'"),
+            self._make_component("my-skill", ComponentType.SKILL, "does things"),
+            self._make_component("other-skill", ComponentType.SKILL, "more stuff"),
+            self._make_component("main", ComponentType.CLAUDE_MD, "instructions"),
+        ]
+        setup = self._make_setup(components)
+        deps = analyze_dependencies(setup)
+        orphan_names = [o.split("/")[-1] for o in deps.orphan_components]
+        assert "referencing-cmd" in orphan_names
+
     def test_unreferenced_command_is_orphaned(self):
         components = [
             self._make_component("my-skill", ComponentType.SKILL, "does things"),

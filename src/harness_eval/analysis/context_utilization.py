@@ -38,8 +38,6 @@ class ContextUtilizationReport:
 
 
 PEAK_WARNING_THRESHOLD = 0.20
-PEAK_CRITICAL_THRESHOLD = 0.50
-ALWAYS_LOADED_WARNING_THRESHOLD = 0.10
 
 DEFAULT_MODELS: list[ModelSpec] = [
     ModelSpec("claude-haiku-4.5", 200_000),
