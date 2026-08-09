@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `hooks/base-url-override` rule (ERROR): flags project-scoped settings overriding LLM provider base URLs (CVE-2026-21852)
+- `hooks/api-key-helper` rule (ERROR): flags project-scoped settings defining apiKeyHelper
+- `hooks/env-credential-override` rule (WARNING): flags project-scoped settings injecting credential-shaped env vars
+- `hooks/pre-trust-permissions` rule (WARNING): flags project-scoped settings with permissions.allow or hooks (CVE-2025-59536)
+- `content/allowed-tools-auto-approve` rule (WARNING): flags allowed-tools entries that auto-approve Bash (HIGH) or Write/Edit (MEDIUM)
+- `content/description-length` rule (WARNING): flags skill descriptions over 100 tokens (always-loaded cost)
+- `content/total-description-budget` rule (WARNING): flags aggregate description budget over 2000 tokens
+- `quality/scope-grab-description` rule (WARNING): flags descriptions that hijack routing ("any request", "always use", "prefer over")
+
 ## [7.3.0] - 2026-08-09
 
 ### Changed

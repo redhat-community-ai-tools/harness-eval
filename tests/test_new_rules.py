@@ -134,7 +134,9 @@ class TestHooksNetworkAccess:
         messages = [d.message for d in result.diagnostics]
         assert any("curl pipe to shell" in m for m in messages)
 
-    def test_clean_hook_no_findings(self, tmp_path: Path) -> None:
+    def test_clean_hook_no_network_findings(self, tmp_path: Path) -> None:
         path = self._make_settings(tmp_path, "afterWrite", "echo done")
         result = lint_hooks(path)
-        assert result.error_count == 0 and result.warning_count == 0
+        assert result.error_count == 0
+        network_findings = [d for d in result.diagnostics if d.rule_id == "hooks/network-access"]
+        assert len(network_findings) == 0

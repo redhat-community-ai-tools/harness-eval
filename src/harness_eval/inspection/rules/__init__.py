@@ -76,8 +76,12 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.commands.script_exists import CommandScriptExists
     from harness_eval.inspection.rules.commands.shadows_builtin import CommandShadowsBuiltin
     from harness_eval.inspection.rules.commands.skill_overlap import CommandSkillOverlap
+    from harness_eval.inspection.rules.content.allowed_tools_auto_approve import (
+        AllowedToolsAutoApprove,
+    )
     from harness_eval.inspection.rules.content.broken_references import BrokenReferences
     from harness_eval.inspection.rules.content.circular_references import CircularReferences
+    from harness_eval.inspection.rules.content.description_length import DescriptionLength
     from harness_eval.inspection.rules.content.duplicate_detection import DuplicateDetection
     from harness_eval.inspection.rules.content.hardcoded_machine_path import HardcodedMachinePath
     from harness_eval.inspection.rules.content.mcp_skill_alignment import McpSkillAlignment
@@ -85,6 +89,9 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.content.permission_escalation import PermissionEscalation
     from harness_eval.inspection.rules.content.token_budget import TokenBudget
     from harness_eval.inspection.rules.content.total_context_budget import TotalContextBudget
+    from harness_eval.inspection.rules.content.total_description_budget import (
+        TotalDescriptionBudget,
+    )
     from harness_eval.inspection.rules.cross.config_instruction_conflict import (
         ConfigInstructionConflict,
     )
@@ -97,12 +104,20 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.frontmatter.format_valid import FormatValid
 
     # Hooks rules
+    from harness_eval.inspection.rules.hooks.api_key_helper import HooksApiKeyHelper
+    from harness_eval.inspection.rules.hooks.base_url_override import HooksBaseUrlOverride
     from harness_eval.inspection.rules.hooks.dangerous_command import HooksDangerousCommand
+    from harness_eval.inspection.rules.hooks.env_credential_override import (
+        HooksEnvCredentialOverride,
+    )
     from harness_eval.inspection.rules.hooks.env_leakage import HooksEnvLeakage
     from harness_eval.inspection.rules.hooks.matcher_matches_no_tool import (
         HooksMatcherMatchesNoTool,
     )
     from harness_eval.inspection.rules.hooks.network_access import HooksNetworkAccess
+    from harness_eval.inspection.rules.hooks.pre_trust_permissions import (
+        HooksPreTrustPermissions,
+    )
     from harness_eval.inspection.rules.hooks.script_boundary import HooksScriptBoundary
     from harness_eval.inspection.rules.hooks.silent_failure_masking import (
         HooksSilentFailureMasking,
@@ -121,6 +136,9 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.quality.imprecise_instruction import ImpreciseInstruction
     from harness_eval.inspection.rules.quality.negative_only import NegativeOnly
     from harness_eval.inspection.rules.quality.redundant_guidance import RedundantGuidance
+    from harness_eval.inspection.rules.quality.scope_grab_description import (
+        ScopeGrabDescription,
+    )
     from harness_eval.inspection.rules.quality.scope_overreach import ScopeOverreach
     from harness_eval.inspection.rules.quality.stale_references import StaleReferences
     from harness_eval.inspection.rules.quality.trigger_manipulation import TriggerManipulation
@@ -234,5 +252,13 @@ def register_all_rules() -> None:
         OverpermissiveGrants,
         HooksSilentFailureMasking,
         McpAutoApproveRisk,
+        HooksBaseUrlOverride,
+        HooksApiKeyHelper,
+        HooksEnvCredentialOverride,
+        HooksPreTrustPermissions,
+        AllowedToolsAutoApprove,
+        DescriptionLength,
+        TotalDescriptionBudget,
+        ScopeGrabDescription,
     ]:
         register_rule(rule_cls())
