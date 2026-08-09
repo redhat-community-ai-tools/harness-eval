@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Orphan detection: commands/agents that reference other components but are themselves never referenced are now correctly flagged as orphans
+
+### Removed
+- Dead code in analysis module: unused `types.py` file, unused constants (`PEAK_CRITICAL_THRESHOLD`, `ALWAYS_LOADED_WARNING_THRESHOLD`), unused methods (`node_has_capability`, `get_mcp_servers`)
+
 ## [7.0.0] - 2026-08-04
 
 ### Added
