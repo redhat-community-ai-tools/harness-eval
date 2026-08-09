@@ -274,7 +274,6 @@ def lint(
     diagnostics = _parse_errors_to_findings(
         skill.parse_errors,
         skill.skill_md_path,
-        category=skill.parse_errors[0] if skill.parse_errors else "structural",
     )
 
     rule_diags, suppression_count, rules_run = _run_rules(

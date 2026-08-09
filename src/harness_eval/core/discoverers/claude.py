@@ -301,8 +301,9 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
         seen_paths: set[str] = set()
         deduped = []
         for c in results:
-            if c.path not in seen_paths:
-                seen_paths.add(c.path)
+            resolved = str(Path(c.path).resolve())
+            if resolved not in seen_paths:
+                seen_paths.add(resolved)
                 deduped.append(c)
         return deduped
 

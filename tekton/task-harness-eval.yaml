@@ -3,7 +3,7 @@ kind: Task
 metadata:
   name: harness-eval
   labels:
-    app.kubernetes.io/version: "7.2.0"
+    app.kubernetes.io/version: "7.3.0"
   annotations:
     tekton.dev/displayName: "harness-eval"
     tekton.dev/categories: Security
@@ -33,14 +33,17 @@ spec:
       type: string
       default: "strict"
       description: "Enforcement mode: strict (fail on findings), advisory (report only), off (skip)."
+      enum: ["strict", "advisory", "off"]
     - name: format
       type: string
       default: "terminal"
       description: "Output format: terminal, json, sarif."
+      enum: ["terminal", "json", "sarif"]
     - name: recursive
       type: string
       default: "false"
       description: Recursively search subdirectories for agent configs.
+      enum: ["true", "false"]
     - name: exclude
       type: string
       default: ""
@@ -54,98 +57,131 @@ spec:
     - name: lint
       image: $(params.image)
       workingDir: $(workspaces.source.path)
+      env:
+        - name: HOME
+          value: /tmp
+        - name: PARAM_COMMANDS
+          value: $(params.commands)
+        - name: PARAM_PATH
+          value: $(params.path)
+        - name: PARAM_ENFORCE
+          value: $(params.enforce)
+        - name: PARAM_FORMAT
+          value: $(params.format)
+        - name: PARAM_RECURSIVE
+          value: $(params.recursive)
+        - name: PARAM_EXCLUDE
+          value: $(params.exclude)
+        - name: WORKSPACE_PATH
+          value: $(workspaces.source.path)
       script: |
         #!/usr/bin/env bash
         set -euo pipefail
 
-        if ! echo "$(params.commands)" | grep -q "lint"; then
+        if ! echo "${PARAM_COMMANDS}" | grep -q "lint"; then
           echo "Skipping lint (not in commands list)"
           exit 0
         fi
 
-        SCAN_PATH="$(workspaces.source.path)/$(params.path)"
+        SCAN_PATH="${WORKSPACE_PATH}/${PARAM_PATH}"
 
-        CMD="harness-eval lint ${SCAN_PATH}"
-        CMD="${CMD} --enforce $(params.enforce)"
-        CMD="${CMD} --format $(params.format)"
-        CMD="${CMD} --report-card $(workspaces.source.path)/harness-eval-report-card.json"
+        CMD=(harness-eval lint "${SCAN_PATH}")
+        CMD+=(--enforce "${PARAM_ENFORCE}")
+        CMD+=(--format "${PARAM_FORMAT}")
+        CMD+=(--report-card "${WORKSPACE_PATH}/harness-eval-report-card.json")
 
-        if [ "$(params.recursive)" = "true" ]; then
-          CMD="${CMD} --recursive"
+        if [ "${PARAM_RECURSIVE}" = "true" ]; then
+          CMD+=(--recursive)
         fi
 
-        EXCLUDE="$(params.exclude)"
-        if [ -n "${EXCLUDE}" ]; then
-          IFS=',' read -ra PATTERNS <<< "${EXCLUDE}"
+        if [ -n "${PARAM_EXCLUDE}" ]; then
+          IFS=',' read -ra PATTERNS <<< "${PARAM_EXCLUDE}"
           for pat in "${PATTERNS[@]}"; do
-            CMD="${CMD} --exclude ${pat}"
+            CMD+=(--exclude "${pat}")
           done
         fi
 
-        echo "Running: ${CMD}"
-        ${CMD}
-      env:
-        - name: HOME
-          value: /tmp
+        echo "Running: ${CMD[*]}"
+        "${CMD[@]}"
 
     - name: security
       image: $(params.image)
       workingDir: $(workspaces.source.path)
+      env:
+        - name: HOME
+          value: /tmp
+        - name: PARAM_COMMANDS
+          value: $(params.commands)
+        - name: PARAM_PATH
+          value: $(params.path)
+        - name: PARAM_ENFORCE
+          value: $(params.enforce)
+        - name: PARAM_FORMAT
+          value: $(params.format)
+        - name: PARAM_RECURSIVE
+          value: $(params.recursive)
+        - name: PARAM_EXCLUDE
+          value: $(params.exclude)
+        - name: WORKSPACE_PATH
+          value: $(workspaces.source.path)
       script: |
         #!/usr/bin/env bash
         set -euo pipefail
 
-        if ! echo "$(params.commands)" | grep -q "security"; then
+        if ! echo "${PARAM_COMMANDS}" | grep -q "security"; then
           echo "Skipping security (not in commands list)"
           exit 0
         fi
 
-        SCAN_PATH="$(workspaces.source.path)/$(params.path)"
+        SCAN_PATH="${WORKSPACE_PATH}/${PARAM_PATH}"
 
-        CMD="harness-eval security ${SCAN_PATH}"
-        CMD="${CMD} --enforce $(params.enforce)"
-        CMD="${CMD} --format $(params.format)"
+        CMD=(harness-eval security "${SCAN_PATH}")
+        CMD+=(--enforce "${PARAM_ENFORCE}")
+        CMD+=(--format "${PARAM_FORMAT}")
 
-        if [ "$(params.recursive)" = "true" ]; then
-          CMD="${CMD} --recursive"
+        if [ "${PARAM_RECURSIVE}" = "true" ]; then
+          CMD+=(--recursive)
         fi
 
-        EXCLUDE="$(params.exclude)"
-        if [ -n "${EXCLUDE}" ]; then
-          IFS=',' read -ra PATTERNS <<< "${EXCLUDE}"
+        if [ -n "${PARAM_EXCLUDE}" ]; then
+          IFS=',' read -ra PATTERNS <<< "${PARAM_EXCLUDE}"
           for pat in "${PATTERNS[@]}"; do
-            CMD="${CMD} --exclude ${pat}"
+            CMD+=(--exclude "${pat}")
           done
         fi
 
-        echo "Running: ${CMD}"
-        ${CMD}
-      env:
-        - name: HOME
-          value: /tmp
+        echo "Running: ${CMD[*]}"
+        "${CMD[@]}"
 
     - name: extract-results
       image: $(params.image)
       workingDir: $(workspaces.source.path)
+      env:
+        - name: HOME
+          value: /tmp
+        - name: WORKSPACE_PATH
+          value: $(workspaces.source.path)
       script: |
         #!/usr/bin/env bash
         set -euo pipefail
 
-        REPORT="$(workspaces.source.path)/harness-eval-report-card.json"
+        REPORT="${WORKSPACE_PATH}/harness-eval-report-card.json"
 
         if [ -f "${REPORT}" ]; then
           VERDICT=$(python3 -c "
         import json, sys
-        r = json.load(open('${REPORT}'))
+        with open(sys.argv[1]) as f:
+            r = json.load(f)
         t = r.get('certification_tier', 'unknown')
         print({'hardened':'CLEAN','verified':'CLEAN','basic':'NEEDS_WORK','unknown':'UNKNOWN'}.get(t.lower(), 'BLOCKED'))
-        " 2>/dev/null || echo "UNKNOWN")
+        " "${REPORT}" 2>/dev/null || echo "UNKNOWN")
 
           GRADE=$(python3 -c "
-        import json
-        r = json.load(open('${REPORT}'))
+        import json, sys
+        with open(sys.argv[1]) as f:
+            r = json.load(f)
         print(r.get('grade', 'N/A'))
-        " 2>/dev/null || echo "N/A")
+        " "${REPORT}" 2>/dev/null || echo "N/A")
         else
           VERDICT="UNKNOWN"
           GRADE="N/A"
@@ -154,6 +190,3 @@ spec:
         printf "%s" "${VERDICT}" > $(results.verdict.path)
         printf "%s" "${GRADE}" > $(results.grade.path)
         echo "Verdict: ${VERDICT} | Grade: ${GRADE}"
-      env:
-        - name: HOME
-          value: /tmp

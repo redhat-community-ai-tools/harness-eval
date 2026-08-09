@@ -35,8 +35,10 @@ def apply_fixes(diagnostics: list[Finding], project_root: Path | None = None) ->
         if project_root is not None and not is_within(path, project_root):
             continue
 
-        content = path.read_text()
-        lines = content.split("\n")
+        raw_bytes = path.read_bytes()
+        line_ending = "\r\n" if b"\r\n" in raw_bytes else "\n"
+        content = raw_bytes.decode("utf-8", errors="replace")
+        lines = content.split(line_ending)
         rule_ids = []
 
         sorted_diags = sorted(
@@ -54,7 +56,7 @@ def apply_fixes(diagnostics: list[Finding], project_root: Path | None = None) ->
             lines[line_num - 1] = diag.fix.replacement
             rule_ids.append(diag.rule_id)
 
-        path.write_text("\n".join(lines))
+        path.write_text(line_ending.join(lines), encoding="utf-8")
         results.append(
             FixResult(
                 file_path=file_path,
