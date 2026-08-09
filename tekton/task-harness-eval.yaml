@@ -3,7 +3,7 @@ kind: Task
 metadata:
   name: harness-eval
   labels:
-    app.kubernetes.io/version: "6.4.0"
+    app.kubernetes.io/version: "7.1.0"
   annotations:
     tekton.dev/displayName: "harness-eval"
     tekton.dev/categories: Security

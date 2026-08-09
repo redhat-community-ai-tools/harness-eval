@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.1.0] - 2026-08-09
+
 ### Fixed
 - Orphan detection: commands/agents that reference other components but are themselves never referenced are now correctly flagged as orphans
 
