@@ -76,9 +76,7 @@ class RubricChecker:
         if not categories:
             return [RubricResult(component_name=cn, component_type=ct) for ct, cn, _ in components]
 
-        safe_components = [
-            (ct, cn, redact_secrets(cc)) for ct, cn, cc in components
-        ]
+        safe_components = [(ct, cn, redact_secrets(cc)) for ct, cn, cc in components]
         prompt = build_batch_prompt(
             safe_components,
             categories,

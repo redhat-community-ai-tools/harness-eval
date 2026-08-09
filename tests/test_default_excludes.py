@@ -10,9 +10,7 @@ from harness_eval.core.setup import DEFAULT_SCAN_EXCLUDES, discover_setup
 def _make_skill(tmp: Path, name: str) -> None:
     skill_dir = tmp / "skills" / name
     skill_dir.mkdir(parents=True, exist_ok=True)
-    (skill_dir / "SKILL.md").write_text(
-        f"---\nname: {name}\ndescription: Test skill\n---\n\nTest."
-    )
+    (skill_dir / "SKILL.md").write_text(f"---\nname: {name}\ndescription: Test skill\n---\n\nTest.")
 
 
 class TestDefaultScanExcludes:
