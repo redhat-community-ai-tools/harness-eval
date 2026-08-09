@@ -1,3 +1,3 @@
 """harness-eval: Evaluate and compare AI agent setups."""
 
-__version__ = "7.2.0"
+__version__ = "7.3.0"
