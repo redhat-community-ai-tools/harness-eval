@@ -6,9 +6,9 @@
 [![Rules](https://img.shields.io/badge/rules-84-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-Evaluate AI code agent setups for best practices, redundancy, security, and cross-component issues.
+A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, OpenCode), builds a component graph across all of them, and runs 84 deterministic rules to catch issues that per-file linters miss: credential exfiltration chains, confused deputy attacks, skill/hook conflicts, and token budget blowouts.
 
-Most tools test whether a skill produces correct output. This tool checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`.
+Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`.
 
 ## Quick start
 
@@ -32,9 +32,19 @@ Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift P
 | `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: `[llm]` extra or in-session. |
 | `rules` | List all rules. Filter by `--category` or `--target`. | No |
 
-## Supported AI tools
+## Cross-component analysis
 
-Auto-detects which tool(s) a project uses and evaluates all discovered components together. Multi-tool projects are fully supported.
+This is the core differentiator. Most linters check files in isolation. harness-eval builds a component graph that traces data flows across skills, agents, hooks, and MCP servers, then runs cross-component rules against it. This catches classes of issues that per-file analysis cannot:
+
+- A hook reads credentials from env, passes them to a skill, which forwards them to an MCP server with broad network access
+- A command's `allowed_tools` list doesn't cover the tools its instructions actually use
+- Settings.json `permissions.deny` blocks a tool that CLAUDE.md instructs the agent to use
+- Two assistants' instruction files (CLAUDE.md and GEMINI.md) have drifted apart
+- A skill is defined but never referenced from any instruction file (orphan)
+
+Multi-tool projects are fully supported. When a project uses both Claude Code and Cursor, all components are evaluated together.
+
+## Supported AI tools
 
 | Assistant | What it discovers |
 |-----------|------------------|
@@ -50,8 +60,6 @@ Auto-detects which tool(s) a project uses and evaluates all discovered component
 ## Inspection rules
 
 84 deterministic rules across 11 categories: structural, frontmatter, content, quality, security, cross-component, commands, CLAUDE.md, MCP, hooks, and agents. Four presets: `recommended` (default), `strict`, `security`, `pre-workflow`.
-
-Cross-component analysis is the core differentiator. Most linters check files in isolation; harness-eval builds a component graph that traces data flows across skills, agents, hooks, and MCP servers. This catches threats like credential exfiltration chains and confused deputy attacks.
 
 For the complete rule list with examples, detection techniques, and framework mappings (OWASP, MITRE ATLAS), see [`docs/rules-reference.md`](docs/rules-reference.md).
 

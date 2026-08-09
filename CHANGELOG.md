@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ## [7.3.0] - 2026-08-09
 
+### Changed
+- README: lead with cross-component analysis and multi-tool auto-detection as the value prop; moved cross-component section above supported tools with concrete examples
+
 ### Fixed
 - Parse error findings now use correct `structural` category instead of the error message string
 - Parsers (`_read_and_parse`, `parse_claude_md`, `parse_hooks`) now specify `encoding="utf-8", errors="replace"` to prevent `UnicodeDecodeError` on non-UTF-8 files
