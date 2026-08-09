@@ -12,6 +12,7 @@ from harness_eval.cli import cli
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
+from harness_eval.utils.redact import redact_secrets
 
 
 @cli.command("skill")
@@ -86,7 +87,7 @@ def eval_skill(
                 name="context", path=context_path, user_config_dir=user_config
             )
             parts = [
-                f"[{c.component_type.value}] {c.name}: {c.content[:200]}"
+                f"[{c.component_type.value}] {c.name}: {redact_secrets(c.content)[:200]}"
                 for c in ctx_setup.components
             ]
             context_text = "\n".join(parts)

@@ -14,6 +14,28 @@ from harness_eval.core.types import (
     Setup,
 )
 
+# ponytail: default excludes keep credential files out of scan copies (HE-3).
+DEFAULT_SCAN_EXCLUDES: tuple[str, ...] = (
+    "**/.env",
+    "**/.env.*",
+    "**/credentials/**",
+    "**/credentials.*",
+    "**/*.pem",
+    "**/*.key",
+    "**/*id_rsa*",
+)
+
+
+def merge_scan_excludes(user_excludes: tuple[str, ...] = ()) -> tuple[str, ...]:
+    """Return default credential excludes plus any user-supplied patterns."""
+    if not user_excludes:
+        return DEFAULT_SCAN_EXCLUDES
+    merged = list(DEFAULT_SCAN_EXCLUDES)
+    for pattern in user_excludes:
+        if pattern not in merged:
+            merged.append(pattern)
+    return tuple(merged)
+
 
 def _matches_exclude(component_path: str, root: Path, patterns: tuple[str, ...]) -> bool:
     """Check if a component path matches any exclude pattern."""
@@ -44,6 +66,7 @@ def discover_setup(
         raise FileNotFoundError(f"Setup path does not exist: {path}")
 
     user_dir = Path(user_config_dir) if user_config_dir else None
+    exclude = merge_scan_excludes(exclude)
 
     components: list[ParsedComponent] = []
 

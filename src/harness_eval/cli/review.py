@@ -13,6 +13,7 @@ from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
 from harness_eval.rubric.types import RubricResult
+from harness_eval.utils.redact import redact_secrets
 
 
 @cli.command("review")
@@ -47,7 +48,8 @@ def eval_setup_review(
     checker = RubricChecker(client)
 
     context_parts = [
-        f"[{c.component_type.value}] {c.name}: {c.content[:200]}" for c in setup.components
+        f"[{c.component_type.value}] {c.name}: {redact_secrets(c.content)[:200]}"
+        for c in setup.components
     ]
     context_text = "\n".join(context_parts)
 

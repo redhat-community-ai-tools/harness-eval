@@ -55,7 +55,16 @@ For the complete rule list with examples, detection techniques, and framework ma
 
 ## Privacy
 
-`lint` and `security` (without `--review`) are fully offline. `review`, `security --review`, and `skill --rubric` send code snippets to an LLM provider (Gemini or Anthropic API via CLI, or in-session when used as a plugin/command). See [`docs/how-can-you-know-its-safe-to-use-this-tool.md`](docs/how-can-you-know-its-safe-to-use-this-tool.md) for details.
+`lint` and `security` (without `--review`) are fully offline. **LLM review is opt-in:**
+only `review`, `security --review`, and `skill --rubric` send snippets to a remote
+provider (Gemini or Anthropic via CLI, or in-session as a plugin/command).
+
+Before any remote LLM call, likely secrets (tokens, PEM keys, `API_KEY=` assignments,
+known prefix patterns) are replaced with `[REDACTED]` (HE-2). Scans also skip `.env`,
+`credentials` paths, and `*.pem` / `*.key` / `id_rsa` globs by default (HE-3); add
+more with `--exclude`.
+
+See [`docs/how-can-you-know-its-safe-to-use-this-tool.md`](docs/how-can-you-know-its-safe-to-use-this-tool.md) for details.
 
 ## Contributing
 
