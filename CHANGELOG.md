@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.2.0] - 2026-08-09
+
 ### Added
 - Windsurf discovery: `.windsurfrules` and `.windsurf/rules/*.md` mapped to CLAUDE_MD (#30)
 - Cline discovery: `.clinerules` file or `.clinerules/*.md` directory mapped to CLAUDE_MD (#30)
