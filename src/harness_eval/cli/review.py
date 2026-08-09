@@ -12,6 +12,7 @@ from harness_eval.cli import cli
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
+from harness_eval.rubric.types import RubricResult
 from harness_eval.utils.redact import redact_secrets
 
 

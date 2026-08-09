@@ -467,7 +467,7 @@ def eval_setup_security(
                     {
                         "rule_id": d.rule_id,
                         "severity": d.severity.value,
-                        "message": d.message,
+                        "message": redact_secrets(d.message),
                     }
                     for d in r.diagnostics
                 ]
