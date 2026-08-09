@@ -29,7 +29,7 @@ def list_files(directory: Path) -> list[str]:
 
 def _read_and_parse(path: Path) -> tuple[str, object, list[str]]:
     """Read a file and parse its frontmatter. Returns (raw_content, frontmatter_result, errors)."""
-    raw_content = path.read_text()
+    raw_content = path.read_text(encoding="utf-8", errors="replace")
     fm = parse_frontmatter_rich(raw_content)
     return raw_content, fm, fm.errors
 
@@ -193,7 +193,7 @@ def parse_claude_md(file_path: str) -> ParsedClaudeMd:
             parse_errors=[f"File not found: {file_path}"],
         )
 
-    raw_content = path.read_text()
+    raw_content = path.read_text(encoding="utf-8", errors="replace")
     lines = raw_content.split("\n")
 
     sections: list[dict[str, str]] = []
@@ -242,7 +242,7 @@ def parse_hooks(settings_path: str) -> ParsedHooks:
             parse_errors=[f"File not found: {settings_path}"],
         )
 
-    raw_content = path.read_text()
+    raw_content = path.read_text(encoding="utf-8", errors="replace")
     try:
         data = json_mod.loads(raw_content)
     except json_mod.JSONDecodeError as e:

@@ -154,7 +154,7 @@ def eval_setup_review(
         click.echo(f"Setup Review: {setup.name}")
         click.echo(f"{'=' * 60}")
         click.echo(f"Components: {len(setup.components)}")
-        click.echo(f"Provider: {provider} | Model: {model or 'default'}")
+        click.echo(f"Provider: {provider} | Model: {client.model}")
         click.echo("")
 
         for rr in rubric_results:

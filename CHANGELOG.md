@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.3.0] - 2026-08-09
+
+### Fixed
+- Parse error findings now use correct `structural` category instead of the error message string
+- Parsers (`_read_and_parse`, `parse_claude_md`, `parse_hooks`) now specify `encoding="utf-8", errors="replace"` to prevent `UnicodeDecodeError` on non-UTF-8 files
+- Auto-fix (`fixer.py`) preserves original line endings (CRLF/LF) instead of unconditionally normalizing to LF
+- `lint --output` flag now works with terminal format (was silently ignored, only JSON/SARIF honored it)
+- MCP config deduplication in Claude discoverer now uses resolved paths, consistent with other discoverers
+- `review` command terminal output now shows the effective model name instead of the CLI argument
+
+### Security
+- Tekton task: replaced string-concatenated shell commands with bash arrays to prevent command injection via parameters; added `enum` constraints on `enforce`, `format`, and `recursive` params; extract-results step now passes file path as `sys.argv[1]` instead of interpolating into Python code
+
 ## [7.2.0] - 2026-08-09
 
 ### Added

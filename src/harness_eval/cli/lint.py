@@ -166,8 +166,8 @@ def eval_setup_lint(
             data["metadata"] = metadata.to_dict()
             emit_output(json_mod.dumps(data, indent=2), output_path)
         else:
-            click.echo(format_terminal(system, results))
-            click.echo(metadata.format_terminal())
+            text = format_terminal(system, results) + "\n" + metadata.format_terminal()
+            emit_output(text, output_path)
     else:
         results = _inspect_single_file(target, config_rules)
 
@@ -205,17 +205,19 @@ def eval_setup_lint(
         else:
             total_errors = sum(r.error_count for r in results)
             total_warnings = sum(r.warning_count for r in results)
+            lines_out = []
             for r in results:
                 if r.diagnostics:
-                    click.echo(f"\n{r.target_type}/{r.target_name} ({r.tokens} tokens):")
+                    lines_out.append(f"\n{r.target_type}/{r.target_name} ({r.tokens} tokens):")
                     for d in r.diagnostics:
                         icon = "X" if d.severity.value == "error" else "!"
-                        click.echo(f"  [{icon}] {d.rule_id}: {d.message}")
-            click.echo(
+                        lines_out.append(f"  [{icon}] {d.rule_id}: {d.message}")
+            lines_out.append(
                 f"\n{len(results)} components scanned, "
                 f"{total_errors} errors, {total_warnings} warnings"
             )
-            click.echo(metadata.format_terminal())
+            lines_out.append(metadata.format_terminal())
+            emit_output("\n".join(lines_out), output_path)
 
     all_findings = [d for r in results for d in r.diagnostics]
     fixable_count = sum(1 for d in all_findings if d.fix is not None)
