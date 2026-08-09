@@ -18,9 +18,7 @@ def main() -> None:
     from harness_eval.inspection.engine import inspect_setup
     from harness_eval.inspection.registry import get_all_rules
 
-    setup = discover_setup(
-        name=Path(setup_path).name, path=setup_path, user_config_dir=user_config
-    )
+    setup = discover_setup(name=Path(setup_path).name, path=setup_path, user_config_dir=user_config)
     results = inspect_setup(setup, SECURITY)
 
     skip_rules = {"security/yara-signatures", "security/cve-lookup"}
@@ -29,7 +27,11 @@ def main() -> None:
 
     for r in results:
         for d in r.diagnostics:
-            if d.rule_id in skip_rules and d.severity.value == "info" and d.message not in seen_skip:
+            if (
+                d.rule_id in skip_rules
+                and d.severity.value == "info"
+                and d.message not in seen_skip
+            ):
                 seen_skip.add(d.message)
                 skip_notices.append(d.message)
 

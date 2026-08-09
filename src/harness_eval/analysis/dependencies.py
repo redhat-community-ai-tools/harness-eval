@@ -92,7 +92,6 @@ def analyze_dependencies(setup: Setup) -> DependencyReport:
     referenced_names = set()
     for e in deduped:
         referenced_names.add(e.target_name)
-        referenced_names.add(e.source_name)
 
     orphans = []
     # Skills are activated by description matching, not by explicit references,
