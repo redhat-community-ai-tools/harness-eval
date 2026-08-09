@@ -15,6 +15,7 @@ from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ParsedComponent
 from harness_eval.inspection.types import AdjudicatedFinding, Finding, InspectionResult, Severity
 from harness_eval.output.metadata import EvalMetadata
+from harness_eval.utils.redact import redact_secrets
 
 
 @dataclass(frozen=True)
@@ -471,7 +472,10 @@ def eval_setup_security(
                     for d in r.diagnostics
                 ]
                 prompt = build_adjudication_prompt(
-                    r.target_type, r.target_name, comp.content, findings_data
+                    r.target_type,
+                    r.target_name,
+                    redact_secrets(comp.content),
+                    findings_data,
                 )
                 try:
                     response = client.generate(ADJUDICATION_SYSTEM, prompt)
@@ -487,7 +491,8 @@ def eval_setup_security(
             adjudicated = True
 
         context_parts = [
-            f"[{c.component_type.value}] {c.name}: {c.content[:200]}" for c in setup.components
+            f"[{c.component_type.value}] {c.name}: {redact_secrets(c.content)[:200]}"
+            for c in setup.components
         ]
         context_text = "\n".join(context_parts)
 

@@ -9,6 +9,7 @@ from harness_eval.rubric.dimensions import CATEGORIES_BY_TYPE
 from harness_eval.rubric.prompts import SYSTEM_PROMPT, build_batch_prompt, build_issue_prompt
 from harness_eval.rubric.types import IssueCategory, RubricIssue, RubricResult
 from harness_eval.utils.llm import LLMClient
+from harness_eval.utils.redact import redact_secrets
 
 _ISSUE_WITH_IMPACT_RE = re.compile(
     r"ISSUE:\s*(.+?)\s*\|\s*CATEGORY:\s*(\S+)\s*\|\s*SEVERITY:\s*(\S+)\s*\|\s*EVIDENCE:\s*(.+?)\s*\|\s*SUGGESTION:\s*(.+?)\s*\|\s*IMPACT:\s*(.+)"
@@ -52,9 +53,9 @@ class RubricChecker:
         prompt = build_issue_prompt(
             component_type=component_type,
             component_name=component_name,
-            content=content,
+            content=redact_secrets(content),
             categories=categories,
-            context=context,
+            context=redact_secrets(context) if context else None,
         )
 
         response = self.client.generate(SYSTEM_PROMPT, prompt)
@@ -75,7 +76,14 @@ class RubricChecker:
         if not categories:
             return [RubricResult(component_name=cn, component_type=ct) for ct, cn, _ in components]
 
-        prompt = build_batch_prompt(components, categories, context)
+        safe_components = [
+            (ct, cn, redact_secrets(cc)) for ct, cn, cc in components
+        ]
+        prompt = build_batch_prompt(
+            safe_components,
+            categories,
+            redact_secrets(context) if context else None,
+        )
         response = self.client.generate(SYSTEM_PROMPT, prompt)
         return self._parse_batch_response(response, components)
 
