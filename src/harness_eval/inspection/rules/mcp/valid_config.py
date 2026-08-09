@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules.mcp._shared import extract_servers
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -23,8 +24,8 @@ class McpValidConfig:
         messages={
             "invalid_json": "MCP config is not valid JSON: {{error}}",
             "not_object": "MCP config root must be a JSON object",
-            "missing_servers": "MCP config has no 'mcpServers' key",
-            "servers_not_object": "'mcpServers' must be a JSON object, got {{actual_type}}",
+            "missing_servers": "MCP config has no 'mcpServers' or 'mcp' key",
+            "servers_not_object": "MCP servers must be a JSON object, got {{actual_type}}",
             "server_no_transport": "Server '{{name}}' has no 'command' (stdio) or 'url' (HTTP/SSE)",
             "args_not_array": "Server '{{name}}': 'args' must be an array, got {{actual_type}}",
             "env_not_object": "Server '{{name}}': 'env' must be an object, got {{actual_type}}",
@@ -55,7 +56,7 @@ class McpValidConfig:
             context.report(ReportDescriptor(message_id="not_object", location=loc))
             return
 
-        servers = data.get("mcpServers")
+        servers = extract_servers(data)
         if servers is None:
             context.report(ReportDescriptor(message_id="missing_servers", location=loc))
             return

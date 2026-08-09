@@ -1,0 +1,6 @@
+---
+name: project-rules
+---
+# Project rules
+
+Use PEP 8 for all Python code. Prefer explicit over implicit.

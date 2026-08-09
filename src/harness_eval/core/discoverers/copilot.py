@@ -24,12 +24,14 @@ class CopilotDiscoverer(ToolDiscoverer):
             (root / ".github" / "prompts").is_dir()
             or (root / ".github" / "agents").is_dir()
             or (root / ".github" / "skills").is_dir()
+            or (root / ".github" / "copilot-instructions.md").is_file()
         )
 
     def discover(
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[ParsedComponent]:
         results: list[ParsedComponent] = []
+        results.extend(self._discover_instructions(root))
         results.extend(self._discover_skills(root, recursive=recursive))
         results.extend(self._discover_commands(root, recursive=recursive))
         results.extend(self._discover_agents(root, recursive=recursive))
@@ -39,6 +41,10 @@ class CopilotDiscoverer(ToolDiscoverer):
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[Path]:
         paths: list[Path] = []
+
+        instructions = root / ".github" / "copilot-instructions.md"
+        if instructions.is_file():
+            paths.append(instructions)
 
         # Copilot skills
         copilot_skills = root / ".github" / "skills"
@@ -70,6 +76,19 @@ class CopilotDiscoverer(ToolDiscoverer):
                 paths.append(f)
 
         return paths
+
+    def _discover_instructions(self, root: Path) -> list[ParsedComponent]:
+        instructions = root / ".github" / "copilot-instructions.md"
+        if instructions.is_file():
+            return [
+                parse_file(
+                    instructions,
+                    ComponentType.CLAUDE_MD,
+                    name="copilot-instructions",
+                    source_tool="copilot",
+                )
+            ]
+        return []
 
     def _discover_skills(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
         results = []

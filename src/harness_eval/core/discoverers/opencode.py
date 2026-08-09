@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from harness_eval.core.discoverers.base import ToolDiscoverer, _recursive_glob, parse_file
+from harness_eval.core.discoverers.base import (
+    ToolDiscoverer,
+    _json_top_level_keys,
+    _recursive_glob,
+    parse_file,
+)
 from harness_eval.core.types import ComponentType, ParsedComponent
 
 
@@ -26,7 +31,12 @@ class OpenCodeDiscoverer(ToolDiscoverer):
         Claude Code, OpenCode) so it is attributed as "agents-md" rather than
         "opencode".  The .opencode/ directory is OpenCode-specific.
         """
-        return (root / "AGENTS.md").is_file() or (root / ".opencode").is_dir()
+        return (
+            (root / "AGENTS.md").is_file()
+            or (root / ".opencode").is_dir()
+            or (root / "opencode.json").is_file()
+            or (root / "opencode.jsonc").is_file()
+        )
 
     def discover(
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
@@ -35,6 +45,7 @@ class OpenCodeDiscoverer(ToolDiscoverer):
         results.extend(self._discover_instructions(root, recursive=recursive))
         results.extend(self._discover_commands(root, recursive=recursive))
         results.extend(self._discover_agents(root, recursive=recursive))
+        results.extend(self._discover_mcp(root))
         return results
 
     def collect_paths(
@@ -69,6 +80,11 @@ class OpenCodeDiscoverer(ToolDiscoverer):
         if recursive:
             for f in _recursive_glob(root, ".opencode/agents/*.md"):
                 paths.append(f)
+
+        for cfg_name in ("opencode.json", "opencode.jsonc"):
+            cfg = root / cfg_name
+            if cfg.is_file():
+                paths.append(cfg)
 
         return paths
 
@@ -126,3 +142,20 @@ class OpenCodeDiscoverer(ToolDiscoverer):
                     seen_paths.add(resolved)
                     results.append(parse_file(f, ComponentType.AGENT, source_tool="opencode"))
         return results
+
+    def _discover_mcp(self, root: Path) -> list[ParsedComponent]:
+        # OpenCode stores MCP servers in opencode.json(c) under the 'mcp' key.
+        # Only emit an MCP config component when that key is present so that
+        # non-MCP OpenCode configs are not misclassified.
+        for cfg_name in ("opencode.json", "opencode.jsonc"):
+            cfg = root / cfg_name
+            if cfg.is_file() and "mcp" in _json_top_level_keys(cfg):
+                return [
+                    parse_file(
+                        cfg,
+                        ComponentType.MCP_CONFIG,
+                        name=cfg_name,
+                        source_tool="opencode",
+                    )
+                ]
+        return []
