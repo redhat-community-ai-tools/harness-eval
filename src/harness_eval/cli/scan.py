@@ -33,6 +33,22 @@ def scan_skill(path: str, fmt: str, fail_on_error: bool, fail_on_warning: bool) 
 
     setup = discover_setup(name=target.name, path=str(target))
 
+    if not setup.components and (target / "SKILL.md").exists():
+        from harness_eval.core.types import ComponentType
+        from harness_eval.inspection.parsers import parse_skill
+
+        skill = parse_skill(str(target))
+        from harness_eval.core.types import ParsedComponent
+
+        setup.components.append(
+            ParsedComponent(
+                name=skill.dir_name,
+                component_type=ComponentType.SKILL,
+                path=skill.skill_md_path,
+                content=skill.raw_content,
+            )
+        )
+
     if not setup.components:
         click.echo(f"No agent components found in {path}.", err=True)
         raise SystemExit(1)

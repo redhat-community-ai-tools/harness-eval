@@ -16,7 +16,7 @@ Ask the user: print the report in conversation, or write to a file?
 ## Step 2: Run Deterministic Security Scan
 
 ```bash
-harness-eval security .
+harness-eval harness-security .
 ```
 
 If `harness-eval` is not installed, try `pip install harness-eval` first.

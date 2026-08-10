@@ -23,7 +23,7 @@ Determine the skill path from $ARGUMENTS. If the user says a skill name, find it
 ## Step 3: Run Lint
 
 ```bash
-harness-eval skill <skill-path> --context .
+harness-eval skill-review <skill-path> --context .
 ```
 
 If `harness-eval` is not installed, try `pip install harness-eval` first.

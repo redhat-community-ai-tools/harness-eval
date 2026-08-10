@@ -199,6 +199,10 @@ def load_yaml_rules(search_paths: list[Path] | None = None) -> int:
     if default_dir.is_dir():
         paths.insert(0, default_dir)
 
+    project_dir = Path.cwd() / ".harness-eval" / "rules"
+    if project_dir.is_dir() and project_dir not in paths:
+        paths.append(project_dir)
+
     total = 0
     for p in paths:
         total += load_yaml_rules_from_dir(p)

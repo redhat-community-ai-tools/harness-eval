@@ -17,7 +17,7 @@ Ask the user: print the report in conversation, or write to a file?
 Run the deterministic scan first to get structural data:
 
 ```bash
-harness-eval lint . --format json
+harness-eval harness-lint . --format json
 ```
 
 If `harness-eval` is not installed, try `pip install harness-eval` first.

@@ -148,10 +148,10 @@ Run harness-eval as a CI gate in OpenShift Pipelines. Requires the OpenShift Pip
 
 ```bash
 # Build the image
-podman build -t harness-eval:7.5.0 -f Containerfile .
+podman build -t harness-eval:7.7.1 -f Containerfile .
 
 # Push to your registry (internal OpenShift, quay.io, etc.)
-podman push harness-eval:7.5.0 <your-registry>/harness-eval:7.5.0
+podman push harness-eval:7.7.1 <your-registry>/harness-eval:7.7.1
 
 # Apply the Task and Pipeline
 oc apply -f tekton/task-harness-eval.yaml
@@ -173,11 +173,12 @@ No pip install needed. Install directly from within Claude Code:
 /reload-plugins
 ```
 
-The 4 commands appear in the `/` menu:
-- `/harness-eval:lint`
-- `/harness-eval:review`
-- `/harness-eval:security`
-- `/harness-eval:skill`
+The 5 commands appear in the `/` menu:
+- `/harness-eval:harness-lint`
+- `/harness-eval:harness-review`
+- `/harness-eval:harness-security`
+- `/harness-eval:skill-review`
+- `/harness-eval:skill-verify`
 
 No API key needed. Claude evaluates in-session.
 
@@ -191,10 +192,11 @@ Requires the CLI tool installed first (Cursor commands call it for the determini
 pip install harness-eval
 ```
 
-Then copy `.cursor/commands/` from [this repo](https://github.com/redhat-community-ai-tools/harness-eval) into your project. The 4 commands appear in Cursor's command palette:
-- `/lint`
-- `/review`
-- `/security`
-- `/skill`
+Then copy `.cursor/commands/` from [this repo](https://github.com/redhat-community-ai-tools/harness-eval) into your project. The 5 commands appear in Cursor's command palette:
+- `/harness-lint`
+- `/harness-review`
+- `/harness-security`
+- `/skill-review`
+- `/skill-verify`
 
-No API key needed for review/security/skill. Cursor evaluates in-session.
+No API key needed for harness-review/harness-security/skill-review. Cursor evaluates in-session.

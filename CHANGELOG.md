@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Cursor commands broken**: `.cursor/commands/*.md` bodies referenced old CLI names (`harness-eval lint` instead of `harness-eval harness-lint`). All 5 Cursor commands updated.
+- **`skill-verify` fails on bare skill directories**: now falls back to parsing as a single skill when `SKILL.md` exists but `discover_setup` finds no components.
+- **YAML custom rules unusable for pip users**: now also loads from `.harness-eval/rules/` in the project directory, not just the installed package's internal `rules/custom/`.
+- **Command surface drift shipped uncaught**: added `sync_commands.py --check` to CI lint job.
+- **INSTALL.md docs drift**: updated plugin command names, Cursor command names, added `skill-verify` to command lists, fixed Tekton build version.
+
 ## [7.7.0] - 2026-08-10
 
 ### Added
