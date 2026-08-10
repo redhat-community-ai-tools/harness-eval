@@ -29,6 +29,10 @@ jobs:
       - name: Ruff format
         run: uv run ruff format --check src/ tests/
 
+      - name: Mypy type check
+        continue-on-error: true
+        run: uv run mypy src/ --ignore-missing-imports
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -56,6 +60,29 @@ jobs:
 
       - name: Run tests with coverage
         run: uv run pytest -v --cov=src --cov-report=term-missing --cov-fail-under=70
+
+  changelog:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check CHANGELOG.md updated
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          if echo "$TITLE" | grep -qiE '^(feat|fix|refactor|perf|security)'; then
+            if git diff --name-only origin/main...HEAD | grep -q '^CHANGELOG.md$'; then
+              echo "CHANGELOG.md updated."
+            else
+              echo "::error::PR title starts with feat/fix/refactor/perf/security but CHANGELOG.md was not modified."
+              echo "Add an entry under [Unreleased] in CHANGELOG.md."
+              exit 1
+            fi
+          else
+            echo "Skipping: PR title does not indicate a feature/fix commit."
+          fi
 
   dogfood:
     runs-on: ubuntu-latest
