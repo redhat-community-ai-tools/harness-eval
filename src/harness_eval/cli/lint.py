@@ -158,7 +158,7 @@ def eval_setup_lint(
         if fmt == "sarif":
             from harness_eval.output.sarif import format_sarif
 
-            sarif_doc = format_sarif(results, metadata)
+            sarif_doc = format_sarif(results, metadata, scan_root=path)
             emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
         elif fmt == "json":
             json_out = format_json(system, results)
@@ -182,7 +182,7 @@ def eval_setup_lint(
         if fmt == "sarif":
             from harness_eval.output.sarif import format_sarif
 
-            sarif_doc = format_sarif(results, metadata)
+            sarif_doc = format_sarif(results, metadata, scan_root=path)
             emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
         elif fmt == "json":
             output = {

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 from harness_eval.inspection.types import Finding, InspectionResult, Severity
 from harness_eval.output.metadata import EvalMetadata
 
@@ -35,16 +38,14 @@ def _build_rule_descriptors(findings: list[Finding]) -> list[dict]:
     return list(seen.values())
 
 
-def _relativize_path(path: str) -> str:
-    import os
-
+def _relativize_to_root(file_path: str, scan_root: str) -> str:
     try:
-        return os.path.relpath(path)
+        return os.path.relpath(file_path, scan_root)
     except ValueError:
-        return path
+        return file_path
 
 
-def _build_result(finding: Finding, rule_index: dict[str, int]) -> dict:
+def _build_result(finding: Finding, rule_index: dict[str, int], scan_root: str) -> dict:
     result: dict = {
         "ruleId": finding.rule_id,
         "ruleIndex": rule_index.get(finding.rule_id, 0),
@@ -54,7 +55,7 @@ def _build_result(finding: Finding, rule_index: dict[str, int]) -> dict:
             {
                 "physicalLocation": {
                     "artifactLocation": {
-                        "uri": _relativize_path(finding.location.file),
+                        "uri": _relativize_to_root(finding.location.file, scan_root),
                         "uriBaseId": "%SRCROOT%",
                     },
                     "region": {"startLine": finding.location.start_line or 1},
@@ -76,13 +77,19 @@ def _build_result(finding: Finding, rule_index: dict[str, int]) -> dict:
 def format_sarif(
     inspection_results: list[InspectionResult],
     metadata: EvalMetadata | None = None,
+    scan_root: str | None = None,
 ) -> dict:
+    root = str(Path(scan_root).resolve()) if scan_root else os.getcwd()
     all_findings = [d for r in inspection_results for d in r.diagnostics]
 
     rules = _build_rule_descriptors(all_findings)
     rule_index = {r["id"]: i for i, r in enumerate(rules)}
 
     version = metadata.version if metadata else "dev"
+
+    root_uri = Path(root).as_uri()
+    if not root_uri.endswith("/"):
+        root_uri += "/"
 
     run: dict = {
         "tool": {
@@ -93,9 +100,9 @@ def format_sarif(
                 "rules": rules,
             },
         },
-        "results": [_build_result(f, rule_index) for f in all_findings],
+        "results": [_build_result(f, rule_index, root) for f in all_findings],
         "originalUriBaseIds": {
-            "%SRCROOT%": {"uri": "file:///" + _relativize_path(".") + "/"},
+            "%SRCROOT%": {"uri": root_uri},
         },
     }
 
