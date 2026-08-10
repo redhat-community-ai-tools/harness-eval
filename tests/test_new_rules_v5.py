@@ -526,7 +526,10 @@ class TestTotalDescriptionBudget:
         for i in range(30):
             skill_dir = tmp_path / "skills" / f"skill-{i}"
             skill_dir.mkdir(parents=True)
-            desc = f"This skill handles category {i} with detailed analysis, processing, transformation, and validation of incoming data streams. " * 5
+            desc = (
+                f"This skill handles category {i} with detailed analysis, "
+                f"processing, transformation, and validation of data. "
+            ) * 5
             (skill_dir / "SKILL.md").write_text(
                 f"---\nname: skill-{i}\ndescription: {desc}\n---\n\nBody."
             )
