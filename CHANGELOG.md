@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Mypy type checking step in CI lint job (continue-on-error until existing errors are fixed)
+- `TestRulesReferenceCompleteness` test verifying all registered rules appear in `docs/rules-reference.md`
+- Changelog enforcement CI job that fails PRs titled `feat:/fix:/refactor:/perf:/security:` when CHANGELOG.md is not modified
+- Documentation for 3 MCP security rules (`no-plaintext-secrets`, `unpinned-package`, `auto-approve-risk`) in `docs/rules-reference.md`
+
 ## [7.5.0] - 2026-08-10
 
 ### Fixed
