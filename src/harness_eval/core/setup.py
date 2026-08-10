@@ -76,6 +76,15 @@ def discover_setup(
     components = _deduplicate_components(components)
     components.extend(_discover_uncategorized(root, components))
 
+    if not components and (root / "SKILL.md").exists():
+        comp = _parse_file(
+            root / "SKILL.md",
+            ComponentType.SKILL,
+            name=root.name,
+            source_tool="unknown",
+        )
+        components.append(comp)
+
     if exclude:
         components = [c for c in components if not _matches_exclude(c.path, root, exclude)]
 

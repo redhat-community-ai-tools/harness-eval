@@ -35,6 +35,15 @@ def _build_rule_descriptors(findings: list[Finding]) -> list[dict]:
     return list(seen.values())
 
 
+def _relativize_path(path: str) -> str:
+    import os
+
+    try:
+        return os.path.relpath(path)
+    except ValueError:
+        return path
+
+
 def _build_result(finding: Finding, rule_index: dict[str, int]) -> dict:
     result: dict = {
         "ruleId": finding.rule_id,
@@ -44,7 +53,10 @@ def _build_result(finding: Finding, rule_index: dict[str, int]) -> dict:
         "locations": [
             {
                 "physicalLocation": {
-                    "artifactLocation": {"uri": finding.location.file},
+                    "artifactLocation": {
+                        "uri": _relativize_path(finding.location.file),
+                        "uriBaseId": "%SRCROOT%",
+                    },
                     "region": {"startLine": finding.location.start_line or 1},
                 },
             }
@@ -82,6 +94,9 @@ def format_sarif(
             },
         },
         "results": [_build_result(f, rule_index) for f in all_findings],
+        "originalUriBaseIds": {
+            "%SRCROOT%": {"uri": "file:///" + _relativize_path(".") + "/"},
+        },
     }
 
     return {

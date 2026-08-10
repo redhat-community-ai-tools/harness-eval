@@ -8,18 +8,5 @@
   },
   "repository": "https://github.com/redhat-community-ai-tools/harness-eval",
   "license": "Apache-2.0",
-  "keywords": ["evaluation", "harness", "setup", "skills", "configuration", "security"],
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run python \"${CLAUDE_PLUGIN_ROOT}/skills/lint/scripts/ensure_deps.py\" \"${CLAUDE_PLUGIN_DATA}\"",
-            "timeout": 30000
-          }
-        ]
-      }
-    ]
-  }
+  "keywords": ["evaluation", "harness", "setup", "skills", "configuration", "security"]
 }

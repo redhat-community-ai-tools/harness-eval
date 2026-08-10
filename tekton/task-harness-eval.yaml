@@ -103,7 +103,8 @@ spec:
         fi
 
         echo "Running: ${CMD[*]}"
-        "${CMD[@]}"
+        "${CMD[@]}" || LINT_EXIT=$?
+        echo "${LINT_EXIT:-0}" > "${WORKSPACE_PATH}/.harness-eval-lint-exit"
 
     - name: security
       image: $(params.image)
@@ -173,7 +174,7 @@ spec:
         import json, sys
         with open(sys.argv[1]) as f:
             r = json.load(f)
-        t = r.get('certification_tier', 'unknown')
+        t = r.get('certification', r.get('certification_tier', 'unknown'))
         print({'hardened':'CLEAN','verified':'CLEAN','basic':'NEEDS_WORK','unknown':'UNKNOWN'}.get(t.lower(), 'BLOCKED'))
         " "${REPORT}" 2>/dev/null || echo "UNKNOWN")
 
@@ -191,3 +192,9 @@ spec:
         printf "%s" "${VERDICT}" > $(results.verdict.path)
         printf "%s" "${GRADE}" > $(results.grade.path)
         echo "Verdict: ${VERDICT} | Grade: ${GRADE}"
+
+        LINT_EXIT_FILE="${WORKSPACE_PATH}/.harness-eval-lint-exit"
+        if [ -f "${LINT_EXIT_FILE}" ] && [ "$(cat "${LINT_EXIT_FILE}")" != "0" ]; then
+          echo "Lint step failed with exit code $(cat "${LINT_EXIT_FILE}")"
+          exit "$(cat "${LINT_EXIT_FILE}")"
+        fi

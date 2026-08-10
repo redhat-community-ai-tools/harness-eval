@@ -143,19 +143,18 @@ class TestSkillScriptPaths:
     """Verify that all script paths referenced in SKILL.md files are correct."""
 
     @pytest.mark.parametrize(
-        "skill_name,script_pattern",
+        "skill_name,cli_command",
         [
-            ("lint", "skills/lint/scripts/run_assessment.py"),
-            ("security", "skills/security/scripts/run_security_scan.py"),
-            ("eval-skill", "skills/eval-skill/scripts/run_skill_eval.py"),
+            ("lint", "harness-eval harness-lint"),
+            ("security", "harness-eval harness-security"),
+            ("eval-skill", "harness-eval skill-review"),
         ],
     )
-    def test_skill_md_references_correct_script(self, skill_name: str, script_pattern: str) -> None:
+    def test_skill_md_references_cli_command(self, skill_name: str, cli_command: str) -> None:
         skill_md = SKILLS / skill_name / "SKILL.md"
         content = skill_md.read_text()
-        assert script_pattern in content, (
-            f"{skill_name}/SKILL.md references wrong script path. "
-            f"Expected '{script_pattern}' to appear in the file."
+        assert cli_command in content, (
+            f"{skill_name}/SKILL.md does not reference CLI command '{cli_command}'."
         )
 
     @pytest.mark.parametrize(

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **P0: `skill-verify` undercount + severity inversion.** Merge loop now keeps highest severity when a rule fires under both presets, and recounts error/warning totals from diagnostics after merging. Previously a SECURITY-escalated finding (e.g. taint-flow ERROR) was discarded in favor of the RECOMMENDED version (WARNING), and stale counts produced false CAUTION verdicts.
+- **P0: `harness-security` and `harness-lint` on bare skill directories.** Moved the SKILL.md fallback from `scan.py` into `discover_setup()` so all commands handle bare skill dirs.
+- **P1: Plugin skills non-functional outside the repo.** All 4 SKILL.md files now call the installed CLI (`harness-eval harness-lint`, etc.) instead of bare relative paths to internal scripts. Deleted dead `ensure_deps.py` and `.harness-venv` bootstrap.
+- **P1: `skill-verify.md` mapped to wrong skill.** Removed from `SKILL_NAME_MAP`; it's not backed by a skill.
+- **P2: Tekton `certification_tier` -> `certification`.** Reads the correct key from the report card.
+- **P2: Tekton strict mode skipping security.** Lint step no longer aborts the Task on failure; security always runs, lint exit code is checked in extract-results.
+- **P3: INFO findings rendered as WARNING.** Added INFO label to terminal output.
+- **P3: SARIF absolute paths.** URIs are now relative with `%SRCROOT%` uriBaseId.
+
 ## [7.7.2] - 2026-08-10
 
 ### Fixed

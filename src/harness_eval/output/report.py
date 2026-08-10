@@ -62,7 +62,7 @@ def format_section(title: str) -> str:
 def format_finding_line(
     rule_id: str, severity: str, message: str, suggestion: str | None = None
 ) -> str:
-    label = "FAIL" if severity == "error" else "WARNING"
+    label = "FAIL" if severity == "error" else ("INFO" if severity == "info" else "WARNING")
     short_id = rule_id.split("/")[-1]
     line = f"    {label:<8} {short_id}: {message}"
     if suggestion:
@@ -84,7 +84,7 @@ def _compress_findings(diagnostics: list) -> list[str]:
     compressed: list[str] = []
     for rule_id, findings in by_rule.items():
         severity = findings[0].severity.value
-        label = "FAIL" if severity == "error" else "WARNING"
+        label = "FAIL" if severity == "error" else ("INFO" if severity == "info" else "WARNING")
         short_id = _shorten_rule_id(rule_id)
         if len(findings) <= 2:
             for d in findings:
