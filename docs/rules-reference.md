@@ -129,6 +129,9 @@ These rules run against MCP server configuration files. Applies to: CC, CU.
 | `mcp/duplicate-server` | content | Flags MCP servers that appear more than once (same name or same URL). Duplicates cause confusion about which instance to use. | Two entries both named `github` with different configs | Key deduplication |
 | `mcp/suspicious-endpoint` | security | Flags MCP servers pointing to localhost or private IP addresses. These often indicate development configs accidentally left in a shared project. | `http://192.168.1.1:8080` or `http://localhost:3000` as an MCP server URL | Pattern matching (IP ranges) |
 | `mcp/no-wildcard-tools` | security | Flags MCP servers that expose all their tools without restriction. Least privilege means only exposing the tools the project actually needs. | An MCP server with no `allowedTools` filter, granting access to every tool it offers | Config field check |
+| `mcp/no-plaintext-secrets` | security | Flags MCP server configs that contain plaintext secrets (API keys, tokens, passwords) in `env` or `args`. Secrets should come from environment variables or secret managers, not be hardcoded. | `"env": {"API_KEY": "sk-abc123..."}` in `.mcp.json` | Regex pattern matching (known secret prefixes) |
+| `mcp/unpinned-package` | security | Flags MCP servers installed via `npx -y` or `@latest` without version pinning. Unpinned packages pull whatever version is current, which could include malicious updates. | `"command": "npx -y @modelcontextprotocol/server-github"` without a version pin | Package reference parsing |
+| `mcp/auto-approve-risk` | security | Flags MCP server configs that use `autoApprove` to bypass the user confirmation prompt for specific tools. Auto-approved tools execute without human review. | `"autoApprove": ["read_file", "write_file"]` in an MCP server config | Config field check |
 
 ## Hooks (.claude/settings.json hooks, .cursor/hooks.json)
 

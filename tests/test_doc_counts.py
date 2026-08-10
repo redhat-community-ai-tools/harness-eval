@@ -71,6 +71,23 @@ class TestRuleCountDrift:
                 )
 
 
+class TestRulesReferenceCompleteness:
+    def test_every_rule_is_documented(self) -> None:
+        rules_ref = ROOT / "docs" / "rules-reference.md"
+        if not rules_ref.exists():
+            return
+        content = rules_ref.read_text()
+        all_rules = get_all_rules()
+        missing = []
+        for rule in all_rules:
+            if rule.meta.id not in content:
+                missing.append(rule.meta.id)
+        assert missing == [], (
+            f"{len(missing)} rules missing from docs/rules-reference.md: "
+            + ", ".join(sorted(missing))
+        )
+
+
 class TestCommandSurfaceSync:
     def test_claude_and_cursor_commands_have_same_names(self) -> None:
         claude_dir = ROOT / "commands"
