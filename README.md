@@ -50,8 +50,8 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 |-----------|------------------|
 | Claude Code | `CLAUDE.md`, `skills/`, `commands/`, `.claude/agents/`, `.claude/settings.json`, `.mcp.json` |
 | Cursor | `.cursor/rules/*.mdc`, `.cursorrules`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
-| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` |
-| Cline | `.clinerules` (file or directory of `*.md`) |
+| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` (discovery + structure rules) |
+| Cline | `.clinerules` (file or directory of `*.md`) (discovery + structure rules) |
 | Copilot | `.github/copilot-instructions.md`, `.github/skills/`, `.github/prompts/`, `.github/agents/` |
 | Gemini CLI | `GEMINI.md`, `.gemini/commands/`, `.gemini/settings.json` (MCP) |
 | OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `opencode.json` (MCP) |

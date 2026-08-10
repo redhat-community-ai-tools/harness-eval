@@ -100,7 +100,7 @@ def _make_report_fn(
     category: RuleCategory,
     fixable: bool,
     file_path: str,
-    suppressions: dict[int | None, set[str]],
+    suppressions_by_file: dict[str, dict[int | None, set[str]]],
     findings: list[Finding],
     suppression_counter: list[int],
     explicitly_configured: bool = False,
@@ -113,7 +113,8 @@ def _make_report_fn(
 
     def report(descriptor: ReportDescriptor) -> None:
         loc = descriptor.location or Location(file=file_path)
-        if is_suppressed(suppressions, rule_id, loc.start_line):
+        sups = suppressions_by_file.get(loc.file, suppressions_by_file.get(file_path, {}))
+        if is_suppressed(sups, rule_id, loc.start_line):
             suppression_counter[0] += 1
             return
         template = meta_messages.get(descriptor.message_id, descriptor.message_id)
@@ -172,7 +173,19 @@ def _run_rules(
     findings: list[Finding] = []
     rules_run: list[RuleResult] = []
     suppression_counter = [0]
-    suppressions = parse_suppressions(raw_content, file_path=file_path) if raw_content else {}
+    suppressions_by_file: dict[str, dict[int | None, set[str]]] = {}
+    if raw_content:
+        suppressions_by_file[file_path] = parse_suppressions(raw_content, file_path=file_path)
+    if skill and skill.sub_file_contents and skill.dir_path:
+        from pathlib import Path as _Path
+
+        skill_dir = _Path(skill.dir_path)
+        for rel_path, content in skill.sub_file_contents.items():
+            if content:
+                abs_path = str(skill_dir / rel_path)
+                sups = parse_suppressions(content, file_path=abs_path)
+                if sups:
+                    suppressions_by_file[abs_path] = sups
     config_rules = config_rules or {}
     scan_state = scan_state if scan_state is not None else {}
 
@@ -218,7 +231,7 @@ def _run_rules(
                 rule.meta.category,
                 rule.meta.fixable,
                 file_path,
-                suppressions,
+                suppressions_by_file,
                 findings,
                 suppression_counter,
                 explicitly_configured,

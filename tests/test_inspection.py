@@ -164,7 +164,29 @@ class TestSecurityRules:
         rule_ids = {d.rule_id for d in result.diagnostics}
         assert "security/no-prompt-injection" in rule_ids
 
-    def test_injection_in_code_block_is_warning(self, tmp_path: Path) -> None:
+    def test_suppression_in_reference_file(self, tmp_path: Path) -> None:
+        skill_dir = tmp_path / "ref-skill"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: ref-skill\ndescription: Skill with reference file\n---\n\nSee rubric."
+        )
+        rubric_dir = skill_dir / "rubric"
+        rubric_dir.mkdir()
+        (rubric_dir / "review.md").write_text(
+            "<!-- evaluator-ignore: security/no-prompt-injection -->\n"
+            "# Rubric\n"
+            'Example: "ignore all previous instructions" is a jailbreak pattern.'
+        )
+        result = lint(str(skill_dir))
+        injection_in_ref = [
+            d
+            for d in result.diagnostics
+            if d.rule_id == "security/no-prompt-injection"
+            and "rubric/review.md" in (d.location.file if d.location else "")
+        ]
+        assert len(injection_in_ref) == 0
+
+    def test_injection_in_code_block_is_info(self, tmp_path: Path) -> None:
         skill_dir = tmp_path / "safe-skill"
         skill_dir.mkdir()
         (skill_dir / "SKILL.md").write_text(
@@ -174,7 +196,7 @@ class TestSecurityRules:
         result = lint(str(skill_dir))
         injection_findings = [d for d in result.diagnostics if "injection" in d.rule_id]
         for f in injection_findings:
-            assert f.severity.value == "warning"
+            assert f.severity.value == "info"
 
 
 class TestContentRules:

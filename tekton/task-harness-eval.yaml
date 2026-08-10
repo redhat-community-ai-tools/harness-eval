@@ -19,7 +19,7 @@ spec:
   params:
     - name: image
       type: string
-      default: image-registry.openshift-image-registry.svc:5000/qe-ds-ai--pipeline/harness-eval:dev
+      default: ghcr.io/redhat-community-ai-tools/harness-eval:7.4.0
       description: Container image for harness-eval.
     - name: path
       type: string
