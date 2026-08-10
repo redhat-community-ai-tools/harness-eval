@@ -72,13 +72,15 @@ class HooksBaseUrlOverride:
                         )
                     )
 
-        for line_num, line in enumerate(raw.split("\n"), 1):
-            if _BASE_URL_PATTERN.search(line) and "env" not in data:
-                context.report(
-                    ReportDescriptor(
-                        message_id="base_url_override",
-                        data={"var": _BASE_URL_PATTERN.search(line).group(0)},  # type: ignore[union-attr]
-                        location=Location(file=hooks_data.file_path, start_line=line_num),
+        if "env" not in data:
+            for line_num, line in enumerate(raw.split("\n"), 1):
+                m = _BASE_URL_PATTERN.search(line)
+                if m:
+                    context.report(
+                        ReportDescriptor(
+                            message_id="base_url_override",
+                            data={"var": m.group(0)},
+                            location=Location(file=hooks_data.file_path, start_line=line_num),
+                        )
                     )
-                )
-                break
+                    break

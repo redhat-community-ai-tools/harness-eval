@@ -43,13 +43,19 @@ class TotalDescriptionBudget:
 
         total = 0
         count = 0
+        largest_skill = all_skills[0]
+        largest_tokens = 0
         for skill in all_skills:
             if not skill.frontmatter:
                 continue
             desc = skill.frontmatter.get("description", "")
             if isinstance(desc, str) and desc.strip():
-                total += count_tokens(desc)
+                t = count_tokens(desc)
+                total += t
                 count += 1
+                if t > largest_tokens:
+                    largest_tokens = t
+                    largest_skill = skill
 
         if total > DEFAULT_TOTAL_DESCRIPTION_BUDGET:
             context.report(
@@ -61,7 +67,7 @@ class TotalDescriptionBudget:
                         "budget": str(DEFAULT_TOTAL_DESCRIPTION_BUDGET),
                     },
                     location=Location(
-                        file=all_skills[0].skill_md_path,
+                        file=largest_skill.skill_md_path,
                         start_line=1,
                     ),
                 )

@@ -14,7 +14,7 @@ from harness_eval.inspection.types import (
 )
 
 _CREDENTIAL_KEY = re.compile(
-    r".*(?:_KEY|_TOKEN|_SECRET|_PASSWORD|_CREDENTIAL|_API_KEY)$",
+    r".*(?:_KEY_ID|_KEY|_TOKEN|_SECRET|_PASSWORD|_CREDENTIAL|_PAT)$",
     re.IGNORECASE,
 )
 
