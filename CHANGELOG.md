@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.7.0] - 2026-08-10
+
 ### Added
 - **`skill-verify` command**: vet a skill or setup before installing. Combines lint + security checks in one pass. Outputs SAFE/CAUTION/UNSAFE verdict. Supports `--format json`, `--fail-on-error`, `--fail-on-warning`.
 - **Declarative YAML rules**: add custom rules as `.yaml` files without writing Python. Drop in `rules/custom/`. Supports regex patterns (case-insensitive), configurable severity, suggestions, and target types.
