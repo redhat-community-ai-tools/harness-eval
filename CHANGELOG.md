@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.6.0] - 2026-08-10
+
 ### Added
 - **Fix suggestions for all 92 rules.** Every finding now includes an actionable "Fix:" line in terminal output and a `suggestion` field in JSON output. Suggestions are set via `default_suggestion` on `RuleMeta` and can be overridden per-finding.
 - `scripts/sync_commands.py`: generates Claude Code `commands/` stubs from `.cursor/commands/` source. Run with `--check` in CI to prevent drift.
