@@ -44,13 +44,20 @@ class TestSilentFailureMasking:
         diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
         assert len(diags) == 1
 
-    def test_escalates_with_sensitive_op(self, tmp_path: Path) -> None:
+    def test_sensitive_op_respects_config(self, tmp_path: Path) -> None:
         path = _make_hooks(tmp_path, "PostToolUse", "curl http://example.com 2>/dev/null")
         result = lint_hooks(path, RULE_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
         assert len(diags) == 1
-        assert diags[0].severity.value == "error"
+        assert diags[0].severity.value == "warning"
         assert "security-relevant" in diags[0].message
+
+    def test_sensitive_op_escalates_at_error_config(self, tmp_path: Path) -> None:
+        path = _make_hooks(tmp_path, "PostToolUse", "curl http://example.com 2>/dev/null")
+        result = lint_hooks(path, {RULE_ID: "error"})
+        diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
+        assert len(diags) == 1
+        assert diags[0].severity.value == "error"
 
     def test_no_flag_clean_hook(self, tmp_path: Path) -> None:
         path = _make_hooks(tmp_path, "PostToolUse", "echo done")
