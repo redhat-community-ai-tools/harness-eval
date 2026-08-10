@@ -92,9 +92,9 @@ def scan_lines_for_patterns(
     """Scan content lines for regex patterns with optional context awareness.
 
     When code_block_msg is provided, code fences are tracked and matches
-    inside them use that message ID with WARNING severity.
+    inside them use that message ID with INFO severity.
     When example_msg is provided, matches in quotes or example contexts
-    use that message ID with WARNING severity.
+    use that message ID with INFO severity.
     When negation_msg is provided, lines containing negation words before
     the pattern match use that message ID with WARNING severity.
     """
@@ -175,8 +175,7 @@ def scan_lines_for_credential_patterns(
     - Sequence[re.Pattern]: match.group(0) used as data value
     - Sequence[tuple[re.Pattern, str]]: str used as data value
 
-    When code_block_msg is provided, matches inside code fences use that
-    message ID with WARNING severity instead of the group's message ID.
+    When code_block_msg is provided, lines inside code fences are skipped.
     When suggestion is provided, it is attached to every reported finding.
     """
     lines = content.split("\n")

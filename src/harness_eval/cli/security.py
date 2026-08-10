@@ -444,8 +444,11 @@ def eval_setup_security(
         checker = RubricChecker(client)
         try:
             checker._ensure_client_safe()
-        except ImportError as e:
-            raise click.ClickException(str(e)) from None
+        except (ImportError, ValueError) as e:
+            key_hint = "ANTHROPIC_API_KEY" if provider == "anthropic" else "GEMINI_API_KEY"
+            raise click.ClickException(
+                f"{e}\n\nSet {key_hint} in your environment, or run `harness-eval doctor` to check setup."
+            ) from None
 
         components_needing_adjudication = [r for r in results if r.diagnostics]
         if components_needing_adjudication:

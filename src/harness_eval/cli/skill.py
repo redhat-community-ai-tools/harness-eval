@@ -78,8 +78,11 @@ def eval_skill(
         checker = RubricChecker(client)
         try:
             checker._ensure_client_safe()
-        except ImportError as e:
-            raise click.ClickException(str(e)) from None
+        except (ImportError, ValueError) as e:
+            key_hint = "ANTHROPIC_API_KEY" if provider == "anthropic" else "GEMINI_API_KEY"
+            raise click.ClickException(
+                f"{e}\n\nSet {key_hint} in your environment, or run `harness-eval doctor` to check setup."
+            ) from None
 
         context_text = None
         if context_path:
