@@ -147,35 +147,46 @@ def eval_skill(
             }
         click.echo(json_mod.dumps(output, indent=2))
     else:
-        click.echo(f"\n{'=' * 60}")
-        click.echo(f"Skill Evaluation: {skill.dir_name}")
-        click.echo(f"{'=' * 60}")
-        click.echo(f"Tokens: {skill.tokens}")
-        click.echo(f"Files: {len(skill.files)}")
+        from harness_eval.output.report import format_finding_line, format_header, format_section
+
+        click.echo(
+            format_header(
+                f"Skill Evaluation: {skill.dir_name}",
+                Tokens=skill.tokens,
+                Files=len(skill.files),
+            )
+        )
 
         if skill.frontmatter:
             desc = skill.frontmatter.get("description", "(none)")
             click.echo(f"Description: {desc}")
 
-        click.echo(f"\nInspection: {result.error_count} errors, {result.warning_count} warnings")
-        click.echo(f"{'─' * 60}")
+        click.echo(
+            format_section(
+                f"Inspection: {result.error_count} errors, {result.warning_count} warnings"
+            )
+        )
         if result.diagnostics:
             for d in result.diagnostics:
-                icon = "X" if d.severity.value == "error" else "!"
-                click.echo(f"  [{icon}] {d.rule_id}: {d.message}")
+                click.echo(
+                    format_finding_line(
+                        d.rule_id,
+                        d.severity.value,
+                        d.message,
+                        d.suggestion,
+                    )
+                )
         else:
             click.echo("  No issues found.")
 
         if context_findings:
-            click.echo("\nContextual Analysis (in setup):")
-            click.echo(f"{'─' * 60}")
+            click.echo(format_section("Contextual Analysis (in setup)"))
             for finding in context_findings:
                 click.echo(f"  [~] {finding}")
 
         if rubric_result:
             if rubric_result.issues:
-                click.echo(f"\nRubric Issues ({len(rubric_result.issues)} found):")
-                click.echo(f"{'─' * 60}")
+                click.echo(format_section(f"Rubric Issues ({len(rubric_result.issues)} found)"))
                 for issue in rubric_result.issues:
                     click.echo(f"  [{issue.category}] {issue.description}")
                     click.echo(f"    Evidence: {issue.evidence}")

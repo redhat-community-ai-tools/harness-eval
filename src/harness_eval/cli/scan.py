@@ -106,23 +106,30 @@ def scan_skill(path: str, fmt: str, fail_on_error: bool, fail_on_warning: bool) 
         }
         click.echo(json_mod.dumps(output, indent=2))
     else:
-        click.echo(f"\n{'=' * 60}")
-        click.echo(f"Scan: {target.name}")
-        click.echo(f"{'=' * 60}")
-        click.echo(f"Components: {len(merged)}")
-        click.echo(f"Errors: {total_errors} | Warnings: {total_warnings}")
-        click.echo(f"Verdict: {verdict}")
+        from harness_eval.output.report import format_finding_line, format_header
+
+        click.echo(
+            format_header(
+                f"Scan: {target.name}",
+                Components=len(merged),
+                Findings=f"{total_errors} errors, {total_warnings} warnings",
+                Verdict=verdict,
+            )
+        )
         click.echo("")
 
         for r in merged:
             if r.diagnostics:
                 click.echo(f"  {r.target_type}/{r.target_name}:")
                 for d in r.diagnostics:
-                    label = "FAIL" if d.severity.value == "error" else "WARNING"
-                    short_rule = d.rule_id.split("/")[-1]
-                    click.echo(f"    {label:<8} {short_rule}: {d.message}")
-                    if d.suggestion:
-                        click.echo(f"             Fix: {d.suggestion}")
+                    click.echo(
+                        format_finding_line(
+                            d.rule_id,
+                            d.severity.value,
+                            d.message,
+                            d.suggestion,
+                        )
+                    )
                 click.echo("")
 
         if verdict == "SAFE":

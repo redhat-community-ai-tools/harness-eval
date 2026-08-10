@@ -247,10 +247,14 @@ def _format_terminal_security(report: _SecurityReport) -> None:
     components_with_findings = [r for r in report.results if r.diagnostics]
     clean_count = len(report.results) - len(components_with_findings)
 
-    click.echo(f"\n{'=' * 60}")
-    click.echo(f"Security Audit: {report.setup_name}")
-    click.echo(f"{'=' * 60}")
-    click.echo(f"Components scanned: {len(report.results)}")
+    from harness_eval.output.report import format_header
+
+    click.echo(
+        format_header(
+            f"Security Audit: {report.setup_name}",
+            **{"Components scanned": len(report.results)},
+        )
+    )
     if report.adjudicated:
         click.echo(f"Scanner:         {raw_errors} errors, {raw_warnings} warnings")
         click.echo(

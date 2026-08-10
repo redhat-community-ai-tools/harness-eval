@@ -153,11 +153,15 @@ def eval_setup_review(
         }
         click.echo(json_mod.dumps(output, indent=2))
     else:
-        click.echo(f"\n{'=' * 60}")
-        click.echo(f"Setup Review: {setup.name}")
-        click.echo(f"{'=' * 60}")
-        click.echo(f"Components: {len(setup.components)}")
-        click.echo(f"Provider: {provider} | Model: {client.model}")
+        from harness_eval.output.report import format_header
+
+        click.echo(
+            format_header(
+                f"Setup Review: {setup.name}",
+                Components=len(setup.components),
+                Provider=f"{provider} | Model: {client.model}",
+            )
+        )
         click.echo("")
 
         for rr in rubric_results:
