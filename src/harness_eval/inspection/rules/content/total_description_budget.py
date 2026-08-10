@@ -30,6 +30,7 @@ class TotalDescriptionBudget:
                 "session whether invoked or not."
             ),
         },
+        default_suggestion="Shorten skill descriptions to reduce always-loaded token usage.",
     )
 
     def create(self, context: RuleContext) -> None:

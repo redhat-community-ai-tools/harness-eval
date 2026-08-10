@@ -25,6 +25,7 @@ class McpNoWildcardTools:
             "no_tool_restriction": "Server '{{name}}' has no 'tools' or 'allowedTools' field, exposing all available tools.",
         },
         target_type=ComponentType.MCP_CONFIG,
+        default_suggestion="Add an allowedTools list to restrict exposed tools.",
     )
 
     def create(self, context: RuleContext) -> None:

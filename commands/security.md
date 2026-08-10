@@ -1,5 +1,5 @@
 ---
-description: "Deep security audit of the agent setup. Deterministic security rules (prompt injection, credential access, exfiltration, taint tracking, YARA, CVE) plus LLM semantic review."
+description: "Deep security audit of the agent setup. Combines deterministic scanning with semantic security review"
 ---
 
 # Eval Setup Security

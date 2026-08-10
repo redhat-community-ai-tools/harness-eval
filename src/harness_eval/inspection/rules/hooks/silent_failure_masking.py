@@ -52,6 +52,7 @@ class HooksSilentFailureMasking:
             ),
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Remove error suppression or add explicit error handling.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -28,6 +28,7 @@ class AgentExcessivePermissions:
         },
         target_type=ComponentType.AGENT,
         frameworks={"owasp_agentic": "ASI02"},
+        default_suggestion="Add allowedTools or disallowedTools to restrict tool access.",
     )
 
     def create(self, context: RuleContext) -> None:

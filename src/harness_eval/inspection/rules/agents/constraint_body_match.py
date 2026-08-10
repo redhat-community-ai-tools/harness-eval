@@ -68,6 +68,7 @@ class ConstraintBodyMatch:
             "unmatched_constraint": "Body states '{{constraint}}' but no matching disallowedTools entry found — constraint relies on agent compliance, not enforcement",
         },
         target_type=ComponentType.AGENT,
+        default_suggestion="Update the agent body to match its declared constraints.",
     )
 
     def create(self, context: RuleContext) -> None:

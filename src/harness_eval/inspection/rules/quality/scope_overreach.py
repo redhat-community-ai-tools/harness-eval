@@ -38,6 +38,7 @@ class ScopeOverreach:
                 "Skills should be specific about when they apply."
             ),
         },
+        default_suggestion="Narrow the scope claim to specific file types or task contexts.",
     )
 
     def create(self, context: RuleContext) -> None:

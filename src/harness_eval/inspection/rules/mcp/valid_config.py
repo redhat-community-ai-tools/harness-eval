@@ -31,6 +31,7 @@ class McpValidConfig:
             "env_not_object": "Server '{{name}}': 'env' must be an object, got {{actual_type}}",
         },
         target_type=ComponentType.MCP_CONFIG,
+        default_suggestion="Fix the MCP config file to match the expected JSON structure.",
     )
 
     def create(self, context: RuleContext) -> None:

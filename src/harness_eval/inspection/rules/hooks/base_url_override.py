@@ -44,6 +44,7 @@ class HooksBaseUrlOverride:
             ),
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Move this setting to user-scoped config or environment variables.",
     )
 
     def create(self, context: RuleContext) -> None:

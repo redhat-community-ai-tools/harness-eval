@@ -26,6 +26,7 @@ class ClaudeMdSkillDuplication:
             "overlap_cursor": "Rules section '{{section}}' has {{pct}}% similarity with skill '{{skill}}' — consider removing the duplicate content from the rule file since the skill loads on demand",
         },
         target_type=ComponentType.CLAUDE_MD,
+        default_suggestion="Remove the duplicated content from CLAUDE.md.",
     )
 
     def create(self, context: RuleContext) -> None:

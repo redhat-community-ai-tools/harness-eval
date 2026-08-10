@@ -23,6 +23,7 @@ class ClaudeMdExists:
         },
         target_type=ComponentType.CLAUDE_MD,
         tools=("claude",),
+        default_suggestion="Create a CLAUDE.md with project-specific build, test, and style instructions.",
     )
 
     def create(self, context: RuleContext) -> None:

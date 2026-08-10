@@ -28,6 +28,7 @@ class TokenBudget:
             "over_budget": "Skill is {{tokens}} tokens — computed budget is {{budget}} ({{context_budget}} context budget / {{concurrent}} concurrent skills, ceiling {{ceiling}})",
             "over_lines": "SKILL.md is {{lines}} lines — Anthropic recommends keeping SKILL.md under 500 lines",
         },
+        default_suggestion="Split the skill into smaller focused skills, or trim low-value content.",
     )
 
     def create(self, context: RuleContext) -> None:

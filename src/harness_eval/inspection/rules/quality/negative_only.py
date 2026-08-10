@@ -41,6 +41,7 @@ class NegativeOnly:
                 "Line {{line}}: '{{match}}' states what not to do without saying what to do instead"
             ),
         },
+        default_suggestion="Add what to do instead after each prohibition.",
     )
 
     def create(self, context: RuleContext) -> None:

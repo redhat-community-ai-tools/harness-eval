@@ -94,6 +94,7 @@ class YaraScan:
             "yara_skipped": "YARA scanning skipped: {{reason}}. Install with: pip install yara-python",
         },
         frameworks={"mitre_atlas": "AML.T0054"},
+        default_suggestion="Remove or replace the content matched by the YARA rule.",
     )
 
     def create(self, context: RuleContext) -> None:

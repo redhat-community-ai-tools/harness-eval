@@ -53,6 +53,7 @@ class McpSkillAlignment:
             "mcp_unused": "MCP server '{{server}}' is configured but no skill references its tools",
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Remove the unused MCP server or add a skill that uses its tools.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -35,6 +35,7 @@ class HooksValidStructure:
             "script_missing": "Hook for event '{{event}}' references script '{{script}}' which does not exist",
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Add a 'command' field to the hook definition.",
     )
 
     def create(self, context: RuleContext) -> None:

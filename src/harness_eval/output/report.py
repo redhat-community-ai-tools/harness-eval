@@ -67,10 +67,14 @@ def _compress_findings(diagnostics: list) -> list[str]:
         if len(findings) <= 2:
             for d in findings:
                 compressed.append(f"  {label:<8} {short_id}: {d.message}")
+                if d.suggestion:
+                    compressed.append(f"           Fix: {d.suggestion}")
         else:
             compressed.append(f"  {label:<8} {short_id}: {len(findings)} findings")
             for d in findings:
                 compressed.append(f"           {d.message}")
+            if findings[0].suggestion:
+                compressed.append(f"           Fix: {findings[0].suggestion}")
     return compressed
 
 
@@ -299,6 +303,7 @@ def _build_json_inspection(inspection_results: list[InspectionResult]) -> dict:
                         "rule": d.rule_id,
                         "severity": d.severity.value,
                         "message": d.message,
+                        **({"suggestion": d.suggestion} if d.suggestion else {}),
                     }
                     for d in r.diagnostics
                 ],

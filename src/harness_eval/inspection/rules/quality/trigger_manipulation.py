@@ -51,6 +51,7 @@ class TriggerManipulation:
                 "where it may not be needed. Let the user decide when to invoke."
             ),
         },
+        default_suggestion="Replace forced-invocation triggers with descriptive when-to-use guidance.",
     )
 
     def create(self, context: RuleContext) -> None:

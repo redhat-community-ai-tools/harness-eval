@@ -29,6 +29,7 @@ class HooksScriptBoundary:
             ),
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Move the hook script inside the project directory.",
     )
 
     def create(self, context: RuleContext) -> None:

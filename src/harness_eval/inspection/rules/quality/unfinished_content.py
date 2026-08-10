@@ -65,6 +65,7 @@ class UnfinishedContent:
                 "Add content or remove the heading."
             ),
         },
+        default_suggestion="Complete the placeholder text or remove the empty section.",
     )
 
     def create(self, context: RuleContext) -> None:

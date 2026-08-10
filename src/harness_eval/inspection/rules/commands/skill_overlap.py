@@ -25,6 +25,7 @@ class CommandSkillOverlap:
             "overlap": "Command '{{command}}' has {{pct}}% similarity with skill '{{skill}}' — consider whether both are needed",
         },
         target_type=ComponentType.COMMAND,
+        default_suggestion="Remove the duplicate content or convert the command to invoke the skill.",
     )
 
     def create(self, context: RuleContext) -> None:

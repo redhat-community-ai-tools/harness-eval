@@ -26,6 +26,7 @@ class DisallowedToolsParseable:
             "unparseable": "disallowedTools entry '{{entry}}' does not match expected format: ToolName or ToolName(pattern)",
         },
         target_type=ComponentType.AGENT,
+        default_suggestion="Fix the disallowedTools list to use valid tool name patterns.",
     )
 
     def create(self, context: RuleContext) -> None:

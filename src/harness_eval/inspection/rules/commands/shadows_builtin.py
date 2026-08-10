@@ -26,6 +26,7 @@ class CommandShadowsBuiltin:
         },
         target_type=ComponentType.COMMAND,
         tools=("claude",),
+        default_suggestion="Rename the command to avoid shadowing the built-in.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -413,6 +413,7 @@ class BashTaintTracking:
             "bash_taint_indirect": "{{file}}: tainted variable '${{var}}' (from line {{source_line}}) flows to {{sink}} (line {{sink_line}}). Possible injection vector.",
         },
         frameworks={"owasp_llm": "LLM06", "owasp_agentic": "AG04"},
+        default_suggestion="Sanitize untrusted input before passing it to shell commands.",
     )
 
     def create(self, context: RuleContext) -> None:

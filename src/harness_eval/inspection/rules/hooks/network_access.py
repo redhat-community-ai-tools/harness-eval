@@ -30,6 +30,7 @@ class HooksNetworkAccess:
             "network_access": "Hook for event '{{event}}' makes a network call: '{{pattern}}'",
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Remove the network call or move it to a user-approved script.",
     )
 
     def create(self, context: RuleContext) -> None:

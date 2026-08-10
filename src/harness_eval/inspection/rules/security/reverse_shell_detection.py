@@ -40,6 +40,7 @@ class ReverseShellDetection:
             "shell_in_code_block": "Line {{line}} contains '{{label}}' inside a code block — likely documentation, but verify.",
         },
         frameworks={"owasp_agentic": "AG04", "mitre_atlas": "AML.T0054"},
+        default_suggestion="Remove the reverse shell pattern from the instructions.",
     )
 
     def create(self, context: RuleContext) -> None:

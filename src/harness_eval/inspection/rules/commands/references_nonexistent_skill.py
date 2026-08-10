@@ -32,6 +32,7 @@ class CommandReferencesNonexistentSkill:
             "missing_skill": "Command '{{command}}' references skill '{{skill}}' but no SKILL.md found for it",
         },
         target_type=ComponentType.COMMAND,
+        default_suggestion="Create the missing skill or remove the reference.",
     )
 
     def create(self, context: RuleContext) -> None:

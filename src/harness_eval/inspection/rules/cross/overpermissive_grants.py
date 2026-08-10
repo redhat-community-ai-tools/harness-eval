@@ -79,6 +79,7 @@ class OverpermissiveGrants:
             ),
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Scope the permission grant to specific commands or paths.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -104,6 +104,7 @@ def _make_report_fn(
     findings: list[Finding],
     suppression_counter: list[int],
     explicitly_configured: bool = False,
+    default_suggestion: str | None = None,
 ) -> Callable[[ReportDescriptor], None]:
     """Build a report callback for a single rule.
 
@@ -132,7 +133,7 @@ def _make_report_fn(
                 location=loc,
                 category=category,
                 fix=descriptor.fix if fixable else None,
-                suggestion=descriptor.suggestion,
+                suggestion=descriptor.suggestion or default_suggestion,
             )
         )
 
@@ -235,6 +236,7 @@ def _run_rules(
                 findings,
                 suppression_counter,
                 explicitly_configured,
+                rule.meta.default_suggestion,
             ),
             severity=severity,
             options=options,

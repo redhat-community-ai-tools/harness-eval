@@ -28,6 +28,7 @@ class TotalContextBudget:
             ),
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Remove low-value skills or reduce their token count.",
     )
 
     def create(self, context: RuleContext) -> None:

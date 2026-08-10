@@ -37,6 +37,7 @@ class AgentUnboundedDelegation:
         },
         target_type=ComponentType.AGENT,
         frameworks={"owasp_agentic": "ASI08"},
+        default_suggestion="Add a recursion depth limit to the delegation chain.",
     )
 
     def create(self, context: RuleContext) -> None:

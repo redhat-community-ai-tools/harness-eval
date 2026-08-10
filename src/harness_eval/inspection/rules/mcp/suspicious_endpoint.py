@@ -35,6 +35,7 @@ class McpSuspiciousEndpoint:
             "suspicious_url": "Server '{{name}}' points to local/private address '{{url}}'. This may be a test config left in production.",
         },
         target_type=ComponentType.MCP_CONFIG,
+        default_suggestion="Replace the local address with the production endpoint.",
     )
 
     def create(self, context: RuleContext) -> None:

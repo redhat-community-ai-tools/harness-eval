@@ -40,6 +40,7 @@ class DataExfiltration:
             "exfil_in_code_block": "Line {{line}} contains '{{label}}' inside a code block — likely documentation, but verify.",
         },
         frameworks={"owasp_llm": "LLM06", "owasp_agentic": "AG04"},
+        default_suggestion="Remove the network call or the credential access from the same component.",
     )
 
     def create(self, context: RuleContext) -> None:

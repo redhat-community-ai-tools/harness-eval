@@ -164,6 +164,7 @@ class AstBehavioral:
             "ast_exec_chain": "{{file}}:{{line}} calls {{call}} with a dynamic source (decoded/fetched data), a high-risk execution chain.",
         },
         frameworks={"owasp_agentic": "AG04", "mitre_atlas": "AML.T0054"},
+        default_suggestion="Remove or sandbox the flagged code pattern.",
     )
 
     def create(self, context: RuleContext) -> None:

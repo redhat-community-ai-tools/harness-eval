@@ -27,6 +27,7 @@ class AgentObfuscationDetection:
         },
         target_type=ComponentType.AGENT,
         frameworks={"owasp_llm": "LLM02", "mitre_atlas": "AML.T0054"},
+        default_suggestion="Replace obfuscated content with plain text.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -48,6 +48,7 @@ class HooksPreTrustPermissions:
             ),
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Move permissions.allow entries to user-scoped settings.",
     )
 
     def create(self, context: RuleContext) -> None:

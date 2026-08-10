@@ -37,6 +37,7 @@ class AgentMemoryWriteUnscoped:
         },
         target_type=ComponentType.AGENT,
         frameworks={"owasp_agentic": "ASI06"},
+        default_suggestion="Scope memory writes to a specific namespace or session.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -134,6 +134,7 @@ class RedundantGuidance:
                 "in this project. Remove to avoid contradictions."
             ),
         },
+        default_suggestion="Remove the instruction or add project-specific detail.",
     )
 
     def create(self, context: RuleContext) -> None:
