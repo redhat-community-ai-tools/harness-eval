@@ -152,7 +152,7 @@ class TestLintOutputFlag:
                 "---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff."
             )
             result = runner.invoke(
-                cli, ["lint", ".", "--format", "terminal", "--output", str(output_file)]
+                cli, ["harness-lint", ".", "--format", "terminal", "--output", str(output_file)]
             )
             assert result.exit_code == 0
 
@@ -173,7 +173,7 @@ class TestLintOutputFlag:
                 "---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff."
             )
             result = runner.invoke(
-                cli, ["lint", ".", "--format", "json", "--output", str(output_file)]
+                cli, ["harness-lint", ".", "--format", "json", "--output", str(output_file)]
             )
             assert result.exit_code == 0
 
@@ -190,7 +190,15 @@ class TestLintOutputFlag:
             skill_md = skill_dir / "SKILL.md"
             skill_md.write_text("---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff.")
             result = runner.invoke(
-                cli, ["lint", str(skill_md), "--format", "terminal", "--output", str(output_file)]
+                cli,
+                [
+                    "harness-lint",
+                    str(skill_md),
+                    "--format",
+                    "terminal",
+                    "--output",
+                    str(output_file),
+                ],
             )
             assert result.exit_code == 0
 

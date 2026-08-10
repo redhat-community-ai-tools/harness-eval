@@ -15,7 +15,7 @@ from harness_eval.output.metadata import EvalMetadata
 from harness_eval.utils.redact import redact_secrets
 
 
-@cli.command("skill")
+@cli.command("skill-review")
 @click.argument("skill_path", type=click.Path(exists=True))
 @click.option(
     "--context",

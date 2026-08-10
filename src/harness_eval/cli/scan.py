@@ -13,7 +13,7 @@ from harness_eval.config.presets import SECURITY
 from harness_eval.output.metadata import EvalMetadata
 
 
-@cli.command("scan")
+@cli.command("skill-verify")
 @click.argument("path", type=click.Path(exists=True))
 @click.option("--format", "fmt", type=click.Choice(["terminal", "json"]), default="terminal")
 @click.option("--fail-on-error", is_flag=True, help="Exit code 1 if any errors are found.")

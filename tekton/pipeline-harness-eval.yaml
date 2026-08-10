@@ -4,7 +4,7 @@ metadata:
   name: harness-eval-scan
 spec:
   description: >-
-    Clone a repository and run harness-eval lint + security scan
+    Clone a repository and run harness-eval harness-lint + security scan
     on its AI agent configurations.
   params:
     - name: repo-url

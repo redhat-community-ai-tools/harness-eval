@@ -67,7 +67,7 @@ def _create_setup(tmp_path: Path) -> Path:
 def test_security_command_terminal(tmp_path: Path) -> None:
     setup = _create_setup(tmp_path)
     runner = CliRunner()
-    result = runner.invoke(cli, ["security", str(setup)])
+    result = runner.invoke(cli, ["harness-security", str(setup)])
     assert result.exit_code == 0
     assert "Security Audit" in result.output
 
@@ -75,7 +75,7 @@ def test_security_command_terminal(tmp_path: Path) -> None:
 def test_security_command_json(tmp_path: Path) -> None:
     setup = _create_setup(tmp_path)
     runner = CliRunner()
-    result = runner.invoke(cli, ["security", str(setup), "--format", "json"])
+    result = runner.invoke(cli, ["harness-security", str(setup), "--format", "json"])
     assert result.exit_code == 0
     import json
 
@@ -86,7 +86,7 @@ def test_security_command_json(tmp_path: Path) -> None:
 def test_security_command_detects_issues(tmp_path: Path) -> None:
     setup = _create_setup(tmp_path)
     runner = CliRunner()
-    result = runner.invoke(cli, ["security", str(setup), "--format", "json"])
+    result = runner.invoke(cli, ["harness-security", str(setup), "--format", "json"])
     assert result.exit_code == 0
     import json
 
@@ -97,12 +97,12 @@ def test_security_command_detects_issues(tmp_path: Path) -> None:
 def test_security_command_fail_on_error(tmp_path: Path) -> None:
     setup = _create_setup(tmp_path)
     runner = CliRunner()
-    result = runner.invoke(cli, ["security", str(setup), "--fail-on-error"])
+    result = runner.invoke(cli, ["harness-security", str(setup), "--fail-on-error"])
     assert result.exit_code == 1
 
 
 def test_security_command_risk_assessment(tmp_path: Path) -> None:
     setup = _create_setup(tmp_path)
     runner = CliRunner()
-    result = runner.invoke(cli, ["security", str(setup)])
+    result = runner.invoke(cli, ["harness-security", str(setup)])
     assert "Risk Assessment:" in result.output

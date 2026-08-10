@@ -20,55 +20,55 @@ DIRTY = str(FIXTURES / "security-issues")
 
 class TestLintCommand:
     def test_lint_clean_fixture(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", CLEAN])
+        result = CliRunner().invoke(cli, ["harness-lint", CLEAN])
         assert result.exit_code == 0
         assert "Setup Assessment" in result.output
 
     def test_lint_dirty_fixture_has_errors(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", DIRTY])
+        result = CliRunner().invoke(cli, ["harness-lint", DIRTY])
         assert "FAIL" in result.output or "error" in result.output.lower()
 
     def test_lint_fail_on_error(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", DIRTY, "--fail-on-error"])
+        result = CliRunner().invoke(cli, ["harness-lint", DIRTY, "--fail-on-error"])
         assert result.exit_code == 1
 
     def test_lint_json_output(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", CLEAN, "--format", "json"])
+        result = CliRunner().invoke(cli, ["harness-lint", CLEAN, "--format", "json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert "component_count" in data
 
     def test_lint_sarif_output(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", CLEAN, "--format", "sarif"])
+        result = CliRunner().invoke(cli, ["harness-lint", CLEAN, "--format", "sarif"])
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data.get("$schema") or data.get("version")
 
     def test_lint_with_preset(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", CLEAN, "--preset", "strict"])
+        result = CliRunner().invoke(cli, ["harness-lint", CLEAN, "--preset", "strict"])
         assert result.exit_code == 0
 
     def test_lint_nonexistent_path(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", "/nonexistent/path"])
+        result = CliRunner().invoke(cli, ["harness-lint", "/nonexistent/path"])
         assert result.exit_code != 0
 
 
 class TestSecurityCommand:
     def test_security_clean_fixture(self) -> None:
-        result = CliRunner().invoke(cli, ["security", CLEAN])
+        result = CliRunner().invoke(cli, ["harness-security", CLEAN])
         assert result.exit_code == 0
         assert "Risk Assessment" in result.output
 
     def test_security_dirty_fixture(self) -> None:
-        result = CliRunner().invoke(cli, ["security", DIRTY])
+        result = CliRunner().invoke(cli, ["harness-security", DIRTY])
         assert "UNSAFE" in result.output
 
     def test_security_fail_on_error(self) -> None:
-        result = CliRunner().invoke(cli, ["security", DIRTY, "--fail-on-error"])
+        result = CliRunner().invoke(cli, ["harness-security", DIRTY, "--fail-on-error"])
         assert result.exit_code == 1
 
     def test_security_json_output(self) -> None:
-        result = CliRunner().invoke(cli, ["security", CLEAN, "--format", "json"])
+        result = CliRunner().invoke(cli, ["harness-security", CLEAN, "--format", "json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert "security_scan" in data
@@ -77,16 +77,16 @@ class TestSecurityCommand:
 
 class TestScanCommand:
     def test_scan_clean_fixture(self) -> None:
-        result = CliRunner().invoke(cli, ["scan", CLEAN])
+        result = CliRunner().invoke(cli, ["skill-verify", CLEAN])
         assert result.exit_code == 0
         assert "Verdict" in result.output
 
     def test_scan_dirty_fixture(self) -> None:
-        result = CliRunner().invoke(cli, ["scan", DIRTY])
+        result = CliRunner().invoke(cli, ["skill-verify", DIRTY])
         assert "UNSAFE" in result.output
 
     def test_scan_json_output(self) -> None:
-        result = CliRunner().invoke(cli, ["scan", CLEAN, "--format", "json"])
+        result = CliRunner().invoke(cli, ["skill-verify", CLEAN, "--format", "json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data["scan"] is True

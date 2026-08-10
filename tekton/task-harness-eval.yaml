@@ -86,7 +86,7 @@ spec:
 
         SCAN_PATH="${WORKSPACE_PATH}/${PARAM_PATH}"
 
-        CMD=(harness-eval lint "${SCAN_PATH}")
+        CMD=(harness-eval harness-lint "${SCAN_PATH}")
         CMD+=(--enforce "${PARAM_ENFORCE}")
         CMD+=(--format "${PARAM_FORMAT}")
         CMD+=(--report-card "${WORKSPACE_PATH}/harness-eval-report-card.json")
@@ -136,7 +136,7 @@ spec:
 
         SCAN_PATH="${WORKSPACE_PATH}/${PARAM_PATH}"
 
-        CMD=(harness-eval security "${SCAN_PATH}")
+        CMD=(harness-eval harness-security "${SCAN_PATH}")
         CMD+=(--enforce "${PARAM_ENFORCE}")
         CMD+=(--format "${PARAM_FORMAT}")
 

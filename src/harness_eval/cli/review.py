@@ -16,7 +16,7 @@ from harness_eval.rubric.types import RubricResult
 from harness_eval.utils.redact import redact_secrets
 
 
-@cli.command("review")
+@cli.command("harness-review")
 @click.argument("path", type=click.Path(exists=True))
 @click.option("--format", "fmt", type=click.Choice(["terminal", "json"]), default="terminal")
 @click.option("--provider", type=click.Choice(["gemini", "anthropic"]), default="gemini")

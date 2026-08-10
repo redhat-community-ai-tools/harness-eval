@@ -322,7 +322,7 @@ def _format_terminal_security(report: _SecurityReport) -> None:
     click.echo("")
 
 
-@cli.command("security")
+@cli.command("harness-security")
 @click.argument("path", type=click.Path(exists=True))
 @click.option(
     "--format", "fmt", type=click.Choice(["terminal", "json", "sarif"]), default="terminal"

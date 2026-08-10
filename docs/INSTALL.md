@@ -16,17 +16,17 @@ pip install harness-eval[llm,tiktoken]  # everything
 Run:
 
 ```bash
-harness-eval lint .                         # deterministic lint (92 rules)
-harness-eval lint . --watch                 # re-run automatically on file changes
-harness-eval lint . --fail-on-error         # exit code 1 on errors (CI gate)
-harness-eval lint . --fail-on-warning       # exit code 1 on any finding (strict)
-harness-eval lint . --format sarif          # SARIF output for GitHub code scanning
-harness-eval lint . --format json           # JSON output for scripts
-harness-eval review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
-harness-eval security .                     # deterministic security scan
-harness-eval security . --review            # security scan + LLM semantic review (requires [llm] extra)
-harness-eval security . --fail-on-warning   # exit code 1 on any security finding
-harness-eval skill ./skills/my-skill --context . --rubric   # deep-evaluate one skill (requires [llm] extra)
+harness-eval harness-lint .                         # deterministic lint (92 rules)
+harness-eval harness-lint . --watch                 # re-run automatically on file changes
+harness-eval harness-lint . --fail-on-error         # exit code 1 on errors (CI gate)
+harness-eval harness-lint . --fail-on-warning       # exit code 1 on any finding (strict)
+harness-eval harness-lint . --format sarif          # SARIF output for GitHub code scanning
+harness-eval harness-lint . --format json           # JSON output for scripts
+harness-eval harness-review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
+harness-eval harness-security .                     # deterministic security scan
+harness-eval harness-security . --review            # security scan + LLM semantic review (requires [llm] extra)
+harness-eval harness-security . --fail-on-warning   # exit code 1 on any security finding
+harness-eval skill-review ./skills/my-skill --context . --rubric   # deep-evaluate one skill (requires [llm] extra)
 harness-eval rules                          # list all 92 rules
 harness-eval rules --category security      # list security rules only
 harness-eval rules --target hooks           # list rules that apply to hooks
@@ -96,13 +96,13 @@ For monorepos or repos with nested agent configs:
 
 ### Recursive discovery
 
-By default, harness-eval scans the repo root for agent config files (CLAUDE.md, skills, commands, hooks, MCP configs, agents). Use `--recursive` to search the entire directory tree for agent configs in nested directories. This is useful for monorepos and repos with scaffold templates.
+By default, harness-eval skill-verifys the repo root for agent config files (CLAUDE.md, skills, commands, hooks, MCP configs, agents). Use `--recursive` to search the entire directory tree for agent configs in nested directories. This is useful for monorepos and repos with scaffold templates.
 
 CLI:
 
 ```bash
-harness-eval lint . --recursive
-harness-eval security . --recursive
+harness-eval harness-lint . --recursive
+harness-eval harness-security . --recursive
 ```
 
 GitHub Action:
@@ -134,9 +134,9 @@ If you prefer manual setup over the action:
 
 ```yaml
 - run: pip install harness-eval
-- run: harness-eval security . --fail-on-warning
-- run: harness-eval lint . --fail-on-error
-- run: harness-eval lint . --format sarif --output results.sarif
+- run: harness-eval harness-security . --fail-on-warning
+- run: harness-eval harness-lint . --fail-on-error
+- run: harness-eval harness-lint . --format sarif --output results.sarif
 - uses: github/codeql-action/upload-sarif@v3
   with:
     sarif_file: results.sarif

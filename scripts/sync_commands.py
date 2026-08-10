@@ -42,10 +42,11 @@ If the Skill tool is not available or the skill is not found, tell the user:
 """
 
 SKILL_NAME_MAP = {
-    "lint": "lint",
-    "review": "review",
-    "security": "security",
-    "eval-skill": "eval-skill",
+    "harness-lint": "lint",
+    "harness-review": "review",
+    "harness-security": "security",
+    "skill-review": "eval-skill",
+    "skill-verify": "eval-skill",
 }
 
 

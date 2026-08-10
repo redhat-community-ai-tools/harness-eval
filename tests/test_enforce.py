@@ -38,35 +38,37 @@ class TestEnforceLint:
         runner = CliRunner()
         with runner.isolated_filesystem():
             _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["lint", ".", "--enforce", "strict"])
+            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "strict"])
             assert result.exit_code == 1
 
     def test_enforce_advisory_exits_0(self) -> None:
         runner = CliRunner()
         with runner.isolated_filesystem():
             _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["lint", ".", "--enforce", "advisory"])
+            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "advisory"])
             assert result.exit_code == 0
 
     def test_enforce_off_exits_0(self) -> None:
         runner = CliRunner()
         with runner.isolated_filesystem():
             _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["lint", ".", "--enforce", "off"])
+            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "off"])
             assert result.exit_code == 0
 
     def test_enforce_strict_exits_0_when_clean(self) -> None:
         runner = CliRunner()
         with runner.isolated_filesystem():
             Path("CLAUDE.md").write_text("# Clean project\n\nFollow these rules.")
-            result = runner.invoke(cli, ["lint", ".", "--enforce", "strict"])
+            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "strict"])
             assert result.exit_code == 0
 
     def test_enforce_mutual_exclusion_with_fail_on_error(self) -> None:
         runner = CliRunner()
         with runner.isolated_filesystem():
             _setup_clean(Path("."))
-            result = runner.invoke(cli, ["lint", ".", "--enforce", "strict", "--fail-on-error"])
+            result = runner.invoke(
+                cli, ["harness-lint", ".", "--enforce", "strict", "--fail-on-error"]
+            )
             assert result.exit_code != 0
             assert "mutually exclusive" in result.output.lower() or result.exception
 
@@ -76,12 +78,12 @@ class TestEnforceSecurity:
         runner = CliRunner()
         with runner.isolated_filesystem():
             _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["security", ".", "--enforce", "advisory"])
+            result = runner.invoke(cli, ["harness-security", ".", "--enforce", "advisory"])
             assert result.exit_code == 0
 
     def test_enforce_off_exits_0(self) -> None:
         runner = CliRunner()
         with runner.isolated_filesystem():
             _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["security", ".", "--enforce", "off"])
+            result = runner.invoke(cli, ["harness-security", ".", "--enforce", "off"])
             assert result.exit_code == 0

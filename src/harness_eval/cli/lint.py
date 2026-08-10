@@ -14,7 +14,7 @@ from harness_eval.core.setup import discover_setup
 from harness_eval.output.metadata import EvalMetadata
 
 
-@cli.command("lint")
+@cli.command("harness-lint")
 @click.argument("path", type=click.Path(exists=True))
 @click.option(
     "--preset",
