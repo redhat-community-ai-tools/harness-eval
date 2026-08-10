@@ -3,7 +3,7 @@ kind: Task
 metadata:
   name: harness-eval
   labels:
-    app.kubernetes.io/version: "7.4.0"
+    app.kubernetes.io/version: "7.5.0"
   annotations:
     tekton.dev/displayName: "harness-eval"
     tekton.dev/categories: Security
@@ -19,8 +19,9 @@ spec:
   params:
     - name: image
       type: string
-      default: image-registry.openshift-image-registry.svc:5000/qe-ds-ai--pipeline/harness-eval:dev
-      description: Container image for harness-eval.
+      description: >-
+        Container image for harness-eval. Build from the included
+        Containerfile and push to your own registry.
     - name: path
       type: string
       default: "."

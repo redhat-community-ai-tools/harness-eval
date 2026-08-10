@@ -113,7 +113,7 @@ def scan_lines_for_patterns(
             if match:
                 if code_block_msg is not None and in_code_fence:
                     message_id = code_block_msg
-                    severity_override: Severity | None = Severity.WARNING
+                    severity_override: Severity | None = Severity.INFO
                 elif negation_msg is not None:
                     prefix = line[: match.start()]
                     if _NEGATION_RE.search(prefix):
@@ -127,7 +127,7 @@ def scan_lines_for_patterns(
                         )
                         if is_quoted or is_example:
                             message_id = example_msg
-                            severity_override = Severity.WARNING
+                            severity_override = Severity.INFO
                         else:
                             message_id = detected_msg
                             severity_override = None
@@ -142,7 +142,7 @@ def scan_lines_for_patterns(
                     )
                     if is_quoted or is_example:
                         message_id = example_msg
-                        severity_override = Severity.WARNING
+                        severity_override = Severity.INFO
                     else:
                         message_id = detected_msg
                         severity_override = None

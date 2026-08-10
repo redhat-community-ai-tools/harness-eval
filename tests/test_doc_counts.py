@@ -23,6 +23,7 @@ FILES_WITH_TOTAL_COUNT = [
     "docs/INSTALL.md",
     "docs/rules-reference.md",
     ".github/actions/harness-eval/action.yml",
+    ".claude-plugin/marketplace.json",
 ]
 
 FILES_WITH_SECURITY_COUNT = [

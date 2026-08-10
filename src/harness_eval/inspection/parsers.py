@@ -77,11 +77,17 @@ def _resolve_skill_path(skill_path: str) -> tuple[Path, Path | None, list[str]]:
     return path, None, [f"Path does not exist: {path}"]
 
 
+_SUPPORTED_COMMAND_EXTS = {".md"}
+_SKIPPABLE_COMMAND_EXTS = {".toml"}
+
+
 def _resolve_command_path(command_path: str) -> tuple[Path, Path | None, list[str]]:
     """Resolve a command path to (cmd_dir, cmd_md, errors)."""
     path = Path(command_path)
-    if path.is_file() and path.suffix == ".md":
+    if path.is_file() and path.suffix in _SUPPORTED_COMMAND_EXTS:
         return path.parent, path, []
+    if path.is_file() and path.suffix in _SKIPPABLE_COMMAND_EXTS:
+        return path.parent, None, []
     if path.is_dir():
         cmd_md = path / "command.md"
         if cmd_md.exists():

@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.5.0] - 2026-08-10
+
+### Fixed
+- **Suppressions now work in reference files.** `evaluator-ignore` comments inside rubric/reference markdown files (not just SKILL.md) are now respected. The engine builds a per-file suppression map from all sub-files in the skill directory.
+- **"Likely safe" findings are now INFO, not ERROR.** Security patterns found inside code blocks or quote/example contexts are downgraded to INFO severity, so they no longer fail `--fail-on-error` gates.
+- **Gemini CLI `.toml` commands no longer produce false parser errors.** `.toml` command files are silently skipped instead of emitting a misleading "Path does not exist" error.
+- **`review` command prints a helpful error when API key is missing** instead of dumping a raw traceback. Error message names the expected env var for the selected provider.
+- **marketplace.json rule count updated** from 81 to 92; added to drift test to prevent future drift.
+
+### Changed
+- Tekton task `image` parameter no longer has a default; users build from the included `Containerfile` and push to their own registry
+- Windsurf and Cline noted as discovery + structure rules in README (full security scanning not yet supported)
+
+### Removed
+- `.skillsaw.yaml`: orphaned third-party linter config with zero references in the codebase
+
 ## [7.4.0] - 2026-08-10
 
 ### Added

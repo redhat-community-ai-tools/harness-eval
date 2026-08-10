@@ -9,31 +9,33 @@ Run harness-eval as a security gate in OpenShift Pipelines (Tekton). Scans AI ag
 
 ## Container Image
 
-harness-eval ships a UBI9-based container image compatible with OpenShift's `restricted-v2` SCC (arbitrary UID, root group).
+harness-eval includes a UBI9-based `Containerfile` compatible with OpenShift's `restricted-v2` SCC (arbitrary UID, root group). No pre-built image is published; build and push to your own registry.
 
-### Build from source
-
-```bash
-podman build -t harness-eval:dev -f Containerfile .
-```
-
-### Push to internal registry
+### Build and push
 
 ```bash
+# Build
+podman build -t harness-eval:7.5.0 -f Containerfile .
+
+# Push to your registry (internal OpenShift registry shown here)
 REGISTRY=$(oc registry info)
 oc new-project harness-eval-demo  # or use an existing project
 podman login "$REGISTRY" -u $(oc whoami) -p $(oc whoami -t) --tls-verify=false
-podman tag harness-eval:dev "$REGISTRY/harness-eval-demo/harness-eval:dev"
-podman push "$REGISTRY/harness-eval-demo/harness-eval:dev" --tls-verify=false
+podman tag harness-eval:7.5.0 "$REGISTRY/harness-eval-demo/harness-eval:7.5.0"
+podman push "$REGISTRY/harness-eval-demo/harness-eval:7.5.0" --tls-verify=false
 ```
+
+For quay.io or another public registry, substitute the registry URL and credentials.
 
 ## Quickstart
 
-Apply the Tekton Task and Pipeline, then create a PipelineRun:
+Apply the Tekton Task and Pipeline, then create a PipelineRun. The `image` parameter is required; set it to the image you built above.
 
 ```bash
 oc apply -f tekton/task-harness-eval.yaml
 oc apply -f tekton/pipeline-harness-eval.yaml
+
+# Edit pipelinerun-example.yaml to set the image parameter, then:
 oc create -f tekton/pipelinerun-example.yaml
 ```
 
@@ -51,7 +53,7 @@ The `harness-eval` Task accepts the following parameters:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `image` | (internal registry) | Container image for harness-eval |
+| `image` | (required) | Container image for harness-eval (build from Containerfile) |
 | `path` | `.` | Subdirectory within the workspace to scan |
 | `commands` | `lint,security` | Comma-separated commands to run |
 | `enforce` | `strict` | `strict` (fail on findings), `advisory` (report only), `off` (skip) |
