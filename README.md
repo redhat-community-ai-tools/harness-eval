@@ -27,6 +27,7 @@ Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift P
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
 | `lint` | 92 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
+| `scan` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
 | `review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
 | `security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
 | `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: `[llm]` extra or in-session. |
@@ -75,6 +76,25 @@ known prefix patterns) are replaced with `[REDACTED]` (HE-2). Scans also skip `.
 more with `--exclude`.
 
 See [`docs/how-can-you-know-its-safe-to-use-this-tool.md`](docs/how-can-you-know-its-safe-to-use-this-tool.md) for details.
+
+## Custom YAML rules
+
+Add your own rules without writing Python. Drop a `.yaml` file in `src/harness_eval/inspection/rules/custom/` or pass a directory with `--rules-dir`:
+
+```yaml
+id: custom/no-sudo
+severity: error
+description: Flag sudo usage in skills
+suggestion: Remove sudo; skills should not require root access.
+target: skill
+category: security
+patterns:
+  - label: sudo command
+    regex: '\bsudo\b'
+message: "Found '{{label}}' on line {{line}}"
+```
+
+YAML rules support regex pattern matching on component content. For complex logic (AST analysis, cross-component checks), use Python rules instead.
 
 ## Contributing
 

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **`scan` command**: vet a skill or setup before installing. Combines lint + security checks in one pass. Outputs SAFE/CAUTION/UNSAFE verdict. Supports `--format json`, `--fail-on-error`, `--fail-on-warning`.
+- **Declarative YAML rules**: add custom rules as `.yaml` files without writing Python. Drop in `rules/custom/` or load from any directory. Supports regex patterns, configurable severity, suggestions, and target types.
+
 ## [7.6.0] - 2026-08-10
 
 ### Added
