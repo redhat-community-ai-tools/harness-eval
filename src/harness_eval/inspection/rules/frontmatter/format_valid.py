@@ -22,6 +22,7 @@ class FormatValid:
             "missing_name": "Field 'name' is missing from frontmatter",
             "name_mismatch": "Frontmatter 'name' ({{fm_name}}) does not match directory name ({{dir_name}})",
         },
+        default_suggestion="Fix the YAML frontmatter syntax errors.",
     )
 
     def create(self, context: RuleContext) -> None:

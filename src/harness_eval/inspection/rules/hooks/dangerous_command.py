@@ -32,6 +32,7 @@ class HooksDangerousCommand:
             "dangerous_command": "Hook for event '{{event}}' contains dangerous command: '{{pattern}}'",
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Replace the dangerous command with a safer alternative.",
     )
 
     def create(self, context: RuleContext) -> None:

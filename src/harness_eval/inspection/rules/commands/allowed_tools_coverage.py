@@ -86,6 +86,7 @@ class CommandAllowedToolsCoverage:
             ),
         },
         target_type=ComponentType.COMMAND,
+        default_suggestion="Update the allowed-tools list to match the tools the command uses.",
     )
 
     def create(self, context: RuleContext) -> None:

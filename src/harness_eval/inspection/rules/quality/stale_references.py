@@ -95,6 +95,7 @@ class StaleReferences:
         messages={
             "stale": ("Line {{line}}: '{{label}}' is outdated. {{replacement}}"),
         },
+        default_suggestion="Update the outdated reference to its current replacement.",
     )
 
     def create(self, context: RuleContext) -> None:

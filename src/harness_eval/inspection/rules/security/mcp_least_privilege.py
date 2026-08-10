@@ -68,6 +68,7 @@ class McpLeastPrivilege:
             "mcp_overdeclared": "allowed-tools grants {{capability}} access but no code uses it. Remove unused permissions to follow least-privilege.",
         },
         frameworks={"owasp_agentic": "AG02"},
+        default_suggestion="Restrict the MCP server's tool list to only required tools.",
     )
 
     def create(self, context: RuleContext) -> None:

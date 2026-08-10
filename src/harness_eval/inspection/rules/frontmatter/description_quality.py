@@ -42,6 +42,7 @@ class DescriptionQuality:
             "too_long": "Description is {{length}} characters — Anthropic's documented limit is 1,024",
             "too_short": "Description is only {{length}} characters — too vague for reliable skill matching",
         },
+        default_suggestion="Rewrite the description to clearly state what the skill does and when to use it.",
     )
 
     def create(self, context: RuleContext) -> None:

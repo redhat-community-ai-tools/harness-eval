@@ -70,6 +70,7 @@ class McpNoPlaintextSecrets:
             ),
         },
         target_type=ComponentType.MCP_CONFIG,
+        default_suggestion="Replace the literal secret with an environment variable reference.",
     )
 
     def create(self, context: RuleContext) -> None:

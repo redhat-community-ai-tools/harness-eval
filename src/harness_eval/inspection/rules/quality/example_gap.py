@@ -36,6 +36,7 @@ class ExampleGap:
                 "Adding a code block with a concrete example improves compliance."
             ),
         },
+        default_suggestion="Add a code block with a concrete usage example.",
     )
 
     def create(self, context: RuleContext) -> None:

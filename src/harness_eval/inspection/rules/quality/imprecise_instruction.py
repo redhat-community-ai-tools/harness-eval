@@ -50,6 +50,7 @@ class ImpreciseInstruction:
         messages={
             "imprecise": ("Line {{line}}: '{{match}}' — {{category}}. {{advice}}"),
         },
+        default_suggestion="Replace vague language with specific, actionable wording.",
     )
 
     def create(self, context: RuleContext) -> None:

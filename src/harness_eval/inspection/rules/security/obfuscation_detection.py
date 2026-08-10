@@ -39,6 +39,7 @@ class ObfuscationDetection:
             "obfuscation_in_code_block": "Line {{line}} contains '{{label}}' inside a code block — likely documentation, but verify.",
         },
         frameworks={"owasp_llm": "LLM02", "mitre_atlas": "AML.T0054"},
+        default_suggestion="Replace obfuscated content with plain text.",
     )
 
     def create(self, context: RuleContext) -> None:

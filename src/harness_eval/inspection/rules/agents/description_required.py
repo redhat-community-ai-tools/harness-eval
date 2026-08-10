@@ -23,6 +23,7 @@ class AgentDescriptionRequired:
             "empty": "Field 'description' must not be empty",
         },
         target_type=ComponentType.AGENT,
+        default_suggestion="Add a 'description' field to the agent frontmatter.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -27,6 +27,7 @@ class CommandDuplicateDetection:
             "duplicate": "{{similarity}}% similar to command '{{other}}' — consider merging",
         },
         target_type=ComponentType.COMMAND,
+        default_suggestion="Merge near-duplicate commands into one.",
     )
 
     def create(self, context: RuleContext) -> None:

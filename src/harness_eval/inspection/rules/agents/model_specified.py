@@ -26,6 +26,7 @@ class AgentModelSpecified:
             ),
         },
         target_type=ComponentType.AGENT,
+        default_suggestion="Add 'model: inherit' or a specific model to the agent definition.",
     )
 
     def create(self, context: RuleContext) -> None:

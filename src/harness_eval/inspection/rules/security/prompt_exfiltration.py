@@ -66,6 +66,7 @@ class PromptExfiltration:
             "exfil_negated": "Line {{line}} contains '{{label}}' preceded by negation (likely a restriction, not exfiltration).",
         },
         frameworks={"owasp_llm": "LLM07"},
+        default_suggestion="Remove instructions that expose system prompts in output.",
     )
 
     def create(self, context: RuleContext) -> None:

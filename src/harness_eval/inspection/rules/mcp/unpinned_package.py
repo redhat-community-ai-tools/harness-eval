@@ -61,6 +61,7 @@ class McpUnpinnedPackage:
             ),
         },
         target_type=ComponentType.MCP_CONFIG,
+        default_suggestion="Pin the package to an exact version.",
     )
 
     def create(self, context: RuleContext) -> None:

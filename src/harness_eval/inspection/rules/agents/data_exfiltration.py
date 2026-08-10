@@ -27,6 +27,7 @@ class AgentDataExfiltration:
         },
         target_type=ComponentType.AGENT,
         frameworks={"owasp_llm": "LLM06", "owasp_agentic": "AG04"},
+        default_suggestion="Remove the network call or credential access from the agent definition.",
     )
 
     def create(self, context: RuleContext) -> None:

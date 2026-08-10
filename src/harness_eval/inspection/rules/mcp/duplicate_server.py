@@ -25,6 +25,7 @@ class McpDuplicateServer:
             "duplicate_url": "Multiple servers share the same URL '{{url}}': {{servers}}",
         },
         target_type=ComponentType.MCP_CONFIG,
+        default_suggestion="Remove the duplicate MCP server entry.",
     )
 
     def create(self, context: RuleContext) -> None:

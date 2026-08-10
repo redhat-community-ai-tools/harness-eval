@@ -20,6 +20,7 @@ class SkillMdExists:
         messages={
             "not_found": "SKILL.md not found in {{dir}}",
         },
+        default_suggestion="Add a SKILL.md file to the skill directory.",
     )
 
     def create(self, context: RuleContext) -> None:

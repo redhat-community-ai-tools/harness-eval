@@ -32,6 +32,7 @@ class HooksApiKeyHelper:
             ),
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Move apiKeyHelper to user-scoped settings.",
     )
 
     def create(self, context: RuleContext) -> None:

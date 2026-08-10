@@ -64,6 +64,7 @@ class MultiAssistantDrift:
             ),
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Sync the diverged sections between assistant memory files.",
     )
 
     def create(self, context: RuleContext) -> None:

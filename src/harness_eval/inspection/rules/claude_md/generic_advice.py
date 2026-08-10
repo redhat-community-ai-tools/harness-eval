@@ -26,6 +26,7 @@ class ClaudeMdGenericAdvice:
         },
         target_type=ComponentType.CLAUDE_MD,
         tools=("claude",),
+        default_suggestion="Remove the generic instruction or make it project-specific.",
     )
 
     def create(self, context: RuleContext) -> None:

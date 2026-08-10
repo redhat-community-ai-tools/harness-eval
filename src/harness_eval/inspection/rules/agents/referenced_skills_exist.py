@@ -22,6 +22,7 @@ class ReferencedSkillsExist:
             "missing_skill": "Agent references skill '{{skill}}' but no SKILL.md found for it",
         },
         target_type=ComponentType.AGENT,
+        default_suggestion="Create the missing skill or fix the reference.",
     )
 
     def create(self, context: RuleContext) -> None:

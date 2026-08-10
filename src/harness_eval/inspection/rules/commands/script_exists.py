@@ -25,6 +25,7 @@ class CommandScriptExists:
             "missing_script": "Command references '{{script}}' but this file does not exist in the command directory",
         },
         target_type=ComponentType.COMMAND,
+        default_suggestion="Create the missing script file or fix the reference path.",
     )
 
     def create(self, context: RuleContext) -> None:

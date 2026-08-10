@@ -50,6 +50,7 @@ class CrossComponentFlow:
             "owasp_agentic": "AG04",
             "mitre_atlas": "AML.T0054",
         },
+        default_suggestion="Restrict network access in the delegated component or scope credentials.",
     )
 
     def create(self, context: RuleContext) -> None:

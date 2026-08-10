@@ -36,6 +36,7 @@ class HooksEnvLeakage:
             "env_leakage": "Hook for event '{{event}}' may leak environment variables: '{{pattern}}'",
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Remove env var printing or redirect output away from the agent.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -124,6 +124,7 @@ class ConfigInstructionConflict:
             ),
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Remove the deny entry or update the instruction to use an allowed tool.",
     )
 
     def create(self, context: RuleContext) -> None:

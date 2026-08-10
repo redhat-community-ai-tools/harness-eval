@@ -63,6 +63,7 @@ class HardcodedMachinePath:
             ),
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Replace the absolute path with $HOME, a relative path, or an env var.",
     )
 
     def create(self, context: RuleContext) -> None:

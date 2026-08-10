@@ -29,6 +29,7 @@ class AgentReverseShellDetection:
         },
         target_type=ComponentType.AGENT,
         frameworks={"owasp_agentic": "AG04", "mitre_atlas": "AML.T0054"},
+        default_suggestion="Remove the reverse shell pattern from the agent definition.",
     )
 
     def create(self, context: RuleContext) -> None:

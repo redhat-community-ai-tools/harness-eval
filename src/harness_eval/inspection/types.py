@@ -81,6 +81,7 @@ class RuleMeta:
     target_type: ComponentType = ComponentType.SKILL
     tools: tuple[str, ...] | None = None
     frameworks: dict[str, str] | None = None
+    default_suggestion: str | None = None
 
 
 @dataclass

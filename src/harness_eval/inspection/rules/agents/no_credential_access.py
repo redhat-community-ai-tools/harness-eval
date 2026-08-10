@@ -32,6 +32,7 @@ class AgentNoCredentialAccess:
         },
         target_type=ComponentType.AGENT,
         frameworks={"owasp_llm": "LLM06", "owasp_agentic": "AG05"},
+        default_suggestion="Remove direct credential access from the agent instructions.",
     )
 
     def create(self, context: RuleContext) -> None:

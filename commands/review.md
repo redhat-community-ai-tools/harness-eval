@@ -1,5 +1,5 @@
 ---
-description: "Full qualitative review of the agent setup. Per-component rubrics, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. Use for deep review, redundancy check, or quality assessment."
+description: "Full qualitative review of the agent setup. Read every file, evaluate quality, redundancy, and optimization opportunities. Produce KEEP/REVIEW/REMOVE verdicts per component"
 ---
 
 # Eval Setup Review

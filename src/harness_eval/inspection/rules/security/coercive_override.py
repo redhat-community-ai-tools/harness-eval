@@ -58,6 +58,7 @@ class CoerciveOverride:
             "coercive_in_example": "Line {{line}} contains '{{label}}' in a quote or example (likely safe).",
         },
         frameworks={"owasp_llm": "LLM01", "owasp_agentic": "AG01"},
+        default_suggestion="Remove or rephrase the coercive override pattern.",
     )
 
     def create(self, context: RuleContext) -> None:

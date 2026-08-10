@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Fix suggestions for all 92 rules.** Every finding now includes an actionable "Fix:" line in terminal output and a `suggestion` field in JSON output. Suggestions are set via `default_suggestion` on `RuleMeta` and can be overridden per-finding.
+- `scripts/sync_commands.py`: generates Claude Code `commands/` stubs from `.cursor/commands/` source. Run with `--check` in CI to prevent drift.
+- Tests for `utils/llm.py` (LLM client abstraction) and suppression edge cases (22 new tests)
 - Mypy type checking step in CI lint job (continue-on-error until existing errors are fixed)
 - `TestRulesReferenceCompleteness` test verifying all registered rules appear in `docs/rules-reference.md`
 - Changelog enforcement CI job that fails PRs titled `feat:/fix:/refactor:/perf:/security:` when CHANGELOG.md is not modified

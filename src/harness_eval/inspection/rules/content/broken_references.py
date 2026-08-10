@@ -105,6 +105,7 @@ class BrokenReferences:
         messages={
             "broken_ref": "Referenced file '{{ref}}' does not exist",
         },
+        default_suggestion="Fix or remove the broken file reference.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -74,6 +74,7 @@ class NoPromptInjection:
             "injection_negated": "Line {{line}} contains '{{label}}' preceded by negation (likely a safety guardrail, not injection).",
         },
         frameworks={"owasp_llm": "LLM01", "mitre_atlas": "AML.T0051"},
+        default_suggestion="Remove or rephrase the flagged text.",
     )
 
     def create(self, context: RuleContext) -> None:

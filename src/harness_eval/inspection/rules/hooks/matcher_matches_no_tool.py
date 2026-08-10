@@ -34,6 +34,7 @@ class HooksMatcherMatchesNoTool:
             ),
         },
         target_type=ComponentType.HOOKS,
+        default_suggestion="Fix the matcher pattern to match a valid tool name.",
     )
 
     def create(self, context: RuleContext) -> None:

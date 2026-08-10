@@ -29,6 +29,7 @@ class CommandReverseShellDetection:
         },
         target_type=ComponentType.COMMAND,
         frameworks={"owasp_agentic": "AG04", "mitre_atlas": "AML.T0054"},
+        default_suggestion="Remove the reverse shell pattern from the command.",
     )
 
     def create(self, context: RuleContext) -> None:

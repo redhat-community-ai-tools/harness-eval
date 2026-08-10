@@ -27,6 +27,7 @@ class PermissionEscalation:
             ),
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Add the required tool to the source skill or remove the reference.",
     )
 
     def create(self, context: RuleContext) -> None:

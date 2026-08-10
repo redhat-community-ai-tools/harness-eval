@@ -21,6 +21,7 @@ class DescriptionRequired:
             "missing": "Required field 'description' is missing from frontmatter",
             "empty": "Field 'description' must not be empty",
         },
+        default_suggestion="Add a 'description' field to the frontmatter.",
     )
 
     def create(self, context: RuleContext) -> None:

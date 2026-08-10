@@ -64,6 +64,7 @@ class OrphanSkills:
             "orphan": "Skill '{{name}}' is not referenced by any command, CLAUDE.md, or agent",
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Reference the skill from a command, CLAUDE.md, or agent, or remove it.",
     )
 
     def create(self, context: RuleContext) -> None:

@@ -23,6 +23,7 @@ class CommandDescriptionRequired:
             "too_vague": "Description '{{desc}}' is too short or vague — should clearly say what the command does",
         },
         target_type=ComponentType.COMMAND,
+        default_suggestion="Add a 'description' field to the command frontmatter.",
     )
 
     def create(self, context: RuleContext) -> None:

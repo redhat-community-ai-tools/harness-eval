@@ -121,6 +121,7 @@ class McpToolPoisoning:
             "mcp_suspicious_default": "Line {{line}}: {{label}}. Suspicious content pattern detected.",
         },
         frameworks={"owasp_llm": "LLM05", "owasp_agentic": "AG03"},
+        default_suggestion="Pin the MCP server package and validate its tool descriptions.",
     )
 
     def create(self, context: RuleContext) -> None:

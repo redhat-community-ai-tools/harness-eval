@@ -30,6 +30,7 @@ class DescriptionLength:
                 "is invoked. Keep descriptions concise; move detail to the body."
             ),
         },
+        default_suggestion="Move detail from the description to the body section.",
     )
 
     def create(self, context: RuleContext) -> None:

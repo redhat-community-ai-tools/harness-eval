@@ -56,6 +56,7 @@ class McpAutoApproveRisk:
             ),
         },
         target_type=ComponentType.MCP_CONFIG,
+        default_suggestion="Remove write/execute tools from the autoApprove list.",
     )
 
     def create(self, context: RuleContext) -> None:

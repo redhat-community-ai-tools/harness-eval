@@ -201,6 +201,7 @@ class TaintTracking:
             "taint_input_exec": "{{file}}: external input (line {{source_line}}) flows to code execution (line {{sink_line}}). Possible injection vector.",
         },
         frameworks={"owasp_llm": "LLM06", "owasp_agentic": "AG04"},
+        default_suggestion="Add input validation before using untrusted data in sensitive operations.",
     )
 
     def create(self, context: RuleContext) -> None:

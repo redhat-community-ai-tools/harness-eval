@@ -54,6 +54,7 @@ class CircularReferences:
             "cycle": "Circular reference detected: {{cycle}}",
         },
         target_type=ComponentType.SKILL,
+        default_suggestion="Break the circular reference chain by removing one link.",
     )
 
     def create(self, context: RuleContext) -> None:

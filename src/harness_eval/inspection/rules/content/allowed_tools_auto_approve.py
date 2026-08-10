@@ -35,6 +35,7 @@ class AllowedToolsAutoApprove:
                 "writes without user confirmation."
             ),
         },
+        default_suggestion="Remove dangerous tools from the allowed-tools list.",
     )
 
     def create(self, context: RuleContext) -> None:

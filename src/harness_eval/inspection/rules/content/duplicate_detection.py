@@ -25,6 +25,7 @@ class DuplicateDetection:
         messages={
             "duplicate": "{{similarity}}% similar to '{{other}}' — consider merging",
         },
+        default_suggestion="Merge near-duplicate skills into one.",
     )
 
     def create(self, context: RuleContext) -> None:
