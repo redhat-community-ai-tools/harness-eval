@@ -209,7 +209,7 @@ def git_commit_and_tag(new_version: str, dry_run: bool) -> None:
         cwd=ROOT,
         check=True,
     )
-    print(f"  Pushed. PyPI publish and GitHub Release will be created automatically.")
+    print("  Pushed. PyPI publish and GitHub Release will be created automatically.")
 
 
 def main() -> None:
