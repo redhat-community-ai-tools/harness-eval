@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.4.0] - 2026-08-10
+
 ### Added
 - `hooks/base-url-override` rule (ERROR): flags project-scoped settings overriding LLM provider base URLs (CVE-2026-21852)
 - `hooks/api-key-helper` rule (ERROR): flags project-scoped settings defining apiKeyHelper
