@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.7.1] - 2026-08-10
+
 ### Fixed
 - **Cursor commands broken**: `.cursor/commands/*.md` bodies referenced old CLI names (`harness-eval lint` instead of `harness-eval harness-lint`). All 5 Cursor commands updated.
 - **`skill-verify` fails on bare skill directories**: now falls back to parsing as a single skill when `SKILL.md` exists but `discover_setup` finds no components.
