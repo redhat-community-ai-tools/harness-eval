@@ -1,13 +1,15 @@
 ---
-description: "Vet a skill or setup before installing. Combines lint + security checks in one pass"
+description: "Vet a skill or setup before installing. Combines lint + security checks in one pass."
 ---
 
 # Skill Verify
 
-Use the Skill tool to invoke `eval-skill` explicitly.
+Run `harness-eval skill-verify` on the path provided in $ARGUMENTS.
 
-Pass through any arguments from $ARGUMENTS (e.g., a specific path to evaluate).
+```bash
+harness-eval skill-verify $ARGUMENTS
+```
 
-If the Skill tool is not available or the skill is not found, tell the user:
-- Check that `skills/eval-skill/SKILL.md` exists in the workspace
-- If not, reinstall the harness-eval plugin
+If `harness-eval` is not installed, tell the user to run `pip install harness-eval` first.
+
+Present the verdict (SAFE / CAUTION / UNSAFE) and any findings with fix suggestions.

@@ -40,7 +40,7 @@ def scan_skill(path: str, fmt: str, fail_on_error: bool, fail_on_warning: bool) 
     lint_results = inspect_setup(setup, RECOMMENDED)
     security_results = inspect_setup(setup, SECURITY)
 
-    seen_keys: set[str] = set()
+    seen_keys: set[tuple[str, str]] = set()
     merged = []
     for r in [*lint_results, *security_results]:
         key = (r.target_type, r.target_name)

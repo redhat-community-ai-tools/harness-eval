@@ -79,7 +79,7 @@ See [`docs/how-can-you-know-its-safe-to-use-this-tool.md`](docs/how-can-you-know
 
 ## Custom YAML rules
 
-Add your own rules without writing Python. Drop a `.yaml` file in `src/harness_eval/inspection/rules/custom/` or pass a directory with `--rules-dir`:
+Add your own rules without writing Python. Drop a `.yaml` file in `src/harness_eval/inspection/rules/custom/`:
 
 ```yaml
 id: custom/no-sudo
@@ -94,7 +94,7 @@ patterns:
 message: "Found '{{label}}' on line {{line}}"
 ```
 
-YAML rules support regex pattern matching on component content. For complex logic (AST analysis, cross-component checks), use Python rules instead.
+YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. For complex logic (AST analysis, cross-component checks), use Python rules instead.
 
 ## Contributing
 

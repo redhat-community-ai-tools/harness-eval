@@ -96,7 +96,7 @@ For monorepos or repos with nested agent configs:
 
 ### Recursive discovery
 
-By default, harness-eval skill-verifys the repo root for agent config files (CLAUDE.md, skills, commands, hooks, MCP configs, agents). Use `--recursive` to search the entire directory tree for agent configs in nested directories. This is useful for monorepos and repos with scaffold templates.
+By default, harness-eval scans the repo root for agent config files (CLAUDE.md, skills, commands, hooks, MCP configs, agents). Use `--recursive` to search the entire directory tree for agent configs in nested directories. This is useful for monorepos and repos with scaffold templates.
 
 CLI:
 
