@@ -124,3 +124,13 @@ class TestVersionFlag:
         result = CliRunner().invoke(cli, ["--version"])
         assert result.exit_code == 0
         assert "harness-eval" in result.output
+
+
+class TestSkillReviewCommand:
+    def test_json_output_has_required_fields(self) -> None:
+        skill_path = str(FIXTURES / "sample-setup-a" / "skills" / "code-review")
+        result = CliRunner().invoke(cli, ["skill-review", skill_path, "--format", "json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        for key in ("skill", "tokens", "errors", "warnings", "findings"):
+            assert key in data, f"Missing key '{key}' in skill-review JSON output"

@@ -46,7 +46,7 @@ If no context path, omit the `--context` flag.
 
 If `harness-eval` is not installed, install it first: `pip install harness-eval`
 
-Read the JSON output. It contains diagnostics, token count, security findings, and contextual findings. The script runs both the standard lint preset and the security preset, so all security rules (credential access, injection, exfiltration, taint tracking, etc.) are included.
+Read the JSON output. It contains diagnostics, token count, and contextual findings. This runs the recommended preset (quality + structural rules). For full security vetting, use `/skill-verify` instead.
 
 ## Step 4: Read Actual Files
 
