@@ -8,7 +8,7 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-from harness_eval.utils.tokens import count_tokens
+from harness_eval.utils.tokens import count_tokens, is_fallback
 
 DEFAULT_TOTAL_DESCRIPTION_BUDGET = 2000
 
@@ -58,11 +58,12 @@ class TotalDescriptionBudget:
                     largest_skill = skill
 
         if total > DEFAULT_TOTAL_DESCRIPTION_BUDGET:
+            total_str = f"~{total}" if is_fallback() else str(total)
             context.report(
                 ReportDescriptor(
                     message_id="over_budget",
                     data={
-                        "total": str(total),
+                        "total": total_str,
                         "count": str(count),
                         "budget": str(DEFAULT_TOTAL_DESCRIPTION_BUDGET),
                     },

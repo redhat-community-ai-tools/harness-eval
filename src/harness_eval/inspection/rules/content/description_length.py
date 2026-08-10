@@ -8,7 +8,7 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-from harness_eval.utils.tokens import count_tokens
+from harness_eval.utils.tokens import count_tokens, is_fallback
 
 DEFAULT_MAX_DESCRIPTION_TOKENS = 100
 
@@ -45,10 +45,11 @@ class DescriptionLength:
         budget = DEFAULT_MAX_DESCRIPTION_TOKENS
 
         if tokens > budget:
+            token_str = f"~{tokens}" if is_fallback() else str(tokens)
             context.report(
                 ReportDescriptor(
                     message_id="over_budget",
-                    data={"tokens": str(tokens), "budget": str(budget)},
+                    data={"tokens": token_str, "budget": str(budget)},
                     location=Location(file=skill.skill_md_path),
                 )
             )
