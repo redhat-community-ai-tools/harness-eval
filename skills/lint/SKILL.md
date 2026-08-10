@@ -1,15 +1,15 @@
 ---
 name: lint
-description: Run deterministic static analysis on the full agent setup (CLAUDE.md, skills, commands, hooks, agents, MCP configs). 84 rules + system-level analysis (token budget, trigger overlaps, dependencies). No LLM. Use when the user wants a fast lint check, CI gate, or structural health report.
+description: Run deterministic static analysis on the full agent setup (CLAUDE.md, skills, commands, hooks, agents, MCP configs). 92 rules + system-level analysis (token budget, trigger overlaps, dependencies). No LLM. Use when the user wants a fast lint check, CI gate, or structural health report.
 allowed-tools:
   - Bash
   - Read
 ---
-<!-- evaluator-ignore: content/broken-references, security/mcp-least-privilege, security/ast-behavioral -->
+<!-- evaluator-ignore: content/broken-references, security/mcp-least-privilege, security/ast-behavioral, content/allowed-tools-auto-approve -->
 
 # Lint Setup
 
-Run 84 deterministic rules + system-level analysis on the user's agent setup. No LLM involved. Fast, reproducible, CI-suitable.
+Run 92 deterministic rules + system-level analysis on the user's agent setup. No LLM involved. Fast, reproducible, CI-suitable.
 
 ## Hard Rules
 

@@ -28,6 +28,9 @@ class DependencyReport:
     orphan_components: list[str] = field(default_factory=list)
 
 
+# Setups with very few components are too small for orphan detection to be useful.
+MIN_COMPONENTS_FOR_ORPHAN_DETECTION = 4
+
 _SKILL_REF_PATTERNS = [
     re.compile(r"skills?[/\\](\w[\w-]*)"),
     re.compile(r"/(\w[\w-]*)\s+skill"),
@@ -100,7 +103,9 @@ def analyze_dependencies(setup: Setup) -> DependencyReport:
     for comp in setup.components:
         if comp.component_type not in orphan_types:
             continue
-        if comp.name not in referenced_names and len(setup.components) > 3:
+        is_orphan = comp.name not in referenced_names
+        has_enough_components = len(setup.components) >= MIN_COMPONENTS_FOR_ORPHAN_DETECTION
+        if is_orphan and has_enough_components:
             orphans.append(f"{comp.component_type.value}/{comp.name}")
 
     return DependencyReport(

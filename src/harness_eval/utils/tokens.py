@@ -39,6 +39,12 @@ def _reset():
     _WARNED = False
 
 
+def is_fallback() -> bool:
+    if _ENCODER is None and not _FALLBACK:
+        _init_encoder()
+    return _FALLBACK
+
+
 def count_tokens(text: str) -> int:
     global _WARNED
 

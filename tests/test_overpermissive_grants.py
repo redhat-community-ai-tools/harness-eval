@@ -51,14 +51,14 @@ def _lint(tmp_path: Path, skill_dir: Path) -> list:
 
 class TestOverpermissiveGrants:
     def test_flags_bash_star(self, tmp_path: Path) -> None:
-        """Bash(*) should be flagged at error severity."""
+        """Bash(*) should be flagged; severity follows config, not per-finding override."""
         skill_dir = _make_skill(tmp_path)
         _make_settings(tmp_path, allow_list=["Bash(*)"])
 
         diags = _lint(tmp_path, skill_dir)
         assert len(diags) == 1
         assert "unrestricted shell" in diags[0].message
-        assert diags[0].severity.value == "error"
+        assert diags[0].severity.value == "warning"
 
     def test_flags_bare_bash(self, tmp_path: Path) -> None:
         """Bare 'Bash' without parens should be flagged."""

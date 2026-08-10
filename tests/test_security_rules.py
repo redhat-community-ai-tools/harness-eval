@@ -341,7 +341,7 @@ class TestBase64EntropyFiltering:
 
 
 class TestSubprocessHardcodedDetection:
-    def test_hardcoded_subprocess_is_warning(self, skill_dir: Path) -> None:
+    def test_hardcoded_subprocess_respects_config(self, skill_dir: Path) -> None:
         _write_skill(
             skill_dir,
             py_content='import subprocess\nsubprocess.run(["ruff", "check", "."])\n',
@@ -349,10 +349,10 @@ class TestSubprocessHardcodedDetection:
         result = lint(str(skill_dir), SECURITY)
         ast_findings = [d for d in result.diagnostics if d.rule_id == "security/ast-behavioral"]
         assert len(ast_findings) >= 1
-        assert ast_findings[0].severity.value == "warning"
+        assert ast_findings[0].severity.value == "error"
         assert "hardcoded" in ast_findings[0].message
 
-    def test_dynamic_subprocess_is_warning(self, skill_dir: Path) -> None:
+    def test_dynamic_subprocess_respects_config(self, skill_dir: Path) -> None:
         _write_skill(
             skill_dir,
             py_content=("import subprocess, sys\nsubprocess.run(sys.argv[1:])\n"),
@@ -360,15 +360,25 @@ class TestSubprocessHardcodedDetection:
         result = lint(str(skill_dir), SECURITY)
         ast_findings = [d for d in result.diagnostics if d.rule_id == "security/ast-behavioral"]
         assert len(ast_findings) >= 1
-        assert ast_findings[0].severity.value == "warning"
+        assert ast_findings[0].severity.value == "error"
         assert "dynamic" in ast_findings[0].message
 
-    def test_shell_true_is_warning(self, skill_dir: Path) -> None:
+    def test_shell_true_respects_config(self, skill_dir: Path) -> None:
         _write_skill(
             skill_dir,
             py_content=('import subprocess\nsubprocess.run("ls -la", shell=True)\n'),
         )
         result = lint(str(skill_dir), SECURITY)
+        ast_findings = [d for d in result.diagnostics if d.rule_id == "security/ast-behavioral"]
+        assert len(ast_findings) >= 1
+        assert ast_findings[0].severity.value == "error"
+
+    def test_hardcoded_subprocess_is_warning_at_default(self, skill_dir: Path) -> None:
+        _write_skill(
+            skill_dir,
+            py_content='import subprocess\nsubprocess.run(["ruff", "check", "."])\n',
+        )
+        result = lint(str(skill_dir))
         ast_findings = [d for d in result.diagnostics if d.rule_id == "security/ast-behavioral"]
         assert len(ast_findings) >= 1
         assert ast_findings[0].severity.value == "warning"

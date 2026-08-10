@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `hooks/base-url-override` rule (ERROR): flags project-scoped settings overriding LLM provider base URLs (CVE-2026-21852)
+- `hooks/api-key-helper` rule (ERROR): flags project-scoped settings defining apiKeyHelper
+- `hooks/env-credential-override` rule (WARNING): flags credential-shaped env vars (`_KEY`, `_TOKEN`, `_SECRET`, `_PASSWORD`, `_KEY_ID`, `_PAT`) in project settings; excludes `_PUBLIC_KEY`
+- `hooks/pre-trust-permissions` rule (WARNING): flags `permissions.allow` and lifecycle hooks (`SessionStart`, `Stop`, etc.) that auto-execute without user interaction (CVE-2025-59536)
+- `content/allowed-tools-auto-approve` rule (WARNING): flags allowed-tools entries that auto-approve Bash or `Bash(...)` (HIGH) or Write/Edit (MEDIUM)
+- `content/description-length` rule (WARNING): flags skill descriptions over 100 tokens (always-loaded cost); shows approximate count when tiktoken unavailable
+- `content/total-description-budget` rule (WARNING): flags aggregate description budget over 2000 tokens; attributes finding to the largest contributor skill
+- `quality/scope-grab-description` rule (WARNING): flags descriptions that hijack routing ("any request", "always use", "prefer over"); qualified phrases ("any request involving X") are excluded
+
+### Changed
+- **Engine: explicit config wins over per-finding severity_override.** When a rule's severity is explicitly set in a preset or user config, per-finding `severity_override` can no longer silently downgrade it. INFO-level overrides (used for skip notices) are exempt. This means findings that were previously downgraded to WARNING under the SECURITY/STRICT presets now correctly report at the configured severity.
+- `hooks/base-url-override`: now scans the full settings file (not just the `env` section), catches base URLs in hook commands, handles malformed JSON via line-scan fallback, and reports all occurrences. Uses exact-match for env keys to avoid false positives on suffixed names like `ANTHROPIC_BASE_URL_MIRROR`.
+- Token budget rules indicate approximate counts (`~108 tokens`) when tiktoken is unavailable
+
+### Fixed
+- Orphan detection: extracted magic threshold into `MIN_COMPONENTS_FOR_ORPHAN_DETECTION` constant
+
 ## [7.3.0] - 2026-08-09
 
 ### Changed

@@ -70,6 +70,8 @@ def _resolve_severity(
     if severity_config is None and config_rules:
         return None
 
+    explicitly_configured = severity_config is not None
+
     if isinstance(severity_config, list) and len(severity_config) > 0:
         sev_str = severity_config[0]
         options = severity_config[1:]
@@ -88,7 +90,7 @@ def _resolve_severity(
     except ValueError:
         severity = rule.meta.default_severity
 
-    return severity, options
+    return severity, options, explicitly_configured
 
 
 def _make_report_fn(
@@ -101,6 +103,7 @@ def _make_report_fn(
     suppressions: dict[int | None, set[str]],
     findings: list[Finding],
     suppression_counter: list[int],
+    explicitly_configured: bool = False,
 ) -> Callable[[ReportDescriptor], None]:
     """Build a report callback for a single rule.
 
@@ -115,7 +118,11 @@ def _make_report_fn(
             return
         template = meta_messages.get(descriptor.message_id, descriptor.message_id)
         message = _interpolate(template, descriptor.data)
-        effective_severity = descriptor.severity_override or severity
+        override = descriptor.severity_override
+        if explicitly_configured and override and override != Severity.INFO:
+            effective_severity = severity
+        else:
+            effective_severity = override or severity
         findings.append(
             Finding(
                 rule_id=rule_id,
@@ -198,7 +205,7 @@ def _run_rules(
         resolved = _resolve_severity(rule, config_rules)
         if resolved is None:
             continue
-        severity, options = resolved
+        severity, options, explicitly_configured = resolved
 
         findings_before = len(findings)
 
@@ -214,6 +221,7 @@ def _run_rules(
                 suppressions,
                 findings,
                 suppression_counter,
+                explicitly_configured,
             ),
             severity=severity,
             options=options,

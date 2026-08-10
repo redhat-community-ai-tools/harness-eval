@@ -84,6 +84,17 @@ RECOMMENDED: dict[str, str] = {
     # Command rules (new)
     "command/allowed-tools-coverage": "warning",
     "cross/overpermissive-grants": "warning",
+    # Pre-trust config rules
+    "hooks/base-url-override": "error",
+    "hooks/api-key-helper": "error",
+    "hooks/env-credential-override": "warning",
+    "hooks/pre-trust-permissions": "warning",
+    # Allowed-tools auto-approve
+    "content/allowed-tools-auto-approve": "warning",
+    # Description rules
+    "content/description-length": "warning",
+    "content/total-description-budget": "warning",
+    "quality/scope-grab-description": "warning",
 }
 
 STRICT: dict[str, str] = {
@@ -126,6 +137,17 @@ STRICT: dict[str, str] = {
     "cross/multi-assistant-drift": "error",
     "command/allowed-tools-coverage": "error",
     "cross/overpermissive-grants": "error",
+    # Pre-trust config rules
+    "hooks/base-url-override": "error",
+    "hooks/api-key-helper": "error",
+    "hooks/env-credential-override": "error",
+    "hooks/pre-trust-permissions": "error",
+    # Allowed-tools auto-approve
+    "content/allowed-tools-auto-approve": "error",
+    # Description rules
+    "content/description-length": "error",
+    "content/total-description-budget": "error",
+    "quality/scope-grab-description": "error",
     # Quality rules
     "quality/imprecise-instruction": "error",
     "quality/redundant-guidance": "error",
@@ -205,6 +227,13 @@ SECURITY: dict[str, str] = {
     "security/stealth-persistence": "error",
     "security/prompt-exfiltration": "error",
     "cross/overpermissive-grants": "error",
+    # Pre-trust config rules
+    "hooks/base-url-override": "error",
+    "hooks/api-key-helper": "error",
+    "hooks/env-credential-override": "warning",
+    "hooks/pre-trust-permissions": "warning",
+    # Allowed-tools auto-approve
+    "content/allowed-tools-auto-approve": "warning",
 }
 
 PRE_WORKFLOW: dict[str, str] = {
@@ -240,6 +269,10 @@ PRE_WORKFLOW: dict[str, str] = {
     "hooks/dangerous-command": "error",
     "hooks/env-leakage": "warning",
     "hooks/network-access": "warning",
+    "hooks/base-url-override": "error",
+    "hooks/api-key-helper": "error",
+    "hooks/env-credential-override": "warning",
+    "hooks/pre-trust-permissions": "warning",
     "agent/description-required": "off",
     "agent/referenced-skills-exist": "error",
     "agent/disallowed-tools-parseable": "off",
