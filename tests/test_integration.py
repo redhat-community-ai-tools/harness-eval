@@ -21,7 +21,7 @@ class TestCLIExitCodes:
 
     def test_lint_clean_fixture_exits_0(self):
         result = subprocess.run(
-            ["uv", "run", "harness-eval", "lint", str(FIXTURES / "sample-setup-a")],
+            ["uv", "run", "harness-eval", "harness-lint", str(FIXTURES / "sample-setup-a")],
             capture_output=True,
             text=True,
         )
@@ -33,7 +33,7 @@ class TestCLIExitCodes:
                 "uv",
                 "run",
                 "harness-eval",
-                "lint",
+                "harness-lint",
                 str(FIXTURES / "security-issues"),
                 "--fail-on-error",
             ],
@@ -48,7 +48,7 @@ class TestCLIExitCodes:
                 "uv",
                 "run",
                 "harness-eval",
-                "lint",
+                "harness-lint",
                 str(FIXTURES / "security-issues"),
                 "--fail-on-warning",
             ],
@@ -65,7 +65,7 @@ class TestCLIExitCodes:
                 "uv",
                 "run",
                 "harness-eval",
-                "lint",
+                "harness-lint",
                 str(FIXTURES / "sample-setup-a"),
                 "--format",
                 "json",
@@ -85,7 +85,7 @@ class TestCLIExitCodes:
                 "uv",
                 "run",
                 "harness-eval",
-                "lint",
+                "harness-lint",
                 str(FIXTURES / "sample-setup-a"),
                 "--format",
                 "sarif",
@@ -170,7 +170,7 @@ class TestTiktokenFallbackIntegration:
         ):
             tokens._init_encoder()
         result = subprocess.run(
-            ["uv", "run", "harness-eval", "lint", str(FIXTURES / "sample-setup-a")],
+            ["uv", "run", "harness-eval", "harness-lint", str(FIXTURES / "sample-setup-a")],
             capture_output=True,
             text=True,
             env={**__import__("os").environ, "TIKTOKEN_CACHE_DIR": "/nonexistent"},
@@ -184,7 +184,7 @@ class TestSelfDogfood:
 
     def test_lint_own_repo_runs(self):
         result = subprocess.run(
-            ["uv", "run", "harness-eval", "lint", str(REPO_ROOT)],
+            ["uv", "run", "harness-eval", "harness-lint", str(REPO_ROOT)],
             capture_output=True,
             text=True,
             timeout=120,
@@ -196,7 +196,7 @@ class TestSelfDogfood:
         import json
 
         result = subprocess.run(
-            ["uv", "run", "harness-eval", "lint", str(REPO_ROOT), "--format", "json"],
+            ["uv", "run", "harness-eval", "harness-lint", str(REPO_ROOT), "--format", "json"],
             capture_output=True,
             text=True,
             timeout=120,

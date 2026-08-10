@@ -16,8 +16,8 @@ SECURITY_RULES_PATTERN = re.compile(r"(\d+)\s+security\s+rules")
 FILES_WITH_TOTAL_COUNT = [
     "README.md",
     "CLAUDE.md",
-    "commands/lint.md",
-    ".cursor/commands/lint.md",
+    "commands/harness-lint.md",
+    ".cursor/commands/harness-lint.md",
     "skills/lint/SKILL.md",
     "skills/review/report-format.md",
     "docs/INSTALL.md",

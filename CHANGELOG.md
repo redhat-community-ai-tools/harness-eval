@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **`skill-verify` command**: vet a skill or setup before installing. Combines lint + security checks in one pass. Outputs SAFE/CAUTION/UNSAFE verdict. Supports `--format json`, `--fail-on-error`, `--fail-on-warning`.
+- **Declarative YAML rules**: add custom rules as `.yaml` files without writing Python. Drop in `rules/custom/`. Supports regex patterns (case-insensitive), configurable severity, suggestions, and target types.
+- CLI integration tests for all commands
+- Shared formatters (`format_header`, `format_section`, `format_finding_line`) in `output/report.py`
+
+### Changed
+- **BREAKING: CLI commands renamed.** `lint` -> `harness-lint`, `security` -> `harness-security`, `review` -> `harness-review`, `skill` -> `skill-review`. The new `skill-verify` command replaces `scan`. Update scripts, CI pipelines, and documentation that reference the old names. `doctor`, `rules`, and `baseline` are unchanged.
+
 ## [7.6.0] - 2026-08-10
 
 ### Added

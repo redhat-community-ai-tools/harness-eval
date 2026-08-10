@@ -16,7 +16,7 @@ from harness_eval.rubric.types import RubricResult
 from harness_eval.utils.redact import redact_secrets
 
 
-@cli.command("review")
+@cli.command("harness-review")
 @click.argument("path", type=click.Path(exists=True))
 @click.option("--format", "fmt", type=click.Choice(["terminal", "json"]), default="terminal")
 @click.option("--provider", type=click.Choice(["gemini", "anthropic"]), default="gemini")
@@ -153,11 +153,15 @@ def eval_setup_review(
         }
         click.echo(json_mod.dumps(output, indent=2))
     else:
-        click.echo(f"\n{'=' * 60}")
-        click.echo(f"Setup Review: {setup.name}")
-        click.echo(f"{'=' * 60}")
-        click.echo(f"Components: {len(setup.components)}")
-        click.echo(f"Provider: {provider} | Model: {client.model}")
+        from harness_eval.output.report import format_header
+
+        click.echo(
+            format_header(
+                f"Setup Review: {setup.name}",
+                Components=len(setup.components),
+                Provider=f"{provider} | Model: {client.model}",
+            )
+        )
         click.echo("")
 
         for rr in rubric_results:

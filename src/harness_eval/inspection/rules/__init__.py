@@ -262,3 +262,7 @@ def register_all_rules() -> None:
         ScopeGrabDescription,
     ]:
         register_rule(rule_cls())
+
+    from harness_eval.inspection.yaml_rules import load_yaml_rules
+
+    load_yaml_rules()

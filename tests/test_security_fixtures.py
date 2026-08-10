@@ -75,7 +75,7 @@ class TestSecurityFixtureE2E:
         result = runner.invoke(
             cli,
             [
-                "lint",
+                "harness-lint",
                 str(SECURITY_SETUP),
                 "--preset",
                 "security",
@@ -93,7 +93,7 @@ class TestSecurityFixtureE2E:
         result = runner.invoke(
             cli,
             [
-                "lint",
+                "harness-lint",
                 str(SECURITY_SETUP),
                 "--preset",
                 "security",
@@ -113,7 +113,7 @@ class TestSecurityFixtureE2E:
         result = runner.invoke(
             cli,
             [
-                "lint",
+                "harness-lint",
                 str(SECURITY_SETUP),
                 "--format",
                 "json",

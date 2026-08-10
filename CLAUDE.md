@@ -25,8 +25,8 @@ The CI runs 5 jobs: lint, typecheck, test, security gate, lint gate. All must pa
 
 ```bash
 uv run ruff format src/ tests/ && uv run ruff check src/ tests/ && uv run pytest tests/ -q
-uv run harness-eval security . --fail-on-error      # security gate: errors block (warnings are informational)
-uv run harness-eval lint . --fail-on-error          # lint gate: only errors block
+uv run harness-eval harness-security . --fail-on-error      # security gate: errors block (warnings are informational)
+uv run harness-eval harness-lint . --fail-on-error          # lint gate: only errors block
 ```
 
 The most common CI failure is forgetting `ruff format`. The security gate blocks on any security finding (even warnings). The lint gate blocks only on structural errors (broken references, missing descriptions).
@@ -34,7 +34,7 @@ The most common CI failure is forgetting `ruff format`. The security gate blocks
 ## Project structure
 
 - `src/harness_eval/` - main package
-  - `cli/` - Click CLI package (5 commands: `lint.py`, `review.py`, `security.py`, `skill.py`, `doctor.py`)
+  - `cli/` - Click CLI package (6 commands: `lint.py`, `review.py`, `security.py`, `skill.py`, `scan.py`, `doctor.py`)
   - `config/` - rule presets (recommended/strict/security/scan/pre-workflow)
   - `core/` - setup discovery, fingerprinting, component types
     - `discoverers/` - per-tool discoverer classes (`ToolDiscoverer` ABC); add new assistants here

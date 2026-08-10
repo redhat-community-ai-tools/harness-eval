@@ -28,7 +28,7 @@ class TestMissingLLMDeps:
     def test_review_gives_clean_error(self) -> None:
         runner = CliRunner()
         with patch("harness_eval.utils.llm.create_client", side_effect=_make_failing_client):
-            result = runner.invoke(cli, ["review", str(FIXTURES)])
+            result = runner.invoke(cli, ["harness-review", str(FIXTURES)])
         assert result.exit_code != 0
         assert "LLM dependencies not installed" in result.output
         assert "Traceback" not in result.output
@@ -46,7 +46,7 @@ class TestMissingLLMDeps:
         skill_path = FIXTURES / "skills" / "code-review"
         runner = CliRunner()
         with patch("harness_eval.utils.llm.create_client", side_effect=_make_failing_client):
-            result = runner.invoke(cli, ["skill", str(skill_path), "--rubric"])
+            result = runner.invoke(cli, ["skill-review", str(skill_path), "--rubric"])
         assert result.exit_code != 0
         assert "LLM dependencies not installed" in result.output
         assert "Traceback" not in result.output

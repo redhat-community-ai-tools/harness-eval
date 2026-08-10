@@ -218,7 +218,7 @@ class TestCLIWatchFlag:
             Path("CLAUDE.md").write_text("# Test")
             # Mock run_watch to avoid actually starting the watcher
             with patch("harness_eval.watch.run_watch") as mock_watch:
-                result = runner.invoke(cli, ["lint", ".", "--watch"])
+                result = runner.invoke(cli, ["harness-lint", ".", "--watch"])
                 assert result.exit_code == 0
                 mock_watch.assert_called_once()
 
@@ -230,7 +230,7 @@ class TestCLIWatchFlag:
             with patch("harness_eval.watch.run_watch") as mock_watch:
                 result = runner.invoke(
                     cli,
-                    ["lint", ".", "--watch", "--preset", "strict"],
+                    ["harness-lint", ".", "--watch", "--preset", "strict"],
                 )
                 assert result.exit_code == 0
                 mock_watch.assert_called_once_with(
@@ -251,7 +251,7 @@ class TestCLIWatchWithIncompatibleFlags:
             with patch("harness_eval.watch.run_watch"):
                 result = runner.invoke(
                     cli,
-                    ["lint", ".", "--watch", "--fix"],
+                    ["harness-lint", ".", "--watch", "--fix"],
                 )
                 assert result.exit_code == 0
                 assert (
@@ -267,7 +267,7 @@ class TestCLIWatchWithIncompatibleFlags:
             with patch("harness_eval.watch.run_watch"):
                 result = runner.invoke(
                     cli,
-                    ["lint", ".", "--watch", "--fail-on-error"],
+                    ["harness-lint", ".", "--watch", "--fail-on-error"],
                 )
                 assert result.exit_code == 0
                 assert (

@@ -14,8 +14,8 @@ Most tools test whether a skill produces correct output. This one checks the set
 
 ```bash
 pip install harness-eval
-harness-eval lint .          # 92 deterministic rules, fully offline
-harness-eval security .      # security scan (18 rules)
+harness-eval harness-lint .          # 92 deterministic rules, fully offline
+harness-eval harness-security .      # security scan (18 rules)
 ```
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options and configuration.
@@ -26,10 +26,11 @@ Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift P
 
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
-| `lint` | 92 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
-| `review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
-| `security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
-| `skill` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: `[llm]` extra or in-session. |
+| `harness-lint` | 92 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
+| `harness-security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
+| `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
+| `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
+| `skill-review` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: `[llm]` extra or in-session. |
 | `rules` | List all rules. Filter by `--category` or `--target`. | No |
 
 ## Cross-component analysis
@@ -65,8 +66,8 @@ For the complete rule list with examples, detection techniques, and framework ma
 
 ## Privacy
 
-`lint` and `security` (without `--review`) are fully offline. **LLM review is opt-in:**
-only `review`, `security --review`, and `skill --rubric` send snippets to a remote
+`harness-lint` and `harness-security` (without `--review`) are fully offline. **LLM review is opt-in:**
+only `harness-review`, `harness-security --review`, and `skill-review --rubric` send snippets to a remote
 provider (Gemini or Anthropic via CLI, or in-session as a plugin/command).
 
 Before any remote LLM call, likely secrets (tokens, PEM keys, `API_KEY=` assignments,
@@ -75,6 +76,25 @@ known prefix patterns) are replaced with `[REDACTED]` (HE-2). Scans also skip `.
 more with `--exclude`.
 
 See [`docs/how-can-you-know-its-safe-to-use-this-tool.md`](docs/how-can-you-know-its-safe-to-use-this-tool.md) for details.
+
+## Custom YAML rules
+
+Add your own rules without writing Python. Drop a `.yaml` file in `src/harness_eval/inspection/rules/custom/`:
+
+```yaml
+id: custom/no-sudo
+severity: error
+description: Flag sudo usage in skills
+suggestion: Remove sudo; skills should not require root access.
+target: skill
+category: security
+patterns:
+  - label: sudo command
+    regex: '\bsudo\b'
+message: "Found '{{label}}' on line {{line}}"
+```
+
+YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. For complex logic (AST analysis, cross-component checks), use Python rules instead.
 
 ## Contributing
 

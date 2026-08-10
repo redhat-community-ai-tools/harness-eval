@@ -129,7 +129,7 @@ class TestReportCardCLI:
                 "---\nname: clean-skill\ndescription: A clean skill\n---\n\nDo the thing."
             )
             card_path = str(tmp_path / "card.json")
-            result = runner.invoke(cli, ["lint", ".", "--report-card", card_path])
+            result = runner.invoke(cli, ["harness-lint", ".", "--report-card", card_path])
             assert result.exit_code == 0
             card = json.loads(Path(card_path).read_text())
             assert "verdict" in card

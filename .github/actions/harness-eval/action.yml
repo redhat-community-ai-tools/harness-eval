@@ -83,7 +83,7 @@ runs:
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
           set +e
-          harness-eval security "$dir" $recursive_flag $exclude_flags --fail-on-warning
+          harness-eval harness-security "$dir" $recursive_flag $exclude_flags --fail-on-warning
           rc=$?
           set -e
           if [ $rc -ne 0 ]; then
@@ -119,9 +119,9 @@ runs:
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
-          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format json --output "$json_dir/lint-$i.json" || true
+          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format json --output "$json_dir/lint-$i.json" || true
           set +e
-          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags $fail_flag
+          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags $fail_flag
           rc=$?
           set -e
           if [ $rc -ne 0 ]; then
@@ -154,7 +154,7 @@ runs:
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
-          harness-eval lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format sarif --output "$sarif_dir/results-$i.sarif" || true
+          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format sarif --output "$sarif_dir/results-$i.sarif" || true
           count=$(python3 -c "import json; d=json.load(open('$sarif_dir/results-$i.sarif')); print(len(d['runs'][0]['results']))" 2>/dev/null || echo "0")
           total_results=$((total_results + count))
           i=$((i + 1))

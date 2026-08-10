@@ -48,6 +48,28 @@ _TYPE_ORDER = [
 ]
 
 
+def format_header(title: str, **stats: str | int) -> str:
+    lines = [f"\n{'=' * 60}", title, f"{'=' * 60}"]
+    for label, value in stats.items():
+        lines.append(f"{label}: {value}")
+    return "\n".join(lines)
+
+
+def format_section(title: str) -> str:
+    return f"\n{title}:\n{'─' * 60}"
+
+
+def format_finding_line(
+    rule_id: str, severity: str, message: str, suggestion: str | None = None
+) -> str:
+    label = "FAIL" if severity == "error" else "WARNING"
+    short_id = rule_id.split("/")[-1]
+    line = f"    {label:<8} {short_id}: {message}"
+    if suggestion:
+        line += f"\n             Fix: {suggestion}"
+    return line
+
+
 def _shorten_rule_id(rule_id: str) -> str:
     parts = rule_id.split("/", 1)
     return parts[1] if len(parts) > 1 else rule_id

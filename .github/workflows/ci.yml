@@ -101,7 +101,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Security gate (block on security errors)
-        run: uv run harness-eval security . --fail-on-error
+        run: uv run harness-eval harness-security . --fail-on-error
 
       - name: Lint gate (block on structural errors only)
-        run: uv run harness-eval lint . --fail-on-error
+        run: uv run harness-eval harness-lint . --fail-on-error
