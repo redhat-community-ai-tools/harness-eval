@@ -17,6 +17,7 @@ _CREDENTIAL_KEY = re.compile(
     r".*(?:_KEY_ID|_KEY|_TOKEN|_SECRET|_PASSWORD|_CREDENTIAL|_PAT)$",
     re.IGNORECASE,
 )
+_FALSE_POSITIVE = re.compile(r".*_PUBLIC_KEY$", re.IGNORECASE)
 
 
 class HooksEnvCredentialOverride:
@@ -62,7 +63,7 @@ class HooksEnvCredentialOverride:
             return
 
         for key in env:
-            if _CREDENTIAL_KEY.match(key):
+            if _CREDENTIAL_KEY.match(key) and not _FALSE_POSITIVE.match(key):
                 context.report(
                     ReportDescriptor(
                         message_id="env_credential",

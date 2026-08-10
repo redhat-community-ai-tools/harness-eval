@@ -12,6 +12,15 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
+_LIFECYCLE_EVENTS = {
+    "sessionstart",
+    "sessionend",
+    "precompact",
+    "notification",
+    "stop",
+    "subagentstop",
+}
+
 
 class HooksPreTrustPermissions:
     meta = RuleMeta(
@@ -19,9 +28,9 @@ class HooksPreTrustPermissions:
         default_severity=Severity.WARNING,
         fixable=False,
         description=(
-            "Flag project-scoped settings that define permissions.allow or hooks. "
-            "These are read before the user trusts the project (CVE-2025-59536, "
-            "GHSA-ph6w-f82w-28w6)."
+            "Flag project-scoped settings that define permissions.allow or "
+            "lifecycle hooks (SessionStart, Stop, etc.) that auto-execute "
+            "without user interaction (CVE-2025-59536, GHSA-ph6w-f82w-28w6)."
         ),
         category=RuleCategory.SECURITY,
         messages={
@@ -32,9 +41,10 @@ class HooksPreTrustPermissions:
                 "move to user-scoped settings."
             ),
             "pre_trust_hooks": (
-                "Project-scoped settings define hooks that execute on events like "
-                "SessionStart. A malicious repo can run code when the project is "
-                "opened (CVE-2025-59536). Review hook commands carefully."
+                "Project-scoped settings define '{{event}}' hooks that execute "
+                "automatically without user interaction. A malicious repo can run "
+                "code when the project is opened (CVE-2025-59536). Review hook "
+                "commands carefully."
             ),
         },
         target_type=ComponentType.HOOKS,
@@ -71,10 +81,13 @@ class HooksPreTrustPermissions:
                 )
 
         hooks = data.get("hooks", {})
-        if isinstance(hooks, dict) and hooks:
-            context.report(
-                ReportDescriptor(
-                    message_id="pre_trust_hooks",
-                    location=loc,
-                )
-            )
+        if isinstance(hooks, dict):
+            for event_name in hooks:
+                if event_name.lower() in _LIFECYCLE_EVENTS:
+                    context.report(
+                        ReportDescriptor(
+                            message_id="pre_trust_hooks",
+                            data={"event": event_name},
+                            location=loc,
+                        )
+                    )

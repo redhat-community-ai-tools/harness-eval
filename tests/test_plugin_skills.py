@@ -76,7 +76,7 @@ class TestSecuritySkillScript:
 
     def test_clean_fixture_is_not_unsafe(self) -> None:
         data = _run_script(self.SCRIPT, [str(CLEAN_FIXTURE)])
-        assert data["risk_assessment"] in ("SAFE", "CAUTION")
+        assert data["risk_assessment"] == "SAFE"
 
     def test_dirty_fixture_is_unsafe(self) -> None:
         data = _run_script(self.SCRIPT, [str(DIRTY_FIXTURE)])

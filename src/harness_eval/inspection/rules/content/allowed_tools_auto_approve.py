@@ -9,7 +9,7 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
-_HIGH_RISK = {"bash", "bash(*)"}
+_HIGH_RISK = {"bash"}
 _MEDIUM_RISK = {"write", "edit", "notebookedit"}
 
 
@@ -23,7 +23,7 @@ class AllowedToolsAutoApprove:
             "allowed-tools removes the human confirmation prompt; it widens "
             "the blast radius, not narrows it."
         ),
-        category=RuleCategory.SECURITY,
+        category=RuleCategory.CONTENT,
         messages={
             "auto_approve_high": (
                 "allowed-tools includes '{{tool}}', which auto-approves shell "
@@ -59,7 +59,6 @@ class AllowedToolsAutoApprove:
                         message_id="auto_approve_high",
                         data={"tool": tool},
                         location=loc,
-                        severity_override=Severity.WARNING,
                     )
                 )
             elif tool_lower in _MEDIUM_RISK:

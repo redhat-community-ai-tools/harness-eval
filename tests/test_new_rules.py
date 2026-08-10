@@ -138,5 +138,5 @@ class TestHooksNetworkAccess:
         path = self._make_settings(tmp_path, "afterWrite", "echo done")
         result = lint_hooks(path)
         assert result.error_count == 0
-        network_findings = [d for d in result.diagnostics if d.rule_id == "hooks/network-access"]
-        assert len(network_findings) == 0
+        for d in result.diagnostics:
+            assert d.rule_id not in ("hooks/network-access", "hooks/dangerous-command")

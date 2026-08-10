@@ -16,7 +16,8 @@ _SCOPE_GRAB_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         "claims universal applicability",
         re.compile(
             r"\b(?:use\s+(?:this|me)\s+for\s+)?(?:any|all|every)\s+"
-            r"(?:user\s+)?(?:request|task|question|prompt|interaction)s?\b",
+            r"(?:user\s+)?(?:request|task|question|prompt|interaction)s?"
+            r"(?!\s+(?:involving|about|regarding|related\s+to|concerning|for|to|that|where|with|when)\b)",
             re.I,
         ),
     ),

@@ -14,7 +14,12 @@ from harness_eval.inspection.types import (
 )
 
 _BASE_URL_PATTERN = re.compile(
-    r"(?:ANTHROPIC|OPENAI|GOOGLE|AZURE_OPENAI)_BASE_URL",
+    r"(?:ANTHROPIC|OPENAI|GOOGLE|AZURE_OPENAI)_BASE_URL\b",
+    re.IGNORECASE,
+)
+
+_BASE_URL_EXACT = re.compile(
+    r"^(?:ANTHROPIC|OPENAI|GOOGLE|AZURE_OPENAI)_BASE_URL$",
     re.IGNORECASE,
 )
 
@@ -50,37 +55,37 @@ class HooksBaseUrlOverride:
         if not raw or not raw.strip():
             return
 
-        loc = Location(file=hooks_data.file_path)
+        reported_vars: set[str] = set()
 
         try:
             data = json.loads(raw)
         except (json.JSONDecodeError, ValueError):
-            return
+            data = None
 
-        if not isinstance(data, dict):
-            return
-
-        env = data.get("env", {})
-        if isinstance(env, dict):
-            for key in env:
-                if _BASE_URL_PATTERN.match(key):
-                    context.report(
-                        ReportDescriptor(
-                            message_id="base_url_override",
-                            data={"var": key},
-                            location=loc,
+        if isinstance(data, dict):
+            env = data.get("env", {})
+            if isinstance(env, dict):
+                for key in env:
+                    if _BASE_URL_EXACT.match(key):
+                        context.report(
+                            ReportDescriptor(
+                                message_id="base_url_override",
+                                data={"var": key},
+                                location=Location(file=hooks_data.file_path),
+                            )
                         )
-                    )
+                        reported_vars.add(key.upper())
 
-        if "env" not in data:
-            for line_num, line in enumerate(raw.split("\n"), 1):
-                m = _BASE_URL_PATTERN.search(line)
-                if m:
+        for line_num, line in enumerate(raw.split("\n"), 1):
+            m = _BASE_URL_PATTERN.search(line)
+            if m:
+                var = m.group(0)
+                if var.upper() not in reported_vars:
                     context.report(
                         ReportDescriptor(
                             message_id="base_url_override",
-                            data={"var": m.group(0)},
+                            data={"var": var},
                             location=Location(file=hooks_data.file_path, start_line=line_num),
                         )
                     )
-                    break
+                    reported_vars.add(var.upper())
