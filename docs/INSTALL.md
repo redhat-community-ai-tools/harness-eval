@@ -144,17 +144,20 @@ If you prefer manual setup over the action:
 
 ## OpenShift Pipelines (Tekton Task)
 
-Run harness-eval as a CI gate in OpenShift Pipelines. Requires the OpenShift Pipelines operator and a container image built from the included `Containerfile`.
+Run harness-eval as a CI gate in OpenShift Pipelines. Requires the OpenShift Pipelines operator. No pre-built container image is published; build from the included `Containerfile` and push to your own registry.
 
 ```bash
-# Build and push the image
-podman build -t harness-eval:dev -f Containerfile .
+# Build the image
+podman build -t harness-eval:7.5.0 -f Containerfile .
+
+# Push to your registry (internal OpenShift, quay.io, etc.)
+podman push harness-eval:7.5.0 <your-registry>/harness-eval:7.5.0
 
 # Apply the Task and Pipeline
 oc apply -f tekton/task-harness-eval.yaml
 oc apply -f tekton/pipeline-harness-eval.yaml
 
-# Run a scan
+# Set the image parameter in pipelinerun-example.yaml, then:
 oc create -f tekton/pipelinerun-example.yaml
 ```
 
