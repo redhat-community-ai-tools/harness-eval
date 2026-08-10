@@ -79,7 +79,7 @@ See [`docs/how-can-you-know-its-safe-to-use-this-tool.md`](docs/how-can-you-know
 
 ## Custom YAML rules
 
-Add your own rules without writing Python. Drop a `.yaml` file in `src/harness_eval/inspection/rules/custom/`:
+Add your own rules without writing Python. Drop a `.yaml` file in `.harness-eval/rules/` in your project:
 
 ```yaml
 id: custom/no-sudo
