@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **YAML custom rules now execute during `harness-lint`**: rules with `custom/` prefix are no longer skipped by preset whitelisting. Previously, custom YAML rules were loaded and listed by `rules` but never fired during lint.
+- **README accuracy**: Windsurf/Cline changed from "discovery + structure rules" to "discovery only". Gemini row notes `.toml` commands are discovered but not yet linted. YAML rules section documents that custom rules run under every preset.
+
+### Added
+- Example output block in README Quick start showing findings with Fix: lines
+- `skill-verify` highlighted in Quick start section
+- Badge drift test for README `rules-92` badge
+
 ## [7.7.1] - 2026-08-10
 
 ### Fixed

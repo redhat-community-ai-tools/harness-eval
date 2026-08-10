@@ -71,6 +71,21 @@ class TestRuleCountDrift:
                 )
 
 
+class TestReadmeBadge:
+    def test_badge_rule_count_matches_registry(self) -> None:
+        total, _ = _get_rule_counts()
+        readme = ROOT / "README.md"
+        badge_pattern = re.compile(r"rules-(\d+)-blue")
+        for line in readme.read_text().splitlines():
+            m = badge_pattern.search(line)
+            if m:
+                assert int(m.group(1)) == total, (
+                    f"README.md badge says {m.group(1)} rules but registry has {total}."
+                )
+                return
+        raise AssertionError("No rules badge found in README.md")
+
+
 class TestRulesReferenceCompleteness:
     def test_every_rule_is_documented(self) -> None:
         rules_ref = ROOT / "docs" / "rules-reference.md"
