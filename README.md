@@ -106,7 +106,7 @@ patterns:
 message: "Found '{{label}}' on line {{line}}"
 ```
 
-YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under every preset. Disable one with `custom/no-sudo: off` in your config. For complex logic (AST analysis, cross-component checks), use Python rules instead.
+YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under every preset. Remove the rule file to disable it. For complex logic (AST analysis, cross-component checks), use Python rules instead.
 
 ## Contributing
 
