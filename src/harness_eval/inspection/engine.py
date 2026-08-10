@@ -67,7 +67,7 @@ def _resolve_severity(
     if severity_config == "off":
         return None
 
-    if severity_config is None and config_rules:
+    if severity_config is None and config_rules and not rule.meta.id.startswith("custom/"):
         return None
 
     explicitly_configured = severity_config is not None

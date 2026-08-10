@@ -14,8 +14,20 @@ Most tools test whether a skill produces correct output. This one checks the set
 
 ```bash
 pip install harness-eval
-harness-eval harness-lint .          # 92 deterministic rules, fully offline
-harness-eval harness-security .      # security scan (18 rules)
+harness-eval harness-lint .                    # 92 deterministic rules, fully offline
+harness-eval harness-security .                # security scan
+harness-eval skill-verify ./downloaded-skill   # SAFE / CAUTION / UNSAFE before you install
+```
+
+Example output:
+
+```
+FAIL     no-credential-access: References sensitive path '~/.aws/credentials' at line 10
+             Fix: Use a secret manager or environment variable injection instead of hardcoded paths.
+WARNING  orphan-skills: Skill 'creds-skill' is not referenced by any command, CLAUDE.md, or agent
+             Fix: Reference the skill from a command, CLAUDE.md, or agent, or remove it.
+
+Verdict: UNSAFE
 ```
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options and configuration.
@@ -51,10 +63,10 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 |-----------|------------------|
 | Claude Code | `CLAUDE.md`, `skills/`, `commands/`, `.claude/agents/`, `.claude/settings.json`, `.mcp.json` |
 | Cursor | `.cursor/rules/*.mdc`, `.cursorrules`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
-| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` (discovery + structure rules) |
-| Cline | `.clinerules` (file or directory of `*.md`) (discovery + structure rules) |
+| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` (discovery only) |
+| Cline | `.clinerules` (file or directory of `*.md`) (discovery only) |
 | Copilot | `.github/copilot-instructions.md`, `.github/skills/`, `.github/prompts/`, `.github/agents/` |
-| Gemini CLI | `GEMINI.md`, `.gemini/commands/`, `.gemini/settings.json` (MCP) |
+| Gemini CLI | `GEMINI.md`, `.gemini/commands/` (`.md` linted; `.toml` discovered but not yet linted), `.gemini/settings.json` (MCP) |
 | OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `opencode.json` (MCP) |
 | Third-party modules | `.lola/modules/` (skills, commands, agents installed via package managers) |
 
@@ -94,7 +106,7 @@ patterns:
 message: "Found '{{label}}' on line {{line}}"
 ```
 
-YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. For complex logic (AST analysis, cross-component checks), use Python rules instead.
+YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under every preset. Disable one with `custom/no-sudo: off` in your config. For complex logic (AST analysis, cross-component checks), use Python rules instead.
 
 ## Contributing
 
