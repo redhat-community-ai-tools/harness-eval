@@ -17,7 +17,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from pathlib import Path
 
@@ -46,8 +45,9 @@ SKILL_NAME_MAP = {
     "harness-review": "review",
     "harness-security": "security",
     "skill-review": "eval-skill",
-    "skill-verify": "eval-skill",
 }
+
+SKIP_GENERATION = {"skill-verify"}
 
 
 def extract_description(content: str) -> str:
@@ -100,6 +100,8 @@ def main() -> None:
     out_of_sync = []
     for cursor_file in cursor_files:
         cmd_name = cursor_file.stem
+        if cmd_name in SKIP_GENERATION:
+            continue
         cursor_content = cursor_file.read_text()
         stub = generate_stub(cursor_content, cmd_name)
         claude_file = CLAUDE_DIR / cursor_file.name

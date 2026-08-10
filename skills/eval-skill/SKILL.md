@@ -39,12 +39,14 @@ Determine the skill path. If the user says a skill name, find it under `skills/<
 Determine the setup context path (usually the current working directory).
 
 ```bash
-uv run python skills/eval-skill/scripts/run_skill_eval.py <skill-path> <context-path> recommended
+harness-eval skill-review <skill-path> --context <context-path> --format json
 ```
 
-If no context path, pass `-` as the second argument.
+If no context path, omit the `--context` flag.
 
-Read the JSON output. It contains diagnostics, token count, security findings, and contextual findings. The script runs both the standard lint preset and the security preset, so all security rules (credential access, injection, exfiltration, taint tracking, etc.) are included.
+If `harness-eval` is not installed, install it first: `pip install harness-eval`
+
+Read the JSON output. It contains diagnostics, token count, and contextual findings. This runs the recommended preset (quality + structural rules). For full security vetting, use `/skill-verify` instead.
 
 ## Step 4: Read Actual Files
 
@@ -93,7 +95,7 @@ Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]
 ```
 
-Get `{version}` by running: `uv run python -c "import importlib.metadata; print(importlib.metadata.version('harness-eval'))"`
+Get `{version}` by running: `harness-eval --version`
 
 **If the user chose terminal:** print the report in the conversation.
 

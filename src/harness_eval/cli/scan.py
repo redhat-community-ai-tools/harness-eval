@@ -33,22 +33,6 @@ def scan_skill(path: str, fmt: str, fail_on_error: bool, fail_on_warning: bool) 
 
     setup = discover_setup(name=target.name, path=str(target))
 
-    if not setup.components and (target / "SKILL.md").exists():
-        from harness_eval.core.types import ComponentType
-        from harness_eval.inspection.parsers import parse_skill
-
-        skill = parse_skill(str(target))
-        from harness_eval.core.types import ParsedComponent
-
-        setup.components.append(
-            ParsedComponent(
-                name=skill.dir_name,
-                component_type=ComponentType.SKILL,
-                path=skill.skill_md_path,
-                content=skill.raw_content,
-            )
-        )
-
     if not setup.components:
         click.echo(f"No agent components found in {path}.", err=True)
         raise SystemExit(1)
@@ -56,23 +40,33 @@ def scan_skill(path: str, fmt: str, fail_on_error: bool, fail_on_warning: bool) 
     lint_results = inspect_setup(setup, RECOMMENDED)
     security_results = inspect_setup(setup, SECURITY)
 
+    _SEV_RANK = {"error": 2, "warning": 1, "info": 0}
     seen_keys: set[tuple[str, str]] = set()
     merged = []
     for r in [*lint_results, *security_results]:
         key = (r.target_type, r.target_name)
         if key in seen_keys:
             existing = next(m for m in merged if (m.target_type, m.target_name) == key)
-            existing_ids = {d.rule_id for d in existing.diagnostics}
+            existing_by_rule = {d.rule_id: d for d in existing.diagnostics}
             for d in r.diagnostics:
-                if d.rule_id not in existing_ids:
+                prev = existing_by_rule.get(d.rule_id)
+                if prev is None:
                     existing.diagnostics.append(d)
-                    existing_ids.add(d.rule_id)
+                    existing_by_rule[d.rule_id] = d
+                elif _SEV_RANK.get(d.severity.value, 0) > _SEV_RANK.get(prev.severity.value, 0):
+                    existing.diagnostics[existing.diagnostics.index(prev)] = d
+                    existing_by_rule[d.rule_id] = d
             for rr in r.rules_run:
                 if rr.rule_id not in {x.rule_id for x in existing.rules_run}:
                     existing.rules_run.append(rr)
         else:
             seen_keys.add(key)
             merged.append(r)
+
+    for r in merged:
+        r.error_count = sum(1 for d in r.diagnostics if d.severity.value == "error")
+        r.warning_count = sum(1 for d in r.diagnostics if d.severity.value == "warning")
+        r.info_count = sum(1 for d in r.diagnostics if d.severity.value == "info")
 
     total_errors = sum(r.error_count for r in merged)
     total_warnings = sum(r.warning_count for r in merged)

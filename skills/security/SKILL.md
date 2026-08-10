@@ -33,14 +33,10 @@ Wait for their answer before proceeding.
 Determine the setup path. If the user doesn't specify one, use the current working directory.
 
 ```bash
-uv run python skills/security/scripts/run_security_scan.py <setup-path>
+harness-eval harness-security <setup-path> --format json
 ```
 
-If the user has a `~/.claude/` directory, pass it as the second argument:
-
-```bash
-uv run python skills/security/scripts/run_security_scan.py <setup-path> ~/.claude
-```
+If `harness-eval` is not installed, install it first: `pip install harness-eval`
 
 Read the JSON output. Note which checks were skipped and why.
 
@@ -72,6 +68,6 @@ Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]
 ```
 
-Get `{version}` by running: `uv run python -c "import importlib.metadata; print(importlib.metadata.version('harness-eval'))"`
+Get `{version}` by running: `harness-eval --version`
 
 Record the timestamp of your first tool call in Step 2 and compute the exact difference when you finish.
