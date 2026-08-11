@@ -65,7 +65,7 @@ RECOMMENDED: dict[str, str] = {
     "quality/example-gap": "info",
     "quality/stale-references": "warning",
     "quality/negative-only": "warning",
-    "quality/scope-overreach": "warning",
+    "quality/scope-overreach": "info",
     "quality/trigger-manipulation": "warning",
     "security/coercive-override": "error",
     "security/stealth-persistence": "error",

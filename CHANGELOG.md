@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- `command/references-nonexistent-skill`: tightened to require the word "skill" in verb patterns; skips CLI binary names after install commands and path segments. Reduces false positives on commands mentioning tools like helm, kubectl, ruff.
+- `quality/scope-overreach`: replaced "claims all code" pattern (high FP rate on ordinary instructions) with authority-claim patterns (supersedes, required for all tasks, applies to all). Demoted from WARNING to INFO in the recommended preset.
+- Documented suppression mechanisms (evaluator-ignore, baseline, exclude, advisory mode) in README and INSTALL.md
+- Added rule confidence tiers (exact/heuristic/advisory) and known false positive notes to docs/rules-reference.md
+- Removed self-suppressions from Cursor commands and skills now that rules are tightened
+
 ### Fixed
 - Added `# nosec` annotations to suppress false-positive bandit findings in security detection code (`mcp_tool_poisoning.py`, `cve_lookup.py`)
 

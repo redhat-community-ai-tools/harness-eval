@@ -39,6 +39,10 @@ Run `harness-eval doctor` to see which optional capabilities are installed and w
 
 Optional: YARA malware signature scanning for security: `pip install harness-eval[yara]`
 
+### Suppressing false positives
+
+Add `<!-- evaluator-ignore: rule/id -->` to any file for file-wide suppression, or `<!-- evaluator-ignore-next-line: rule/id -->` for a single line. Use `--baseline` for incremental adoption, `--exclude` to skip files, or `--enforce advisory` to report without failing CI. See the [README](../README.md#suppressing-findings) for details.
+
 ## GitHub Action
 
 Add one file to your repo. Every PR gets security + lint checks with inline annotations on the diff.

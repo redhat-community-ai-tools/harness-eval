@@ -13,14 +13,27 @@ from harness_eval.inspection.types import (
 
 _OVERREACH_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
-        "claims all code",
+        "universal scope",
+        re.compile(r"\brequired\s+for\s+(?:all|every|any)\s+(?:tasks?|work|operations?)\b", re.I),
+    ),
+    (
+        "claims priority",
+        re.compile(r"\balways\s+(?:use|invoke|apply|run)\s+(?:this|me)\s+first\b", re.I),
+    ),
+    (
+        "supersedes others",
+        re.compile(r"\bsupersedes?\s+(?:all|every|any|other)\b", re.I),
+    ),
+    (
+        "applies to everything",
         re.compile(
-            r"\b(?:all|every|any)\s+(?:code\s+)?(?:changes?|modifications?|edits?|files?)\b", re.I
+            r"\b(?:applies|apply\s+this)\s+to\s+(?:all|every|any)\s+(?:tasks?|projects?|repositories|work)\b",
+            re.I,
         ),
     ),
     (
-        "universal scope",
-        re.compile(r"\brequired\s+for\s+(?:all|every|any)\s+(?:tasks?|work|operations?)\b", re.I),
+        "demands priority over skills",
+        re.compile(r"\bbefore\s+(?:all|any)\s+other\s+skills?\b", re.I),
     ),
 ]
 

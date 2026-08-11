@@ -232,3 +232,110 @@ class TestSentenceBoundaryPatterns:
             if d.rule_id == "security/unbounded-delegation"
         ]
         assert len(diags) == 0
+
+
+class TestCliBinaryNotSkill:
+    """CLI binary names should not be flagged as missing skills."""
+
+    def _make_and_lint(self, tmp_path, body):
+        from harness_eval.inspection.engine import lint_command
+        from harness_eval.inspection.parsers import parse_skill
+
+        skill_dir = tmp_path / "real-skill"
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: real-skill\ndescription: Real\n---\n\nBody."
+        )
+        cmd_dir = tmp_path / "my-cmd"
+        cmd_dir.mkdir(parents=True, exist_ok=True)
+        (cmd_dir / "command.md").write_text(body)
+        all_skills = [parse_skill(str(skill_dir))]
+        result = lint_command(str(cmd_dir), all_skills=all_skills)
+        return [
+            d for d in result.diagnostics if d.rule_id == "command/references-nonexistent-skill"
+        ]
+
+    def test_uvx_harness_eval_not_flagged(self, tmp_path: Path) -> None:
+        diags = self._make_and_lint(
+            tmp_path,
+            "If `uvx` is not available, fall back to `pip install harness-eval` "
+            "and use `harness-eval` directly.",
+        )
+        assert len(diags) == 0
+
+    def test_pip_install_binary_not_flagged(self, tmp_path: Path) -> None:
+        diags = self._make_and_lint(
+            tmp_path,
+            "Install with pip install ruff and use `ruff` to check code.",
+        )
+        assert len(diags) == 0
+
+    def test_kubectl_helm_not_flagged(self, tmp_path: Path) -> None:
+        diags = self._make_and_lint(
+            tmp_path,
+            "Run `kubectl apply -f x.yaml`. If it fails, use `helm` directly.",
+        )
+        assert len(diags) == 0
+
+    def test_path_reference_not_flagged(self, tmp_path: Path) -> None:
+        diags = self._make_and_lint(
+            tmp_path,
+            "See /docs/release.md for details.",
+        )
+        assert len(diags) == 0
+
+    def test_genuine_skill_reference_fires(self, tmp_path: Path) -> None:
+        diags = self._make_and_lint(
+            tmp_path,
+            "This command invokes the skill 'code-review' to analyze changes.",
+        )
+        assert len(diags) >= 1
+
+    def test_slash_command_reference_fires(self, tmp_path: Path) -> None:
+        diags = self._make_and_lint(
+            tmp_path,
+            "Triggers /security-audit on the workspace.",
+        )
+        assert len(diags) >= 1
+
+
+class TestOrdinaryInstructionsNotOverreach:
+    """Ordinary instructions should not trigger scope-overreach."""
+
+    def test_review_all_code_changes(self, tmp_path: Path) -> None:
+        from harness_eval.inspection.engine import lint
+
+        skill_dir = tmp_path / "review-skill"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: review\ndescription: Code review\n---\n\n"
+            "Review all code changes in the PR before approving."
+        )
+        result = lint(str(skill_dir), {"quality/scope-overreach": "warning"})
+        diags = [d for d in result.diagnostics if d.rule_id == "quality/scope-overreach"]
+        assert len(diags) == 0
+
+    def test_format_all_files(self, tmp_path: Path) -> None:
+        from harness_eval.inspection.engine import lint
+
+        skill_dir = tmp_path / "fmt-skill"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: fmt\ndescription: Formatter\n---\n\n"
+            "Format all files with prettier before committing."
+        )
+        result = lint(str(skill_dir), {"quality/scope-overreach": "warning"})
+        diags = [d for d in result.diagnostics if d.rule_id == "quality/scope-overreach"]
+        assert len(diags) == 0
+
+    def test_run_after_any_changes(self, tmp_path: Path) -> None:
+        from harness_eval.inspection.engine import lint
+
+        skill_dir = tmp_path / "test-skill"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: test\ndescription: Testing\n---\n\nRun pytest after any changes to src/."
+        )
+        result = lint(str(skill_dir), {"quality/scope-overreach": "warning"})
+        diags = [d for d in result.diagnostics if d.rule_id == "quality/scope-overreach"]
+        assert len(diags) == 0

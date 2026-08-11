@@ -96,8 +96,8 @@ class TestPromptExfiltration:
 
 
 class TestScopeOverreach:
-    def test_claims_all_code_flagged(self, tmp_path: Path) -> None:
-        path = _make_skill(tmp_path, "This skill handles all code changes.")
+    def test_claims_authority_flagged(self, tmp_path: Path) -> None:
+        path = _make_skill(tmp_path, "This skill supersedes all other linting tools.")
         result = lint(path, {"quality/scope-overreach": "warning"})
         assert len(_diags_for(result, "quality/scope-overreach")) >= 1
 
@@ -112,7 +112,7 @@ class TestScopeOverreach:
         assert len(_diags_for(result, "quality/scope-overreach")) == 0
 
     def test_code_block_skipped(self, tmp_path: Path) -> None:
-        path = _make_skill(tmp_path, "```\nMUST use this for every task.\n```")
+        path = _make_skill(tmp_path, "```\nThis supersedes all other tools.\n```")
         result = lint(path, {"quality/scope-overreach": "warning"})
         assert len(_diags_for(result, "quality/scope-overreach")) == 0
 

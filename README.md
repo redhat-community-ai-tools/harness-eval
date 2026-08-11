@@ -36,6 +36,28 @@ See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options and config
 
 Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift Pipelines), a **Claude Code plugin**, and **Cursor commands**. Each is documented in [`docs/INSTALL.md`](docs/INSTALL.md).
 
+## Suppressing findings
+
+Not every finding is a real problem. Four ways to handle false positives:
+
+**Inline suppression** (per-file or per-line):
+```markdown
+<!-- evaluator-ignore: rule/id-1, rule/id-2 -->       file-wide
+<!-- evaluator-ignore-next-line: rule/id -->            next line only
+```
+
+**Baseline** (incremental adoption):
+```bash
+harness-eval harness-lint . --format json --output .harness-eval-baseline.json
+harness-eval harness-lint . --baseline .harness-eval-baseline.json   # suppresses known findings
+```
+
+**Exclude files**: `--exclude "vendor/**" --exclude ".git/**"` (repeatable).
+
+**Advisory mode**: `--enforce advisory` reports findings without failing CI.
+
+See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tiers (exact, heuristic, advisory).
+
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
 | `harness-lint` | 96 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
