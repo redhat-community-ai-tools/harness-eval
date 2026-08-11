@@ -9,27 +9,16 @@ Run harness-eval as a security gate in OpenShift Pipelines (Tekton). Scans AI ag
 
 ## Container Image
 
-harness-eval includes a UBI9-based `Containerfile` compatible with OpenShift's `restricted-v2` SCC (arbitrary UID, root group). No pre-built image is published; build and push to your own registry.
+By default, the Tekton Task uses `registry.access.redhat.com/ubi9/python-312:latest` and installs `harness-eval` from PyPI at runtime. No image build required.
 
-### Build and push
+For air-gapped clusters without PyPI access, build from the included `Containerfile` and override the `image` parameter:
 
 ```bash
-# Build
-podman build -t harness-eval:7.5.0 -f Containerfile .
-
-# Push to your registry (internal OpenShift registry shown here)
-REGISTRY=$(oc registry info)
-oc new-project harness-eval-demo  # or use an existing project
-podman login "$REGISTRY" -u $(oc whoami) -p $(oc whoami -t) --tls-verify=false
-podman tag harness-eval:7.5.0 "$REGISTRY/harness-eval-demo/harness-eval:7.5.0"
-podman push "$REGISTRY/harness-eval-demo/harness-eval:7.5.0" --tls-verify=false
+podman build -t harness-eval:latest -f Containerfile .
+podman push harness-eval:latest <your-registry>/harness-eval:latest
 ```
 
-For quay.io or another public registry, substitute the registry URL and credentials.
-
 ## Quickstart
-
-Apply the Tekton Task and Pipeline, then create a PipelineRun. The `image` parameter is required; set it to the image you built above.
 
 ```bash
 oc apply -f tekton/task-harness-eval.yaml
@@ -53,7 +42,7 @@ The `harness-eval` Task accepts the following parameters:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `image` | (required) | Container image for harness-eval (build from Containerfile) |
+| `image` | `ubi9/python-312:latest` | Container image. Default installs from PyPI at runtime. Override for air-gapped clusters. |
 | `path` | `.` | Subdirectory within the workspace to scan |
 | `commands` | `lint,security` | Comma-separated commands to run |
 | `enforce` | `strict` | `strict` (fail on findings), `advisory` (report only), `off` (skip) |

@@ -19,9 +19,10 @@ spec:
   params:
     - name: image
       type: string
+      default: registry.access.redhat.com/ubi9/python-312:latest
       description: >-
-        Container image for harness-eval. Build from the included
-        Containerfile and push to your own registry.
+        Container image. Default installs harness-eval at runtime via pip.
+        For air-gapped clusters, build from the included Containerfile.
     - name: path
       type: string
       default: "."
@@ -84,6 +85,10 @@ spec:
           exit 0
         fi
 
+        if ! command -v harness-eval &>/dev/null; then
+          pip install --quiet --no-cache-dir harness-eval
+        fi
+
         SCAN_PATH="${WORKSPACE_PATH}/${PARAM_PATH}"
 
         CMD=(harness-eval harness-lint "${SCAN_PATH}")
@@ -133,6 +138,10 @@ spec:
         if ! echo "${PARAM_COMMANDS}" | grep -q "security"; then
           echo "Skipping security (not in commands list)"
           exit 0
+        fi
+
+        if ! command -v harness-eval &>/dev/null; then
+          pip install --quiet --no-cache-dir harness-eval
         fi
 
         SCAN_PATH="${WORKSPACE_PATH}/${PARAM_PATH}"
