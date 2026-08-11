@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.8.0] - 2026-08-11
+
 ### Added
 - `hooks/no-commit-guard` rule (WARNING in recommended, ERROR in strict): flags settings with hooks but no PreToolUse guard on git commit. **Note:** projects using `--fail-on-warning` with hooks configured will see a new finding.
 - `security/dangerous-permission-grant` rule (ERROR): flags permissions.allow entries that auto-approve destructive, privilege-escalating, or persistence-creating patterns (sudo, shred, curl|bash, terraform destroy, crontab, etc.)
