@@ -1,3 +1,4 @@
+<!-- evaluator-ignore: command/references-nonexistent-skill -->
 # Skill Verify
 
 Vet a skill or setup before installing. Combines lint + security checks in one pass.

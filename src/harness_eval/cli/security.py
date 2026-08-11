@@ -521,7 +521,19 @@ def eval_setup_security(
                 for comp in setup.components
             }
             for future in as_completed(futures):
-                all_sec_results.append(future.result())
+                try:
+                    all_sec_results.append(future.result())
+                except Exception as e:
+                    err_name = type(e).__name__
+                    if "Auth" in err_name or "Unauthorized" in err_name or "401" in str(e):
+                        key_hint = (
+                            "ANTHROPIC_API_KEY" if provider == "anthropic" else "GEMINI_API_KEY"
+                        )
+                        raise click.ClickException(
+                            f"Authentication failed: {e}\n\n"
+                            f"Check that {key_hint} is valid, or run `harness-eval doctor`."
+                        ) from None
+                    raise
 
         for rr in all_sec_results:
             if rr.issues:

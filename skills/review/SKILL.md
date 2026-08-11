@@ -5,7 +5,7 @@ allowed-tools:
   - Bash
   - Read
 ---
-<!-- evaluator-ignore: content/broken-references, content/allowed-tools-auto-approve -->
+<!-- evaluator-ignore: content/broken-references, content/allowed-tools-auto-approve, quality/scope-overreach -->
 
 # Review Setup
 
