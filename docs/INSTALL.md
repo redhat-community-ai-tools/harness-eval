@@ -165,7 +165,13 @@ Fully offline: no API keys, no egress. See [`docs/openshift.md`](openshift.md) f
 
 ## Claude Code plugin
 
-No pip install needed. Install directly from within Claude Code:
+Requires the CLI installed first (the plugin skills call it for the deterministic scan):
+
+```bash
+pip install harness-eval
+```
+
+Then install the plugin from within Claude Code:
 
 ```
 /plugin marketplace add redhat-community-ai-tools/harness-eval
@@ -180,7 +186,7 @@ The 5 commands appear in the `/` menu:
 - `/harness-eval:skill-review`
 - `/harness-eval:skill-verify`
 
-No API key needed. Claude evaluates in-session.
+No API key needed for harness-lint/harness-security/skill-verify. Claude evaluates in-session for harness-review and skill-review.
 
 To update: re-run the install command.
 
