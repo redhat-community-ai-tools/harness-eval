@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 92 deterministic lint rules and the LLM-based review system.
+Complete reference for all 96 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -118,6 +118,7 @@ These rules run against the project's root system instruction file. Applies to: 
 | `claude-md/exists` | structural | The project should have a system instruction file. Without it, the AI has no project-specific context and relies entirely on defaults. | Project has skills and commands but no CLAUDE.md, GEMINI.md, AGENTS.md, or .cursorrules | File existence check |
 | `claude-md/skill-duplication` | content | System instructions should not repeat what's already in a skill. Duplicated content wastes tokens every session (system instructions are always loaded, skills are on-demand). | CLAUDE.md has a "Testing" section that's 80% identical to the `testing` skill | TF-IDF similarity |
 | `claude-md/generic-advice` | quality | System instructions should not contain advice the AI already follows by default. Generic advice wastes tokens without changing behavior. | `"Write clean, readable code"`, `"Use descriptive variable names"`, `"Handle errors properly"` | Pattern matching |
+| `content/missing-boundary-policy` | content | Flags instruction files that define no directory or resource boundaries. Without scope limits, the agent operates with no declared constraints on which files or systems it can access. | CLAUDE.md with coding style rules but no "off-limits" or "do not access" directives | Pattern matching |
 
 ## MCP configuration (.mcp.json, .cursor/mcp.json)
 
@@ -150,6 +151,9 @@ These rules run against hook definitions. Applies to: CC, CU.
 | `hooks/api-key-helper` | security | Flags project-scoped settings defining `apiKeyHelper`. A repo-controlled helper can intercept or exfiltrate API keys during resolution. | `"apiKeyHelper": "scripts/get-key.sh"` in project settings | JSON key check |
 | `hooks/env-credential-override` | security | Flags project-scoped settings that set credential-shaped environment variables (`_KEY`, `_TOKEN`, `_SECRET`, `_PASSWORD`, `_KEY_ID`, `_PAT`). Excludes `_PUBLIC_KEY`. A cloned repo should not control credential values. | `"env": {"GITHUB_API_KEY": "ghp_abc123"}` in project settings | Regex suffix matching |
 | `hooks/pre-trust-permissions` | security | Flags project-scoped settings with `permissions.allow` entries or lifecycle hooks (`SessionStart`, `Stop`, etc.) that auto-execute without user interaction. CVE-2025-59536 and GHSA-ph6w-f82w-28w6 exploited this. `PreToolUse`/`PostToolUse` hooks are not flagged since they only run during active interaction. | `"permissions": {"allow": ["Bash(*)"]}` or `"hooks": {"SessionStart": [...]}` in project settings | JSON key + lifecycle event check |
+| `hooks/no-commit-guard` | security | Flags settings with hooks but no PreToolUse hook guarding git commit. A commit guard can scan staged changes for secrets before they reach the repository. | Settings with `PreToolUse` hooks but no matcher for `git commit` | JSON key + matcher analysis |
+| `security/dangerous-permission-grant` | security | Flags `permissions.allow` entries that auto-approve destructive, privilege-escalating, or persistence-creating patterns. Goes beyond breadth (Bash(*)) to check depth (sudo, shred, curl\|bash, terraform destroy, crontab, etc.). | `"permissions": {"allow": ["Bash(sudo apt install *)"]}` | Regex pattern matching on allow entries |
+| `hooks/no-audit-trail` | content | Flags settings with no observability or telemetry configuration. Enterprise environments benefit from logging agent activity for audit and incident response. | Settings with no OTEL or logging env vars | JSON env key check |
 
 ## Cross-component rules
 

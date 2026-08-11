@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `hooks/no-commit-guard` rule (WARNING in recommended, ERROR in strict): flags settings with hooks but no PreToolUse guard on git commit. **Note:** projects using `--fail-on-warning` with hooks configured will see a new finding.
+- `security/dangerous-permission-grant` rule (ERROR): flags permissions.allow entries that auto-approve destructive, privilege-escalating, or persistence-creating patterns (sudo, shred, curl|bash, terraform destroy, crontab, etc.)
+- `hooks/no-audit-trail` rule (INFO): flags settings with no telemetry or observability configuration
+- `content/missing-boundary-policy` rule (INFO in strict only, off in recommended): flags instruction files with no directory or resource boundaries
+- Rule count: 92 -> 96
+
+### Fixed
+- Drift test regex now catches "N deterministic lint rules" and similar multi-word patterns
+- Drift test security-guard narrowed to only skip lines matching the security count pattern, not all lines containing "security"
+- Summary-line severity label now shows INFO instead of WARNING for info-level findings
+
 ## [7.7.3] - 2026-08-10
 
 ### Fixed

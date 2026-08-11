@@ -1,5 +1,5 @@
 name: "harness-eval"
-description: "Lint and security-scan AI agent setups (CLAUDE.md, skills, commands, hooks, MCP configs, agents). 92 deterministic rules, no LLM required."
+description: "Lint and security-scan AI agent setups (CLAUDE.md, skills, commands, hooks, MCP configs, agents). 96 deterministic rules, no LLM required."
 author: "redhat-community-ai-tools"
 
 branding:
@@ -242,13 +242,13 @@ runs:
         total_errors=$(echo "$details" | grep "^total_errors=" | cut -d= -f2)
         total_warnings=$(echo "$details" | grep "^total_warnings=" | cut -d= -f2)
 
-        sec_icon="✓"; sec_msg="passed (18 security rules)"
+        sec_icon="✓"; sec_msg="passed (19 security rules)"
         [ "${{ inputs.security-gate }}" != "true" ] && { sec_icon="○"; sec_msg="skipped"; }
         [ "${{ steps.security.outcome }}" != "success" ] && [ "${{ inputs.security-gate }}" = "true" ] && { sec_icon="✗"; sec_msg="findings detected"; }
 
         warnings_note=""
         [ "${total_warnings:-0}" -gt 0 ] && warnings_note=", ${total_warnings} warnings (non-blocking)"
-        lint_icon="✓"; lint_msg="passed (92 rules, ${total_errors:-0} errors${warnings_note})"
+        lint_icon="✓"; lint_msg="passed (96 rules, ${total_errors:-0} errors${warnings_note})"
         [ "${{ inputs.lint-gate }}" != "true" ] && { lint_icon="○"; lint_msg="skipped"; }
         [ "${{ steps.lint.outcome }}" != "success" ] && [ "${{ inputs.lint-gate }}" = "true" ] && { lint_icon="✗"; lint_msg="${total_errors:-0} errors${warnings_note}"; }
 
@@ -302,7 +302,7 @@ runs:
         ${cat_table}
 
         ---
-        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 92 rules | preset: ${{ inputs.preset }}*"
+        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 96 rules | preset: ${{ inputs.preset }}*"
 
         body=$(echo "$body" | sed 's/^        //')
 
