@@ -95,6 +95,11 @@ RECOMMENDED: dict[str, str] = {
     "content/description-length": "warning",
     "content/total-description-budget": "warning",
     "quality/scope-grab-description": "warning",
+    # Setup gap detection
+    "hooks/no-commit-guard": "warning",
+    "security/dangerous-permission-grant": "error",
+    "hooks/no-audit-trail": "info",
+    "content/missing-boundary-policy": "info",
 }
 
 STRICT: dict[str, str] = {
@@ -154,6 +159,11 @@ STRICT: dict[str, str] = {
     "quality/unfinished-content": "error",
     "quality/example-gap": "warning",
     "quality/stale-references": "error",
+    # Setup gap detection
+    "hooks/no-commit-guard": "error",
+    "security/dangerous-permission-grant": "error",
+    "hooks/no-audit-trail": "warning",
+    "content/missing-boundary-policy": "warning",
 }
 
 SECURITY: dict[str, str] = {
@@ -234,6 +244,9 @@ SECURITY: dict[str, str] = {
     "hooks/pre-trust-permissions": "warning",
     # Allowed-tools auto-approve
     "content/allowed-tools-auto-approve": "warning",
+    # Setup gap detection
+    "hooks/no-commit-guard": "warning",
+    "security/dangerous-permission-grant": "error",
 }
 
 PRE_WORKFLOW: dict[str, str] = {

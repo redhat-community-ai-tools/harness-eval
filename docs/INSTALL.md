@@ -16,7 +16,7 @@ pip install harness-eval[llm,tiktoken]  # everything
 Run:
 
 ```bash
-harness-eval harness-lint .                         # deterministic lint (92 rules)
+harness-eval harness-lint .                         # deterministic lint (96 rules)
 harness-eval harness-lint . --watch                 # re-run automatically on file changes
 harness-eval harness-lint . --fail-on-error         # exit code 1 on errors (CI gate)
 harness-eval harness-lint . --fail-on-warning       # exit code 1 on any finding (strict)
@@ -27,7 +27,7 @@ harness-eval harness-security .                     # deterministic security sca
 harness-eval harness-security . --review            # security scan + LLM semantic review (requires [llm] extra)
 harness-eval harness-security . --fail-on-warning   # exit code 1 on any security finding
 harness-eval skill-review ./skills/my-skill --context . --rubric   # deep-evaluate one skill (requires [llm] extra)
-harness-eval rules                          # list all 92 rules
+harness-eval rules                          # list all 96 rules
 harness-eval rules --category security      # list security rules only
 harness-eval rules --target hooks           # list rules that apply to hooks
 harness-eval rules --format json            # machine-readable rule list
@@ -73,8 +73,8 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
         with:
           path: "."              # directories to scan, one per line (default: repo root)
           preset: "recommended"  # recommended, strict, security, or pre-workflow
-          security-gate: "true"  # run security checks (18 rules)
-          lint-gate: "true"      # run lint checks (92 rules)
+          security-gate: "true"  # run security checks (19 rules)
+          lint-gate: "true"      # run lint checks (96 rules)
           lint-fail-on: "error"  # "error" (default) or "warning" (strict)
           sarif: "true"          # inline PR annotations via Code Scanning
           comment: "true"        # post summary comment on PRs

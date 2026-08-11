@@ -3,10 +3,10 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-92-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
+[![Rules](https://img.shields.io/badge/rules-96-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, OpenCode), builds a component graph across all of them, and runs 92 deterministic rules to catch issues that per-file linters miss: credential exfiltration chains, confused deputy attacks, skill/hook conflicts, and token budget blowouts.
+A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, OpenCode), builds a component graph across all of them, and runs 96 deterministic rules to catch issues that per-file linters miss: credential exfiltration chains, confused deputy attacks, skill/hook conflicts, and token budget blowouts.
 
 Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`.
 
@@ -14,7 +14,7 @@ Most tools test whether a skill produces correct output. This one checks the set
 
 ```bash
 pip install harness-eval
-harness-eval harness-lint .                    # 92 deterministic rules, fully offline
+harness-eval harness-lint .                    # 96 deterministic rules, fully offline
 harness-eval harness-security .                # security scan
 harness-eval skill-verify ./downloaded-skill   # SAFE / CAUTION / UNSAFE before you install
 ```
@@ -38,7 +38,7 @@ Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift P
 
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
-| `harness-lint` | 92 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
+| `harness-lint` | 96 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
 | `harness-security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
 | `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
 | `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
@@ -72,7 +72,7 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 
 ## Inspection rules
 
-92 deterministic rules across 11 categories: structural, frontmatter, content, quality, security, cross-component, commands, CLAUDE.md, MCP, hooks, and agents. Four presets: `recommended` (default), `strict`, `security`, `pre-workflow`.
+96 deterministic rules across 11 categories: structural, frontmatter, content, quality, security, cross-component, commands, CLAUDE.md, MCP, hooks, and agents. Four presets: `recommended` (default), `strict`, `security`, `pre-workflow`.
 
 For the complete rule list with examples, detection techniques, and framework mappings (OWASP, MITRE ATLAS), see [`docs/rules-reference.md`](docs/rules-reference.md).
 

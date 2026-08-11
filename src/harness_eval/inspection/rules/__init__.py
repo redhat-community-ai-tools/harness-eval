@@ -263,6 +263,23 @@ def register_all_rules() -> None:
     ]:
         register_rule(rule_cls())
 
+    from harness_eval.inspection.rules.claude_md.missing_boundary_policy import (
+        ClaudeMdMissingBoundaryPolicy,
+    )
+    from harness_eval.inspection.rules.hooks.dangerous_permission_grant import (
+        HooksDangerousPermissionGrant,
+    )
+    from harness_eval.inspection.rules.hooks.no_audit_trail import HooksNoAuditTrail
+    from harness_eval.inspection.rules.hooks.no_commit_guard import HooksNoCommitGuard
+
+    for rule_cls in [
+        HooksNoCommitGuard,
+        HooksDangerousPermissionGrant,
+        HooksNoAuditTrail,
+        ClaudeMdMissingBoundaryPolicy,
+    ]:
+        register_rule(rule_cls())
+
     from harness_eval.inspection.yaml_rules import load_yaml_rules
 
     load_yaml_rules()

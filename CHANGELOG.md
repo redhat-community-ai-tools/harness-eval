@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `hooks/no-commit-guard` rule (WARNING): flags settings with hooks but no PreToolUse guard on git commit
+- `security/dangerous-permission-grant` rule (ERROR): flags permissions.allow entries that auto-approve destructive, privilege-escalating, or persistence-creating patterns (sudo, shred, curl|bash, terraform destroy, crontab, etc.)
+- `hooks/no-audit-trail` rule (INFO): flags settings with no telemetry or observability configuration
+- `content/missing-boundary-policy` rule (INFO): flags instruction files with no directory or resource boundaries
+- Rule count: 92 -> 96
+
 ## [7.7.3] - 2026-08-10
 
 ### Fixed
