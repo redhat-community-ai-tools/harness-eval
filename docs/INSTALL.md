@@ -167,7 +167,7 @@ Install the plugin from within Claude Code:
 /reload-plugins
 ```
 
-No prerequisites — the plugin skills use `uvx` to fetch the CLI on demand from PyPI. The first run downloads the package into a cached ephemeral environment; subsequent runs are fast (~1.2s).
+Requires `uv` (a single standalone binary, see [astral.sh/uv](https://docs.astral.sh/uv/)). The skills use `uvx` to fetch the CLI on demand; if `uv` isn't available, `pip install harness-eval` instead.
 
 The 5 commands appear in the `/` menu:
 - `/harness-eval:harness-lint`
@@ -178,7 +178,7 @@ The 5 commands appear in the `/` menu:
 
 No API key needed for harness-lint/harness-security/skill-verify. Claude evaluates in-session for harness-review and skill-review.
 
-To update: re-run the install command. `uvx` always picks up the latest version from PyPI unless you pin it (e.g., `uvx --from harness-eval==7.7.3`).
+To update: re-run the install command. `uvx` always picks up the latest version from PyPI unless you pin it (e.g., `uvx --from harness-eval==7.8.0`).
 
 ## Cursor commands
 

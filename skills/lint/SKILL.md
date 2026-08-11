@@ -33,6 +33,8 @@ Determine the setup path. If the user doesn't specify one, use the current worki
 
 ```bash
 uvx --from harness-eval harness-eval harness-lint <setup-path> --format json
+
+If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.
 ```
 
 Read the JSON output.
