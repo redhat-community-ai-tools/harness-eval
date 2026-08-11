@@ -40,9 +40,9 @@ Determine the setup context path (usually the current working directory).
 
 ```bash
 uvx --from harness-eval harness-eval skill-review <skill-path> --context <context-path> --format json
+```
 
 If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.
-```
 
 If no context path, omit the `--context` flag.
 
@@ -89,7 +89,6 @@ The report must include:
 - Final verdict with suggestions
 
 At the very end:
-
 ```
 Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]

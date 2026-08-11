@@ -33,9 +33,9 @@ Determine the setup path. If the user doesn't specify one, use the current worki
 
 ```bash
 uvx --from harness-eval harness-eval harness-lint <setup-path> --format json
+```
 
 If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.
-```
 
 Read the JSON output.
 
@@ -46,7 +46,6 @@ Read `report-format.md` and format the results following that structure.
 Include all sections: inventory, token budget, context utilization, trigger analysis, dependencies, findings, and inspection summary.
 
 At the very end of the report, include the exact timing:
-
 ```
 Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]
