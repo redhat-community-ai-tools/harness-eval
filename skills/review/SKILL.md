@@ -34,10 +34,8 @@ Wait for their answer before proceeding.
 Determine the setup path. If the user doesn't specify one, use the current working directory.
 
 ```bash
-harness-eval harness-lint <setup-path> --format json
+uvx --from harness-eval harness-eval harness-lint <setup-path> --format json
 ```
-
-If `harness-eval` is not installed, install it first: `pip install harness-eval`
 
 Read the JSON output. This gives you per-component diagnostics, token budget, trigger overlaps, and dependency findings.
 

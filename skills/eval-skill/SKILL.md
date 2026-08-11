@@ -39,12 +39,10 @@ Determine the skill path. If the user says a skill name, find it under `skills/<
 Determine the setup context path (usually the current working directory).
 
 ```bash
-harness-eval skill-review <skill-path> --context <context-path> --format json
+uvx --from harness-eval harness-eval skill-review <skill-path> --context <context-path> --format json
 ```
 
 If no context path, omit the `--context` flag.
-
-If `harness-eval` is not installed, install it first: `pip install harness-eval`
 
 Read the JSON output. It contains diagnostics, token count, and contextual findings. This runs the recommended preset (quality + structural rules). For full security vetting, use `/skill-verify` instead.
 
@@ -95,7 +93,7 @@ Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]
 ```
 
-Get `{version}` by running: `harness-eval --version`
+Get `{version}` by running: `uvx --from harness-eval harness-eval --version`
 
 **If the user chose terminal:** print the report in the conversation.
 

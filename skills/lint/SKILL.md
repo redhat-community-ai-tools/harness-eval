@@ -32,10 +32,8 @@ Wait for their answer before proceeding.
 Determine the setup path. If the user doesn't specify one, use the current working directory.
 
 ```bash
-harness-eval harness-lint <setup-path> --format json
+uvx --from harness-eval harness-eval harness-lint <setup-path> --format json
 ```
-
-If `harness-eval` is not installed, install it first: `pip install harness-eval`
 
 Read the JSON output.
 
@@ -52,7 +50,7 @@ Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]
 ```
 
-Get `{version}` by running: `harness-eval --version`
+Get `{version}` by running: `uvx --from harness-eval harness-eval --version`
 
 Record the timestamp of your first tool call in Step 2 and compute the exact difference when you finish.
 

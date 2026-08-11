@@ -28,10 +28,8 @@ git clone --depth 1 <url> /tmp/skill-to-verify
 ## Step 2: Run the Scan
 
 ```bash
-harness-eval skill-verify <path> --format json
+uvx --from harness-eval harness-eval skill-verify <path> --format json
 ```
-
-If `harness-eval` is not installed, install it first: `pip install harness-eval`
 
 Read the JSON output.
 

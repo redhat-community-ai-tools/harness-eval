@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Plugin skills and Cursor commands now use `uvx --from harness-eval` instead of bare CLI calls, removing the `pip install` prerequisite
+
 ## [7.8.0] - 2026-08-11
 
 ### Added

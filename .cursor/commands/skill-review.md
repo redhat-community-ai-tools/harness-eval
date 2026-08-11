@@ -23,10 +23,10 @@ Determine the skill path from $ARGUMENTS. If the user says a skill name, find it
 ## Step 3: Run Lint
 
 ```bash
-harness-eval skill-review <skill-path> --context .
+uvx --from harness-eval harness-eval skill-review <skill-path> --context .
 ```
 
-If `harness-eval` is not installed, try `pip install harness-eval` first.
+If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.
 
 Read the output for diagnostics, token count, and contextual findings.
 
@@ -66,4 +66,4 @@ Include:
 - What's good / what needs improvement / what's broken
 - Final verdict: **KEEP**, **REVIEW**, or **REMOVE**
 
-At the end of the report, include: `Evaluated with: harness-eval v{version} (cursor-command)` where {version} comes from `harness-eval --version` or `pip show harness-eval`.
+At the end of the report, include: `Evaluated with: harness-eval v{version} (cursor-command)` where {version} comes from `uvx --from harness-eval harness-eval --version` or `pip show harness-eval`.

@@ -16,10 +16,10 @@ Ask the user: print the report in conversation, or write to a file?
 ## Step 2: Run Deterministic Security Scan
 
 ```bash
-harness-eval harness-security .
+uvx --from harness-eval harness-eval harness-security .
 ```
 
-If `harness-eval` is not installed, try `pip install harness-eval` first.
+If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.
 
 For YARA signature scanning (malware, cryptominers, attack tools), install with:
 
@@ -60,4 +60,4 @@ Include:
 4. Skip notices (if YARA or CVE dependencies are missing)
 5. Risk assessment: **SAFE** / **CAUTION** / **UNSAFE**
 
-At the end of the report, include: `Evaluated with: harness-eval v{version} (cursor-command)` where {version} comes from `harness-eval --version` or `pip show harness-eval`.
+At the end of the report, include: `Evaluated with: harness-eval v{version} (cursor-command)` where {version} comes from `uvx --from harness-eval harness-eval --version` or `pip show harness-eval`.
