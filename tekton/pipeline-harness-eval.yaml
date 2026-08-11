@@ -24,7 +24,7 @@ spec:
       description: "Enforcement mode: strict, advisory, off."
     - name: image
       type: string
-      default: image-registry.openshift-image-registry.svc:5000/qe-ds-ai--pipeline/harness-eval:dev
+      default: registry.access.redhat.com/ubi9/python-312:latest
       description: harness-eval container image.
   workspaces:
     - name: shared-workspace

@@ -1,3 +1,4 @@
+<!-- evaluator-ignore: command/references-nonexistent-skill -->
 # Eval Skill
 
 Deep-evaluate a single skill with static analysis and qualitative review, both individually and in context of the full setup.

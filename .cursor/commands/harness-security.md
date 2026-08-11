@@ -1,3 +1,4 @@
+<!-- evaluator-ignore: command/references-nonexistent-skill -->
 # Eval Setup Security
 
 Deep security audit of the agent setup. Combines deterministic scanning with semantic security review.

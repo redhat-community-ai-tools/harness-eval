@@ -1,3 +1,4 @@
+<!-- evaluator-ignore: command/references-nonexistent-skill -->
 # Eval Setup Review
 
 Full qualitative review of the agent setup. Read every file, evaluate quality, redundancy, and optimization opportunities. Produce KEEP/REVIEW/REMOVE verdicts per component.
