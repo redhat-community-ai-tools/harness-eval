@@ -33,10 +33,10 @@ Wait for their answer before proceeding.
 Determine the setup path. If the user doesn't specify one, use the current working directory.
 
 ```bash
-harness-eval harness-security <setup-path> --format json
+uvx --from harness-eval harness-eval harness-security <setup-path> --format json
 ```
 
-If `harness-eval` is not installed, install it first: `pip install harness-eval`
+If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.
 
 Read the JSON output. Note which checks were skipped and why.
 
@@ -62,12 +62,11 @@ Include:
 5. Risk assessment (SAFE / CAUTION / UNSAFE)
 
 At the very end of the report, include the exact timing:
-
 ```
 Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]
 ```
 
-Get `{version}` by running: `harness-eval --version`
+Get `{version}` by running: `uvx --from harness-eval harness-eval --version`
 
 Record the timestamp of your first tool call in Step 2 and compute the exact difference when you finish.

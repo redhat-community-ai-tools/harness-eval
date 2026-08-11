@@ -159,19 +159,15 @@ For air-gapped clusters, build from the included `Containerfile` and override th
 
 ## Claude Code plugin
 
-Requires the CLI installed first (the plugin skills call it for the deterministic scan):
-
-```bash
-pip install harness-eval
-```
-
-Then install the plugin from within Claude Code:
+Install the plugin from within Claude Code:
 
 ```
 /plugin marketplace add redhat-community-ai-tools/harness-eval
 /plugin install harness-eval@harness-eval
 /reload-plugins
 ```
+
+Requires `uv` (a single standalone binary, see [astral.sh/uv](https://docs.astral.sh/uv/)). The skills use `uvx` to fetch the CLI on demand; if `uv` isn't available, `pip install harness-eval` instead.
 
 The 5 commands appear in the `/` menu:
 - `/harness-eval:harness-lint`
@@ -182,21 +178,17 @@ The 5 commands appear in the `/` menu:
 
 No API key needed for harness-lint/harness-security/skill-verify. Claude evaluates in-session for harness-review and skill-review.
 
-To update: re-run the install command.
+To update: re-run the install command. `uvx` always picks up the latest version from PyPI unless you pin it (e.g., `uvx --from harness-eval==7.8.0`).
 
 ## Cursor commands
 
-Requires the CLI tool installed first (Cursor commands call it for the deterministic scan):
-
-```bash
-pip install harness-eval
-```
-
-Then copy `.cursor/commands/` from [this repo](https://github.com/redhat-community-ai-tools/harness-eval) into your project. The 5 commands appear in Cursor's command palette:
+Copy `.cursor/commands/` from [this repo](https://github.com/redhat-community-ai-tools/harness-eval) into your project. The 5 commands appear in Cursor's command palette:
 - `/harness-lint`
 - `/harness-review`
 - `/harness-security`
 - `/skill-review`
 - `/skill-verify`
+
+The commands use `uvx` to fetch the CLI on demand. If `uvx` is not available in your Cursor environment, install the CLI manually first: `pip install harness-eval`.
 
 No API key needed for harness-review/harness-security/skill-review. Cursor evaluates in-session.

@@ -17,10 +17,10 @@ Ask the user: print the report in conversation, or write to a file?
 Run the deterministic scan first to get structural data:
 
 ```bash
-harness-eval harness-lint . --format json
+uvx --from harness-eval harness-eval harness-lint . --format json
 ```
 
-If `harness-eval` is not installed, try `pip install harness-eval` first.
+If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.
 
 Read the JSON output. Use it as context for the qualitative review. Do NOT present the lint report separately.
 
@@ -60,4 +60,4 @@ Include:
 4. Per-component analysis (lint + qualitative review + verdict)
 5. Numbered improvement suggestions
 
-At the end of the report, include: `Evaluated with: harness-eval v{version} (cursor-command)` where {version} comes from `harness-eval --version` or `pip show harness-eval`.
+At the end of the report, include: `Evaluated with: harness-eval v{version} (cursor-command)` where {version} comes from `uvx --from harness-eval harness-eval --version` or `pip show harness-eval`.
