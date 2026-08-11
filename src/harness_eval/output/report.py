@@ -139,7 +139,11 @@ def format_terminal(
     if top_issues:
         lines.append("Top issues:")
         for i, d in enumerate(top_issues, 1):
-            sev = "ERROR" if d.severity.value == "error" else "WARNING"
+            sev = (
+                "ERROR"
+                if d.severity.value == "error"
+                else ("INFO" if d.severity.value == "info" else "WARNING")
+            )
             loc = (
                 f"{d.location.file}:{d.location.start_line}"
                 if d.location.start_line

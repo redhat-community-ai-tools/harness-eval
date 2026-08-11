@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 92 deterministic lint rules and the LLM-based review system.
+Complete reference for all 96 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 

@@ -99,7 +99,7 @@ RECOMMENDED: dict[str, str] = {
     "hooks/no-commit-guard": "warning",
     "security/dangerous-permission-grant": "error",
     "hooks/no-audit-trail": "info",
-    "content/missing-boundary-policy": "info",
+    "content/missing-boundary-policy": "off",
 }
 
 STRICT: dict[str, str] = {

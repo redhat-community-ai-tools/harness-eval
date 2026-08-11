@@ -10,7 +10,7 @@ from harness_eval.inspection.registry import get_all_rules
 
 ROOT = Path(__file__).resolve().parent.parent
 
-TOTAL_RULES_PATTERN = re.compile(r"(\d+)\s+(?:deterministic\s+)?rules")
+TOTAL_RULES_PATTERN = re.compile(r"(\d+)\s+(?:\w+\s+){0,2}rules")
 SECURITY_RULES_PATTERN = re.compile(r"(\d+)\s+security\s+rules")
 
 FILES_WITH_TOTAL_COUNT = [
@@ -47,10 +47,10 @@ class TestRuleCountDrift:
             if not path.exists():
                 continue
             for lineno, line in enumerate(path.read_text().splitlines(), 1):
-                if SECURITY_RULES_PATTERN.search(line) or "security" in line.lower():
-                    continue
                 for match in TOTAL_RULES_PATTERN.finditer(line):
                     documented = int(match.group(1))
+                    if documented < 50:
+                        continue
                     assert documented == total, (
                         f"{rel_path}:{lineno} says {documented} rules but registry has {total}. "
                         f"Update the documented count to match."

@@ -1,5 +1,5 @@
 name: "harness-eval"
-description: "Lint and security-scan AI agent setups (CLAUDE.md, skills, commands, hooks, MCP configs, agents). 92 deterministic rules, no LLM required."
+description: "Lint and security-scan AI agent setups (CLAUDE.md, skills, commands, hooks, MCP configs, agents). 96 deterministic rules, no LLM required."
 author: "redhat-community-ai-tools"
 
 branding:
