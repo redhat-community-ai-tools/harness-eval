@@ -17,6 +17,7 @@ _DANGEROUS_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"sudo\b", re.I), "privilege escalation (sudo)"),
     (re.compile(r"\bsu\b", re.I), "privilege escalation (su)"),
     (re.compile(r"chmod\s+777\b"), "world-writable permissions (chmod 777)"),
+    (re.compile(r"rm\s+-rf\s+/", re.I), "destructive filesystem (rm -rf /)"),
     (re.compile(r"\bshred\b", re.I), "destructive filesystem (shred)"),
     (re.compile(r"\bmkfs\b", re.I), "destructive filesystem (mkfs)"),
     (re.compile(r"\bdd\b.*\bof=", re.I), "raw disk write (dd)"),
