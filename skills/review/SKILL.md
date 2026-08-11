@@ -90,7 +90,7 @@ Evaluated with: harness-eval v{version} (claude-code-plugin)
 Duration: [X minutes Y seconds]
 ```
 
-Get `{version}` by running: `uv run python -c "import importlib.metadata; print(importlib.metadata.version('harness-eval'))"`
+Get `{version}` by running: `uvx --from harness-eval harness-eval --version`
 
 Compute this from the timestamp of your first tool call in Step 2 to the timestamp when you finish writing the report.
 
