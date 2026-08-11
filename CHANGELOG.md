@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Added `# nosec` annotations to suppress false-positive bandit findings in security detection code (`mcp_tool_poisoning.py`, `cve_lookup.py`)
+
 ### Changed
 - Plugin skills and Cursor commands now use `uvx --from harness-eval` instead of bare CLI calls, removing the `pip install` prerequisite
 
