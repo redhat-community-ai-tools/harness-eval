@@ -84,7 +84,7 @@ def _query_osv(deps: list[dict[str, str]]) -> list[dict[str, str]] | None:
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
+        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:  # nosec B310 — intended CVE lookup via OSV API
             data = json.loads(resp.read())
     except Exception:
         return None

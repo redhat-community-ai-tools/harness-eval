@@ -18,7 +18,18 @@ from harness_eval.inspection.types import (
 
 _BASE64_RAW_RE = re.compile(r"[A-Za-z0-9+/]{40,}={0,2}")
 
-_PATH_PREFIXES = ("./", "../", "~/", "/home", "/usr", "/etc", "/var", "/tmp", "/opt", "/bin")
+_PATH_PREFIXES = (  # nosec B108 — detection pattern for suspicious paths, not temp file usage
+    "./",
+    "../",
+    "~/",
+    "/home",
+    "/usr",
+    "/etc",
+    "/var",
+    "/tmp",
+    "/opt",
+    "/bin",
+)
 
 _ENTROPY_THRESHOLD = 4.5
 
@@ -63,16 +74,17 @@ _ZERO_WIDTH_CHARS = {
     "­": "soft hyphen",
 }
 
+# nosec B613 — bidi chars below are intentional detection signatures for trojan-source attacks
 _RTL_OVERRIDE_CHARS = {
-    "‪": "LRE",
-    "‫": "RLE",
-    "‬": "PDF",
-    "‭": "LRO",
-    "‮": "RLO",
-    "⁦": "LRI",
-    "⁧": "RLI",
-    "⁨": "FSI",
-    "⁩": "PDI",
+    "‪": "LRE",  # nosec B613
+    "‫": "RLE",  # nosec B613
+    "‬": "PDF",  # nosec B613
+    "‭": "LRO",  # nosec B613
+    "‮": "RLO",  # nosec B613
+    "⁦": "LRI",  # nosec B613
+    "⁧": "RLI",  # nosec B613
+    "⁨": "FSI",  # nosec B613
+    "⁩": "PDI",  # nosec B613
 }
 
 _HOMOGLYPH_MAP: dict[str, str] = {
