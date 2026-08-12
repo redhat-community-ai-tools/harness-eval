@@ -1,4 +1,4 @@
-"""harness-eval skill-submission-scan: scan skill submissions for ABEvalFlow."""
+"""harness-eval skill-submission-scan: scan skill submissions for security and quality."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def submission_scan(
 ) -> None:
     """Scan a skill submission directory for security and quality issues.
 
-    Produces pipeline-compatible JSON for ABEvalFlow gates.
+    Produces pipeline-compatible JSON with security and quality findings.
     Runs harness-eval deterministic rules with false-positive
     reduction (code-fence tracking, negation awareness, example context).
     """

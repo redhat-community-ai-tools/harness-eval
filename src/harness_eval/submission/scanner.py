@@ -1,4 +1,4 @@
-"""Skill submission scanner for ABEvalFlow pipeline integration.
+"""Skill submission scanner.
 
 Scans a skill submission directory using harness-eval's rule engine and
 produces pipeline-compatible JSON output with security and quality findings.
