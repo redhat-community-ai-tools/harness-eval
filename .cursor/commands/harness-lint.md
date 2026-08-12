@@ -1,4 +1,3 @@
-<!-- evaluator-ignore: command/references-nonexistent-skill -->
 # Eval Setup Lint
 
 Run 96 deterministic rules + system-level analysis on the agent setup. No LLM. Fast, reproducible, CI-suitable.

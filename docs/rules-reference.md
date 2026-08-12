@@ -20,6 +20,22 @@ Rules are mapped to industry security frameworks where applicable:
 - **OWASP Agentic Security**: AG04 (data exfiltration), AG05 (credential access), and related controls
 - **MITRE ATLAS**: AML.T0054 (LLM prompt injection) and related techniques
 
+### Rule confidence tiers
+
+Each rule falls into one of three confidence tiers:
+
+- **exact** -- checks a concrete artifact (file exists, secret present, JSON valid, path broken). Findings should be fixed.
+- **heuristic** -- pattern-based detection of risky content (injection phrases, exfiltration patterns, dangerous commands). Occasional false positives expected; review and suppress with `evaluator-ignore` when wrong.
+- **advisory** -- linguistic/stylistic signals (scope-overreach, imprecise-instruction, redundant-guidance, example-gap). Treat as prompts for review, not gates.
+
+Rules marked exact should be fixed. Heuristic and advisory findings are conversation starters; suppress freely when they're wrong.
+
+**Known false positives:**
+- `command/references-nonexistent-skill` (heuristic): may fire on CLI binary names; the rule skips names appearing after install commands, but suppress if a legitimate mention is flagged.
+- `quality/scope-overreach` (advisory): targets authority claims (e.g. "required for all tasks"); ordinary instructions like "check all files" are not flagged.
+- `security/no-prompt-injection` (heuristic): fires on documentation that quotes injection phrases as examples.
+- `hooks/silent-failure-masking` (heuristic): fires on intentional `|| true` in cleanup steps.
+
 ---
 
 ## Skills (SKILL.md)
