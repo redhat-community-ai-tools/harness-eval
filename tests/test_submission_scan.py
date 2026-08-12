@@ -355,6 +355,4 @@ class TestNoDuplicateFindings:
             for f in sec
             if f["rule_id"] == "security/no-credential-access" and "ssh" in f["message"].lower()
         ]
-        assert len(cred_findings) == 1, (
-            f"Expected 1 credential finding, got {len(cred_findings)}"
-        )
+        assert len(cred_findings) == 1, f"Expected 1 credential finding, got {len(cred_findings)}"
