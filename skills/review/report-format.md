@@ -23,7 +23,7 @@ Always start the report with this exact text (hardcoded, do not modify):
 
 This review combines two passes:
 
-**Lint (deterministic)** runs 96 rules checking structure, frontmatter, token budget,
+**Lint (deterministic)** runs 97 rules checking structure, frontmatter, token budget,
 broken references, duplicate detection, security patterns (injection, credentials,
 exfiltration, obfuscation, reverse shells), AST behavioral analysis, taint tracking,
 MCP permission analysis, and tool poisoning detection.

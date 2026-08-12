@@ -166,6 +166,7 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.security.unbounded_delegation import UnboundedDelegation
     from harness_eval.inspection.rules.security.yara_scan import YaraScan
     from harness_eval.inspection.rules.structural.skill_md_exists import SkillMdExists
+    from harness_eval.inspection.rules.submission.file_completeness import FileCompleteness
 
     for rule_cls in [
         SkillMdExists,
@@ -260,6 +261,7 @@ def register_all_rules() -> None:
         DescriptionLength,
         TotalDescriptionBudget,
         ScopeGrabDescription,
+        FileCompleteness,
     ]:
         register_rule(rule_cls())
 

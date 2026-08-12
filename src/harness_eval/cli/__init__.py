@@ -15,3 +15,4 @@ from harness_eval.cli import rules as _rules  # noqa: E402, F401
 from harness_eval.cli import scan as _scan  # noqa: E402, F401
 from harness_eval.cli import security as _security  # noqa: E402, F401
 from harness_eval.cli import skill as _skill  # noqa: E402, F401
+from harness_eval.cli import submission_scan as _submission_scan  # noqa: E402, F401
