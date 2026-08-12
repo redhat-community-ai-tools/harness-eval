@@ -324,8 +324,8 @@ class TestSeverityMapping:
 
         sec = output["security"]["findings"]
         stealth = [f for f in sec if f["rule_id"] == "security/stealth-persistence"]
-        if stealth:
-            assert stealth[0]["severity"] == "critical"
+        assert len(stealth) >= 1, "stealth-persistence rule should fire for .claude/ config write"
+        assert stealth[0]["severity"] == "critical"
 
     def test_quality_warnings_are_low(self, tmp_path: Path) -> None:
         sub = _make_submission(tmp_path, test_file="def test():\n    pass\n")
@@ -355,6 +355,4 @@ class TestNoDuplicateFindings:
             for f in sec
             if f["rule_id"] == "security/no-credential-access" and "ssh" in f["message"].lower()
         ]
-        assert len(cred_findings) == 1, (
-            f"Expected 1 credential finding, got {len(cred_findings)}"
-        )
+        assert len(cred_findings) == 1, f"Expected 1 credential finding, got {len(cred_findings)}"
