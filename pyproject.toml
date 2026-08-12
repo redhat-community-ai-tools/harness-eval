@@ -83,5 +83,8 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.bandit]
+exclude_dirs = ["tests"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

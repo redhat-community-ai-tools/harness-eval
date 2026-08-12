@@ -16,6 +16,7 @@ repos:
     hooks:
       - id: bandit
         args: ["-r", "src/"]
+        files: ^src/
 
   - repo: local
     hooks:

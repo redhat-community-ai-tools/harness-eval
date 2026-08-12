@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Bandit pre-commit hook now restricted to `src/` via `files: ^src/` filter, preventing false-positive B101 findings on pytest `assert` statements in test files
+- Added `[tool.bandit]` section to `pyproject.toml` with `exclude_dirs = ["tests"]` for defense-in-depth
+
 ### Changed
 - Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - `command/references-nonexistent-skill`: tightened to require the word "skill" in verb patterns; skips CLI binary names after install commands and path segments. Reduces false positives on commands mentioning tools like helm, kubectl, ruff.
