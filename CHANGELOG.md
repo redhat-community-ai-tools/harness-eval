@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Bandit pre-commit hook now restricted to `src/` via `files: ^src/` filter, preventing false-positive B101 findings on pytest `assert` statements in test files
 - Added `[tool.bandit]` section to `pyproject.toml` with `exclude_dirs = ["tests"]` for defense-in-depth
+- Added `# nosec` annotations to suppress false-positive bandit findings in security detection code (`mcp_tool_poisoning.py`, `cve_lookup.py`)
 
 ### Changed
 - Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
@@ -22,11 +23,6 @@ All notable changes to this project will be documented in this file.
 - Documented suppression mechanisms (evaluator-ignore, baseline, exclude, advisory mode) in README and INSTALL.md
 - Added rule confidence tiers (exact/heuristic/advisory) and known false positive notes to docs/rules-reference.md
 - Removed self-suppressions from Cursor commands and skills now that rules are tightened
-
-### Fixed
-- Added `# nosec` annotations to suppress false-positive bandit findings in security detection code (`mcp_tool_poisoning.py`, `cve_lookup.py`)
-
-### Changed
 - Plugin skills and Cursor commands now use `uvx --from harness-eval` instead of bare CLI calls, removing the `pip install` prerequisite
 
 ## [7.8.0] - 2026-08-11
