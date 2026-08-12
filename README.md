@@ -64,9 +64,11 @@ See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tie
 | `harness-security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
 | `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
 | `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
-| `skill-submission-scan` | Scan a skill submission directory for security and quality issues. Writes pipeline-compatible JSON with findings split by category. | No |
 | `skill-review` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: `[llm]` extra or in-session. |
+| `skill-submission-scan`* | Scan a skill submission for CI pipelines. Splits findings into security and quality JSON files. | No |
 | `rules` | List all rules. Filter by `--category` or `--target`. | No |
+
+\* `skill-verify` and `skill-submission-scan` both vet skills, but for different audiences. `skill-verify` is for developers checking a downloaded skill ("is this safe to install?"). `skill-submission-scan` is for CI pipelines that gate skill submissions, producing structured JSON with `--output-security` and `--output-quality` for downstream automation.
 
 ## Cross-component analysis
 
