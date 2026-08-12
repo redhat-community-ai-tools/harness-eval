@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed vacuous `if stealth:` guard in `test_stealth_persistence_is_critical` that allowed the test to pass silently when the rule didn't fire
+
 ## [7.9.0] - 2026-08-12
 
 ### Added
