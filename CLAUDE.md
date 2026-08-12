@@ -60,3 +60,4 @@ The most common CI failure is forgetting `ruff format`. The security gate blocks
 - `skills/eval-skill/rubric/skills-rubric.md` is a symlink to `skills/review/rubric/skills-rubric.md`; edit the source, not the link
 - YARA and CVE rules only run in the `security` preset (used by `security`), never in lint
 - Rules that resolve file paths from user content must use `safe_join()` from `utils.paths` to prevent path traversal; never join untrusted paths with raw `/` or `Path()`
+- Security detection rules in `src/harness_eval/inspection/rules/security/` intentionally contain attack signatures (suspicious paths, bidi characters, URL calls, shell patterns) as part of their detection logic. When writing or modifying these rules, add inline `# nosec BXXX` annotations (with a brief comment) on any line bandit would flag. Use the specific rule ID (e.g., `B108`, `B310`, `B603`) rather than a bare `# nosec`. Run `bandit -r src/` locally to verify no unannotated findings remain.

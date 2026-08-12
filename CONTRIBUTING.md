@@ -49,12 +49,14 @@ Rules go in `src/harness_eval/inspection/rules/<category>/`. Pick the category t
 | `frontmatter/` | YAML metadata quality | Skill |
 | `content/` | Body content (duplicates, references, budget) | Skill |
 | `quality/` | Instruction effectiveness (hedging, redundancy, placeholders) | Skill |
-| `security/` | Credential access, prompt injection | Skill |
+| `security/` | Credential access, prompt injection (see note below) | Skill |
 | `commands/` | Command-specific checks | Command |
 | `claude_md/` | System instruction checks (CLAUDE.md, GEMINI.md, AGENTS.md, .cursorrules) | CLAUDE_MD |
 | `mcp/` | MCP configuration validation | MCP_CONFIG |
 | `hooks/` | Hook structure, safety, and script boundary | Hooks |
 | `agents/` | Agent definition checks | Agent |
+
+**Security rules and bandit false positives:** Rules in `security/` intentionally contain attack signatures (suspicious paths like `/tmp`, bidi control characters, `urlopen` calls to vulnerability databases, shell patterns) because that is how they detect those patterns in other codebases. Bandit will flag these lines as findings. Add inline `# nosec BXXX` annotations (with a brief explanatory comment) on any line that bandit would flag. Use the specific bandit rule ID (e.g., `# nosec B108  # detection pattern, not real /tmp usage`) rather than a bare `# nosec`. Run `bandit -r src/` locally before committing to verify no unannotated findings remain.
 
 ### 2. Follow the pattern
 
