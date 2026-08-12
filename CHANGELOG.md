@@ -4,20 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Changed
+### Added
 - Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
+
+### Changed
 - `command/references-nonexistent-skill`: tightened to require the word "skill" in verb patterns; skips CLI binary names after install commands and path segments. Reduces false positives on commands mentioning tools like helm, kubectl, ruff.
 - `quality/scope-overreach`: replaced "claims all code" pattern (high FP rate on ordinary instructions) with authority-claim patterns (supersedes, required for all tasks, applies to all). Demoted from WARNING to INFO in the recommended preset.
 - Documented suppression mechanisms (evaluator-ignore, baseline, exclude, advisory mode) in README and INSTALL.md
 - Added rule confidence tiers (exact/heuristic/advisory) and known false positive notes to docs/rules-reference.md
 - Removed self-suppressions from Cursor commands and skills now that rules are tightened
+- Plugin skills and Cursor commands now use `uvx --from harness-eval` instead of bare CLI calls, removing the `pip install` prerequisite
 
 ### Fixed
 - Added `# nosec` annotations to suppress false-positive bandit findings in security detection code (`mcp_tool_poisoning.py`, `cve_lookup.py`)
-
-### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
-- Plugin skills and Cursor commands now use `uvx --from harness-eval` instead of bare CLI calls, removing the `pip install` prerequisite
 
 ## [7.8.0] - 2026-08-11
 
@@ -74,7 +73,6 @@ All notable changes to this project will be documented in this file.
 - Shared formatters (`format_header`, `format_section`, `format_finding_line`) in `output/report.py`
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - **BREAKING: CLI commands renamed.** `lint` -> `harness-lint`, `security` -> `harness-security`, `review` -> `harness-review`, `skill` -> `skill-review`. The new `skill-verify` command replaces `scan`. Update scripts, CI pipelines, and documentation that reference the old names. `doctor`, `rules`, and `baseline` are unchanged.
 
 ## [7.6.0] - 2026-08-10
@@ -98,7 +96,6 @@ All notable changes to this project will be documented in this file.
 - **marketplace.json rule count updated** from 81 to 92; added to drift test to prevent future drift.
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Tekton task `image` parameter no longer has a default; users build from the included `Containerfile` and push to their own registry
 - Windsurf and Cline noted as discovery + structure rules in README (full security scanning not yet supported)
 
@@ -118,7 +115,6 @@ All notable changes to this project will be documented in this file.
 - `quality/scope-grab-description` rule (WARNING): flags descriptions that hijack routing ("any request", "always use", "prefer over"); qualified phrases ("any request involving X") are excluded
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - **Engine: explicit config wins over per-finding severity_override.** When a rule's severity is explicitly set in a preset or user config, per-finding `severity_override` can no longer silently downgrade it. INFO-level overrides (used for skip notices) are exempt. This means findings that were previously downgraded to WARNING under the SECURITY/STRICT presets now correctly report at the configured severity.
 - `hooks/base-url-override`: now scans the full settings file (not just the `env` section), catches base URLs in hook commands, handles malformed JSON via line-scan fallback, and reports all occurrences. Uses exact-match for env keys to avoid false positives on suffixed names like `ANTHROPIC_BASE_URL_MIRROR`.
 - Token budget rules indicate approximate counts (`~108 tokens`) when tiktoken is unavailable
@@ -129,7 +125,6 @@ All notable changes to this project will be documented in this file.
 ## [7.3.0] - 2026-08-09
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - README: lead with cross-component analysis and multi-tool auto-detection as the value prop; moved cross-component section above supported tools with concrete examples
 
 ### Fixed
@@ -177,7 +172,6 @@ All notable changes to this project will be documented in this file.
 - CI test matrix: `core` and `full` legs ensure optional-dependency code paths (bashlex, yara) are tested
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Removed decorative mypy CI step (had continue-on-error: true); tracking issue #54 to re-add enforced
 
 ### Fixed
@@ -211,7 +205,6 @@ All notable changes to this project will be documented in this file.
 - Drift-guard test for rule counts and command surface parity across `commands/` and `.cursor/commands/`
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - GitHub Action reduced from 6 `harness-eval` invocations per scanned directory to 4
 
 ### Fixed
@@ -271,7 +264,6 @@ All notable changes to this project will be documented in this file.
 - MCP tool call detection now skips code blocks, reducing false positives in cross-component and phantom MCP checks
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Source/sink definitions loaded from `capabilities.yaml` instead of inline frozensets
 - Rule count: 68 to 69 (1 new cross-component security rule)
 - SARIF output includes framework metadata and reachability properties
@@ -290,7 +282,6 @@ All notable changes to this project will be documented in this file.
 - Recursive mode in GitHub Action via `recursive: "true"` input
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Quality rules (`imprecise-instruction`, `unfinished-content`, `redundant-guidance`, `stale-references`) and `generic-advice` now use shared `ContextTracker` instead of ad-hoc code fence tracking
 - Cross-type checks rubric expanded from 21 to 22 checks
 - Rule count: 64 to 68 (4 new cross-component content rules)
@@ -306,14 +297,12 @@ All notable changes to this project will be documented in this file.
 - GitHub Action renamed from "Harness Eval / eval" to "Harness Checks / lint-and-security" for clarity
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - GitHub Action PR comment labels: "Security gate" -> "Security checks (15 rules)", "Lint gate" -> "Lint checks (64 rules)", "SARIF" -> "Code scanning"
 - Warnings in lint checks shown as non-blocking in PR comment
 
 ## [5.0.0] - 2026-07-19
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - **BREAKING**: Python package renamed from `setup_eval` to `harness_eval`. Update imports: `from harness_eval...` instead of `from setup_eval...`
 - **BREAKING**: PyPI package renamed from `setup-eval` to `harness-eval`. Install with `pip install harness-eval`.
 - **BREAKING**: CLI binary renamed: `harness-eval lint .` instead of `setup-eval lint .`
@@ -357,7 +346,6 @@ All notable changes to this project will be documented in this file.
 - Versioned data files under `src/harness_eval/data/` for knowledge that decays: built-in commands list and tautological pattern definitions
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - AGENTS.md attribution changed from "opencode" to "agents-md" (cross-tool standard, not OpenCode-specific)
 - tiktoken moved from hard dependency to optional extra (`pip install harness-eval[tiktoken]`). Token counting falls back to chars/4 when tiktoken is not installed.
 - Built-in command list (`builtins.json`) and tautological patterns (`tautological_patterns.json`) extracted from hardcoded Python to versioned JSON data files
@@ -370,7 +358,6 @@ All notable changes to this project will be documented in this file.
 ## [4.0.0] - 2026-07-08
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - **BREAKING**: Python package renamed from `harness_eval_lab` to `harness_eval`. Update imports: `from harness_eval...` instead of `from harness_eval_lab...`
 - **BREAKING**: CLI subcommands shortened: `lint`, `review`, `security`, `skill` (previously `harness-eval-lint`, `harness-eval-review`, `harness-eval-security`, `eval-skill`)
 - GitHub repo renamed from `harness-eval-lab` to `harness-eval`
@@ -398,7 +385,6 @@ All notable changes to this project will be documented in this file.
 - `--output` flag for writing lint and security output to a file instead of stdout
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Tool-neutral language in rule messages (replaced assistant-specific references with generic "AI assistant")
 - Consolidated duplicated security scan logic across component types into shared scanner module
 - Extracted discovery layer into per-tool discoverer classes (`core/discoverers/`)
@@ -451,7 +437,6 @@ All notable changes to this project will be documented in this file.
 - 10 new tests covering base64 entropy filtering, subprocess argument analysis, CVE severity mapping, adjudication parsing, and adjudicated finding properties
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Security risk assessment now uses adjudicated findings (not raw scanner output) when `--review` is enabled; without `--review`, behavior is unchanged (backward compatible)
 - JSON output adds `adjudicated`, `raw_errors`, `raw_warnings`, `confirmed_errors`, `false_positives`, and `downgraded` fields
 - Terminal output shows "Scanner: X errors -> After review: Y confirmed, Z false positives" when adjudicated
@@ -487,7 +472,6 @@ All notable changes to this project will be documented in this file.
 - Negative-match tests confirming clean text (including "Dan") does not trigger false positives
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - `claude-md/exists`, `claude-md/generic-advice`, and `command/shadows-builtin` rules now only fire for Claude Code components (skipped for Cursor)
 - `claude-md/skill-duplication` uses Cursor-appropriate message text when evaluating Cursor rules
 - System analysis messages use tool-aware labels ("cursor rules" vs "CLAUDE.md")
@@ -511,7 +495,6 @@ All notable changes to this project will be documented in this file.
 - LLM client call counters (total/succeeded) for metadata tracking
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - JSON output includes `impact`, `verdict`, and `metadata` fields
 - LLM prompt (issue-template.md) requests impact for each issue
 - Security review rubric requires concrete attack scenarios for FLAG findings
@@ -524,7 +507,6 @@ All notable changes to this project will be documented in this file.
 ## [3.1.2] - 2026-06-17
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Renamed `harness-eval-skill` command to `eval-skill` across CLI, Claude Code plugin, and Cursor
 - Renamed `how-to-contribute.md` to `CONTRIBUTING.md` (standard convention)
 - LLM dependencies (anthropic, google-genai) now included in default install (no separate extras)
@@ -538,7 +520,6 @@ All notable changes to this project will be documented in this file.
 ## [3.1.0] - 2026-06-16
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Renamed package from `harness-eval-lab` to `harness-eval` on PyPI (`pip install harness-eval`)
 - Renamed CLI entry point from `harness-eval-lab` to `harness-eval`
 - Renamed all commands: `eval-setup-lint` to `harness-eval-lint`, `eval-setup-review` to `harness-eval-review`, `eval-setup-security` to `harness-eval-security`, `eval-skill` to `eval-skill`
@@ -593,7 +574,6 @@ All notable changes to this project will be documented in this file.
 - README badges: CI status, coverage, Python version, license
 
 ### Changed
-- Developer guidance in CLAUDE.md and CONTRIBUTING.md for adding `# nosec BXXX` annotations to security detection rules
 - Renamed "Layer 1/Layer 2" terminology to "lint/review" throughout codebase
 - README updated to remove dimension-based framing, describes review as best-practices + cross-component + redundancy checking
 - Future plans restructured from free-form READMEs to structured spec format (problem, proposal, user stories, requirements, success criteria)
