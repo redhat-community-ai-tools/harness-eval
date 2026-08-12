@@ -64,7 +64,7 @@ See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tie
 | `harness-security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
 | `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
 | `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
-| `skill-submission-scan` | Scan a skill submission directory for ABEvalFlow pipeline integration. Writes pipeline-compatible JSON with security and quality findings. | Scan: no. `--review`: `[llm]` extra. |
+| `skill-submission-scan` | Scan a skill submission directory for ABEvalFlow pipeline integration. Writes pipeline-compatible JSON with security and quality findings. | No |
 | `skill-review` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: `[llm]` extra or in-session. |
 | `rules` | List all rules. Filter by `--category` or `--target`. | No |
 

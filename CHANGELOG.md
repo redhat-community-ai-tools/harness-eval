@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.9.0] - 2026-08-12
+
 ### Added
 - `skill-submission-scan` CLI command: scans skill submission directories for ABEvalFlow pipeline integration, producing pipeline-compatible JSON with security and quality findings split into separate output files
 - `submission/file-completeness` rule: checks that instruction.md has meaningful body content and test files contain assertions
