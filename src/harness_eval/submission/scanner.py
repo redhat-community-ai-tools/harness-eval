@@ -88,22 +88,26 @@ def _is_security_finding(finding: Finding) -> bool:
     return finding.rule_id.startswith(_SECURITY_PREFIXES)
 
 
+def _is_under_skill_dir(path: Path, skill_dirs: list[Path]) -> bool:
+    """Check if a path is inside any of the discovered skill directories."""
+    for skill_dir in skill_dirs:
+        try:
+            path.relative_to(skill_dir)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
 def scan_submission(
     directory: Path,
     preset: dict[str, str],
-    *,
-    review: bool = False,
-    provider: str | None = None,
-    model: str | None = None,
 ) -> SubmissionScanResult:
     """Scan a skill submission directory for security and quality issues.
 
     Args:
         directory: Path to the submission directory.
         preset: Rule preset dict (rule_id -> severity).
-        review: If True, run LLM semantic security review.
-        provider: LLM provider for semantic review.
-        model: LLM model for semantic review.
 
     Returns:
         SubmissionScanResult with pipeline-formatted findings.
@@ -141,7 +145,9 @@ def scan_submission(
     all_md = sorted(
         p
         for p in directory.rglob("*.md")
-        if not _is_excluded(p, directory) and p.name != "SKILL.md"
+        if not _is_excluded(p, directory)
+        and p.name != "SKILL.md"
+        and not _is_under_skill_dir(p, skill_dirs)
     )
     for md_file in all_md:
         try:
@@ -154,9 +160,6 @@ def scan_submission(
             results.append(result)
         except Exception:
             logger.warning("Failed to scan: %s", md_file)
-
-    if review:
-        _run_llm_review(directory, results, provider=provider, model=model)
 
     security_findings: list[dict] = []
     quality_findings: list[dict] = []
@@ -188,49 +191,3 @@ def scan_submission(
         total_warnings=total_warnings,
         verdict=verdict,
     )
-
-
-def _run_llm_review(
-    directory: Path,
-    results: list[InspectionResult],
-    *,
-    provider: str | None = None,
-    model: str | None = None,
-) -> None:
-    """Run LLM semantic security review on submission files."""
-    try:
-        from harness_eval.rubric.checker import RubricChecker
-        from harness_eval.rubric.dimensions import SECURITY_REVIEW_CATEGORIES
-    except ImportError:
-        logger.warning("LLM review requires rubric module; skipping")
-        return
-
-    md_files = sorted(p for p in directory.rglob("*.md") if not _is_excluded(p, directory))
-    if not md_files:
-        return
-
-    contents: list[tuple[str, str]] = []
-    for md_file in md_files:
-        try:
-            content = md_file.read_text(encoding="utf-8", errors="replace")
-            rel_path = str(md_file.relative_to(directory))
-            contents.append((rel_path, content))
-        except OSError:
-            continue
-
-    if not contents:
-        return
-
-    try:
-        checker = RubricChecker(provider=provider, model=model)
-        combined = "\n\n---\n\n".join(f"### {path}\n\n{content}" for path, content in contents)
-        llm_findings = checker.check(
-            combined,
-            categories=SECURITY_REVIEW_CATEGORIES,
-            component_name="submission",
-        )
-        if llm_findings and results:
-            for f in llm_findings:
-                results[0].diagnostics.append(f)
-    except Exception:
-        logger.warning("LLM semantic review failed", exc_info=True)

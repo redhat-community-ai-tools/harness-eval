@@ -33,14 +33,6 @@ from harness_eval.output.metadata import EvalMetadata
     default="terminal",
     help="Display format.",
 )
-@click.option("--review", is_flag=True, help="Run LLM semantic security review.")
-@click.option(
-    "--provider",
-    type=click.Choice(["gemini", "anthropic", "openai"]),
-    default=None,
-    help="LLM provider for --review.",
-)
-@click.option("--model", default=None, help="LLM model for --review.")
 @click.option("--fail-on-error", is_flag=True, help="Exit code 1 if any errors found.")
 @click.option("--fail-on-warning", is_flag=True, help="Exit code 1 if any findings found.")
 def submission_scan(
@@ -48,16 +40,13 @@ def submission_scan(
     output_security: str | None,
     output_quality: str | None,
     fmt: str,
-    review: bool,
-    provider: str | None,
-    model: str | None,
     fail_on_error: bool,
     fail_on_warning: bool,
 ) -> None:
     """Scan a skill submission directory for security and quality issues.
 
     Produces pipeline-compatible JSON for ABEvalFlow gates.
-    Runs harness-eval security and quality rules with false-positive
+    Runs harness-eval deterministic rules with false-positive
     reduction (code-fence tracking, negation awareness, example context).
     """
     t0 = time.monotonic()
@@ -74,9 +63,6 @@ def submission_scan(
     result = scan_submission(
         target,
         SKILL_SUBMISSION,
-        review=review,
-        provider=provider,
-        model=model,
     )
 
     metadata = EvalMetadata(
