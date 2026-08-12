@@ -21,12 +21,13 @@ _SKILL_REF_PATTERNS = [
 ]
 
 _INSTALL_CMD = re.compile(
-    r"(?:pip|pip3|pipx|uv|uvx|npm|npx|yarn|pnpm|cargo|brew|apt|apt-get|dnf|go)"
-    r"\s+(?:install|add|run|tool\s+install|--from)\s+([\w][\w.-]*)",
+    r"(?:pip|pip3|pipx|uv|npm|yarn|pnpm|cargo|brew|apt|apt-get|dnf|go)"
+    r"\s+(?:install|add|run|tool\s+install|--from)\s+([\w][\w.-]*)"
+    r"|(?:uvx|npx)\s+([\w][\w.-]*)",
     re.IGNORECASE,
 )
 
-_PATH_CONTINUATION = re.compile(r"/(\w[\w-]{2,})[/.]")
+_PATH_CONTINUATION = re.compile(r"/(?=[/]?)(\w[\w-]{2,})(?=[/.])")
 
 
 class CommandReferencesNonexistentSkill:
@@ -50,14 +51,19 @@ class CommandReferencesNonexistentSkill:
 
         known_skills = {s.dir_name for s in context.all_skills}
 
-        installed_binaries = {m.group(1).lower() for m in _INSTALL_CMD.finditer(cmd.body)}
+        installed_binaries: set[str] = set()
+        for m in _INSTALL_CMD.finditer(cmd.body):
+            name = m.group(1) or m.group(2)
+            if name:
+                installed_binaries.add(name.lower())
         path_segments = {m.group(1).lower() for m in _PATH_CONTINUATION.finditer(cmd.body)}
 
         referenced: set[str] = set()
 
         in_code_fence = False
         for line in cmd.body.split("\n"):
-            if line.strip().startswith("```"):
+            stripped = line.strip()
+            if stripped.startswith("```") or stripped.startswith("~~~"):
                 in_code_fence = not in_code_fence
                 continue
 
