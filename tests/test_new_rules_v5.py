@@ -684,4 +684,4 @@ class TestRuleCount:
     def test_total_rule_count(self) -> None:
         _ensure_rules()
         rules = get_all_rules()
-        assert len(rules) == 96
+        assert len(rules) == 97

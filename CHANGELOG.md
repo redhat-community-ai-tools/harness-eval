@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `skill-submission-scan` CLI command: scans skill submission directories for ABEvalFlow pipeline integration, producing pipeline-compatible JSON with security and quality findings split into separate output files
+- `submission/file-completeness` rule: checks that instruction.md has meaningful body content and test files contain assertions
+- `skill-submission` preset: curated subset of security + quality + content rules for skill submission scanning, with agent-setup-specific rules disabled
+
 ### Fixed
 - Bandit pre-commit hook now restricted to `src/` via `files: ^src/` filter, preventing false-positive B101 findings on pytest `assert` statements in test files
 - Added `[tool.bandit]` section to `pyproject.toml` with `exclude_dirs = ["tests"]` for defense-in-depth

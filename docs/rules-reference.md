@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 96 deterministic lint rules and the LLM-based review system.
+Complete reference for all 97 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -85,6 +85,7 @@ These rules run against every discovered skill. Applies to: CC, CU, CP.
 | `security/unbounded-delegation` | security | Flags instructions that spawn subagents without limits. Unbounded delegation can cascade into resource exhaustion or amplify a compromised agent's reach. | `"Spawn an agent for each file in the repository"` | Pattern matching |
 | `security/yara-signatures` | security (opt-in) | Scans all skill files with YARA rules that detect known malware, webshells, cryptominers, and hack tools. Requires `pip install harness-eval[yara]`. | A Python script in the skill matches a known webshell signature | YARA rule engine |
 | `security/cve-lookup` | security (opt-in) | Checks dependency files (requirements.txt, package.json) in the skill directory against the OSV.dev vulnerability database. | `requirements.txt` pins `requests==2.25.0` which has a known security fix in 2.31+ | OSV.dev API lookup |
+| `submission/file-completeness` | content | Checks that submission files have meaningful content. Flags thin instruction.md (< 50 chars body) and test files without assert statements. Used by `skill-submission-scan` for ABEvalFlow pipeline integration. | instruction.md with only 5 chars of body, test file with no assertions | File content + regex |
 
 ## Agents (.claude/agents/, .github/agents/, .opencode/agents/)
 
