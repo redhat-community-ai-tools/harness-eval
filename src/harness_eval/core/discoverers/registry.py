@@ -5,6 +5,7 @@ from __future__ import annotations
 from harness_eval.core.discoverers.base import ToolDiscoverer
 from harness_eval.core.discoverers.claude import ClaudeCodeDiscoverer
 from harness_eval.core.discoverers.cline import ClineDiscoverer
+from harness_eval.core.discoverers.codex import CodexDiscoverer
 from harness_eval.core.discoverers.copilot import CopilotDiscoverer
 from harness_eval.core.discoverers.cursor import CursorDiscoverer
 from harness_eval.core.discoverers.gemini import GeminiDiscoverer
@@ -20,6 +21,7 @@ DISCOVERERS: list[ToolDiscoverer] = [
     CopilotDiscoverer(),
     GeminiDiscoverer(),
     OpenCodeDiscoverer(),
+    CodexDiscoverer(),
     ThirdPartyDiscoverer(),
 ]
 

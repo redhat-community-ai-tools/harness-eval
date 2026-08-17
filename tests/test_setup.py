@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from harness_eval.core.setup import discover_setup
@@ -108,3 +110,42 @@ def test_no_user_config_graceful(setup_a_path: str) -> None:
     claude_mds = setup.by_type(ComponentType.CLAUDE_MD)
     user_scoped = [c for c in claude_mds if c.scope != ComponentScope.PROJECT]
     assert len(user_scoped) == 0
+
+
+def test_svg_not_treated_as_binary(tmp_path: Path) -> None:
+    """SVG files are text and should be discovered, not skipped as binary."""
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir()
+    svg_file = claude_dir / "diagram.svg"
+    svg_file.write_text('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
+    (tmp_path / "CLAUDE.md").write_text("# Instructions\n")
+
+    setup = discover_setup("svg-test", str(tmp_path))
+    paths = [c.path for c in setup.components]
+    assert any("diagram.svg" in p for p in paths), "SVG should be discovered"
+
+
+def test_binary_file_skipped(tmp_path: Path) -> None:
+    """Actual binary files (.png, .exe) should be skipped."""
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir()
+    png_file = claude_dir / "icon.png"
+    png_file.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
+    (tmp_path / "CLAUDE.md").write_text("# Instructions\n")
+
+    setup = discover_setup("binary-test", str(tmp_path))
+    paths = [c.path for c in setup.components]
+    assert not any("icon.png" in p for p in paths), "PNG should be skipped"
+
+
+def test_unknown_text_extension_discovered(tmp_path: Path) -> None:
+    """Files with unknown extensions containing text should be discovered."""
+    claude_dir = tmp_path / ".claude"
+    claude_dir.mkdir()
+    xyz_file = claude_dir / "config.xyz"
+    xyz_file.write_text("some configuration text")
+    (tmp_path / "CLAUDE.md").write_text("# Instructions\n")
+
+    setup = discover_setup("unknown-ext-test", str(tmp_path))
+    paths = [c.path for c in setup.components]
+    assert any("config.xyz" in p for p in paths), "Unknown text extension should be discovered"

@@ -6,9 +6,9 @@
 [![Rules](https://img.shields.io/badge/rules-97-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, OpenCode), builds a component graph across all of them, and runs 97 deterministic rules to catch issues that per-file linters miss: credential exfiltration chains, confused deputy attacks, skill/hook conflicts, and token budget blowouts.
+A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, OpenCode, Codex CLI), builds a component graph across all of them, and runs 97 deterministic rules to catch issues that per-file linters miss: credential exfiltration chains, confused deputy attacks, skill/hook conflicts, and token budget blowouts.
 
-Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`.
+Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`, `.codex/`.
 
 ## Quick start
 
@@ -34,7 +34,7 @@ See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options and config
 
 ## How to use it
 
-Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift Pipelines), a **Claude Code plugin**, and **Cursor commands**. Each is documented in [`docs/INSTALL.md`](docs/INSTALL.md).
+Available as a **CLI tool**, a **GitHub Action**, a **Tekton Task** (OpenShift Pipelines), a **Claude Code plugin**, **Cursor commands**, and a **pre-commit hook**. Each is documented in [`docs/INSTALL.md`](docs/INSTALL.md).
 
 ## Suppressing findings
 
@@ -93,6 +93,7 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 | Copilot | `.github/copilot-instructions.md`, `.github/skills/`, `.github/prompts/`, `.github/agents/` |
 | Gemini CLI | `GEMINI.md`, `.gemini/commands/` (`.md` linted; `.toml` discovered but not yet linted), `.gemini/settings.json` (MCP) |
 | OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `opencode.json` (MCP) |
+| Codex CLI | `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, `codex.json` |
 | Third-party modules | `.lola/modules/` (skills, commands, agents installed via package managers) |
 
 ## Inspection rules

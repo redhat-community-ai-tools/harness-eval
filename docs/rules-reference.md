@@ -10,7 +10,7 @@ Severity levels: **error** (broken config, security risk), **warning** (reduces 
 
 All deterministic rules run in the **CLI** (`harness-lint`/`harness-security`), **Plugin** (Claude Code / Cursor), and **GitHub Action**. YARA and CVE rules only run in the `security` preset.
 
-Abbreviations: CC = Claude Code, CU = Cursor, CP = Copilot, GE = Gemini CLI, OC = OpenCode
+Abbreviations: CC = Claude Code, CU = Cursor, CP = Copilot, GE = Gemini CLI, OC = OpenCode, CX = Codex CLI
 
 ### Framework mappings
 

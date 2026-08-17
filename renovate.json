@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Detect inline pip install harness-eval==X.Y.Z in workflow files",
+      "fileMatch": ["\\.github/workflows/.+\\.ya?ml$"],
+      "matchStrings": [
+        "pip install [\"']?harness-eval==(?<currentValue>[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "harness-eval",
+      "datasourceTemplate": "pypi"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    }
+  ]
+}

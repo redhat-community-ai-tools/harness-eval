@@ -37,6 +37,10 @@ RELEVANT_PATTERNS = [
     "AGENTS.md",
     ".opencode/commands/*.md",
     ".opencode/agents/*.md",
+    # Codex CLI
+    ".codex/instructions.md",
+    ".codex/setup.sh",
+    "codex.json",
     # Third-party modules
     ".lola/modules/**/SKILL.md",
     ".lola/modules/**/commands/*.md",

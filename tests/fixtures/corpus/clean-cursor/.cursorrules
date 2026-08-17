@@ -1,0 +1,15 @@
+You are a helpful coding assistant working on a TypeScript React application.
+
+## Conventions
+
+- Use functional components with hooks
+- Prefer named exports over default exports
+- Write tests with Vitest and React Testing Library
+- Use Tailwind CSS for styling
+
+## Project structure
+
+- `src/components/` for React components
+- `src/hooks/` for custom hooks
+- `src/lib/` for utility functions
+- `src/api/` for API client code
