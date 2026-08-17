@@ -1,7 +1,7 @@
 - id: harness-lint
   name: harness-lint
   description: Lint AI agent setup files for best practices and structural issues
-  entry: harness-eval harness-lint
+  entry: harness-eval harness-lint .
   language: python
   pass_filenames: false
   always_run: false
@@ -18,7 +18,7 @@
 - id: harness-security
   name: harness-security
   description: Security scan for AI agent setup files
-  entry: harness-eval harness-security
+  entry: harness-eval harness-security .
   language: python
   pass_filenames: false
   always_run: false

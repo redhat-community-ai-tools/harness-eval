@@ -54,12 +54,5 @@
     "severity": "info",
     "target_name": ".mcp.json",
     "target_type": "mcp_config"
-  },
-  {
-    "message": "YARA scanning skipped: yara-python not installed. Install with: pip install yara-python",
-    "rule_id": "security/yara-signatures",
-    "severity": "info",
-    "target_name": "code-review",
-    "target_type": "skill"
   }
 ]

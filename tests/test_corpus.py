@@ -47,6 +47,8 @@ def _get_findings(fixture_path: Path) -> list[dict]:
                     "message": diag.message,
                 }
             )
+    # Exclude environment-dependent findings (YARA availability varies by install extras)
+    findings = [f for f in findings if f["rule_id"] != "security/yara-signatures"]
     findings.sort(key=lambda f: (f["rule_id"], f["target_name"], f["message"]))
     return findings
 

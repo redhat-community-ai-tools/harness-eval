@@ -40,12 +40,5 @@
     "severity": "error",
     "target_name": "exfil",
     "target_type": "skill"
-  },
-  {
-    "message": "YARA scanning skipped: yara-python not installed. Install with: pip install yara-python",
-    "rule_id": "security/yara-signatures",
-    "severity": "info",
-    "target_name": "exfil",
-    "target_type": "skill"
   }
 ]
