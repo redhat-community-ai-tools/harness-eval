@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Removed `.svg` from `_BINARY_SUFFIXES` — SVG is an XML-based text format that should be scanned, not skipped
+
 ## [7.9.1] - 2026-08-17
 
 ### Fixed

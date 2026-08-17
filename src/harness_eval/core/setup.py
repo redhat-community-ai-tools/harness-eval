@@ -170,7 +170,6 @@ _BINARY_SUFFIXES = frozenset(
         ".gif",
         ".bmp",
         ".ico",
-        ".svg",
         ".webp",
         ".zip",
         ".gz",
