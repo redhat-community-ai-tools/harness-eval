@@ -45,7 +45,7 @@ These run automatically on every commit. If they find something, the commit is b
 
 ## What happens if something goes wrong
 
-We have a documented incident response plan in [SECURITY.md](SECURITY.md). If a compromise is ever detected, we follow a 6-step process:
+We have a documented incident response plan in [SECURITY.md](../SECURITY.md). If a compromise is ever detected, we follow a 6-step process:
 
 1. **Contain** - revoke compromised credentials, lock the repository, disable publishing
 2. **Assess** - identify affected releases and determine the attack vector

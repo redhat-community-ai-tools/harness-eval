@@ -148,7 +148,7 @@ jobs:
       - name: Check markdown links
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
         with:
-          args: --no-progress --exclude-loopback --exclude 'pypi.org' 'README.md' 'docs/*.md' 'CONTRIBUTING.md' 'CHANGELOG.md'
+          args: --no-progress --exclude-loopback --exclude 'pypi.org' --exclude 'example\.com' 'README.md' 'docs/*.md' 'CONTRIBUTING.md' 'CHANGELOG.md'
           fail: true
 
       - name: Install uv
