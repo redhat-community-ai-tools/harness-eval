@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   actionlint:
     runs-on: ubuntu-latest
@@ -81,9 +84,10 @@ jobs:
           fetch-depth: 0
 
       - name: Check CHANGELOG.md updated
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          TITLE="${{ github.event.pull_request.title }}"
-          if echo "$TITLE" | grep -qiE '^(feat|fix|refactor|perf|security)'; then
+          if echo "$PR_TITLE" | grep -qiE '^(feat|fix|refactor|perf|security)'; then
             if git diff --name-only origin/main...HEAD | grep -q '^CHANGELOG.md$'; then
               echo "CHANGELOG.md updated."
             else
