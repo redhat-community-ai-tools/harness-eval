@@ -152,6 +152,63 @@ def _deduplicate_components(components: list[ParsedComponent]) -> list[ParsedCom
     return deduped
 
 
+_BINARY_SUFFIXES = frozenset(
+    {
+        ".docx",
+        ".doc",
+        ".xlsx",
+        ".xls",
+        ".pptx",
+        ".ppt",
+        ".pdf",
+        ".odt",
+        ".ods",
+        ".odp",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".bmp",
+        ".ico",
+        ".svg",
+        ".webp",
+        ".zip",
+        ".gz",
+        ".tar",
+        ".bz2",
+        ".xz",
+        ".7z",
+        ".rar",
+        ".woff",
+        ".woff2",
+        ".ttf",
+        ".otf",
+        ".eot",
+        ".pyc",
+        ".pyo",
+        ".so",
+        ".dll",
+        ".dylib",
+        ".o",
+        ".a",
+        ".exe",
+        ".bin",
+        ".class",
+        ".jar",
+        ".war",
+        ".mp3",
+        ".mp4",
+        ".wav",
+        ".avi",
+        ".mov",
+        ".mkv",
+        ".sqlite",
+        ".db",
+        ".sqlite3",
+    }
+)
+
+
 def _discover_uncategorized(
     root: Path, known_components: list[ParsedComponent]
 ) -> list[ParsedComponent]:
@@ -181,6 +238,8 @@ def _discover_uncategorized(
             if not f.is_file():
                 continue
             if ".git" in f.parts or "__pycache__" in f.parts:
+                continue
+            if f.suffix.lower() in _BINARY_SUFFIXES:
                 continue
             resolved = str(f.resolve())
             if resolved in known_paths:
