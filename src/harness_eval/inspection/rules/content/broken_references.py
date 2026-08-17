@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 
 from harness_eval.inspection.types import (
     Location,
@@ -23,6 +24,8 @@ _TEMPLATE_VAR_RE = re.compile(r"\$\{|\$[A-Z_][A-Z0-9_]*|<[a-z_-]+>|\{\{")
 _GLOB_RE = re.compile(r"[*?]")
 _COMMAND_RE = re.compile(r"^(git|bash|uv|npm|curl|grep|tail|mv|cat|echo|find|sed|awk)\s")
 _PLACEHOLDER_RE = re.compile(r"[A-Z]{3,4}[A-Z0-9]*-")
+_GLOB_DIR_RE = re.compile(r"^([^*?{]+?)(?:/\*\*?.*)?$")
+
 _KNOWN_EXTENSIONS = frozenset(
     {
         "py",
@@ -95,6 +98,22 @@ def _fenced_lines(lines: list[str]) -> set[int]:
     return fenced
 
 
+def _paths_base_dirs(frontmatter: dict[str, Any]) -> list[str]:
+    """Extract base directories from a skill's paths frontmatter field."""
+    raw = frontmatter.get("paths")
+    if not raw:
+        return []
+    entries = [raw] if isinstance(raw, str) else list(raw)
+    dirs: list[str] = []
+    for entry in entries:
+        m = _GLOB_DIR_RE.match(entry.strip())
+        if m:
+            base = m.group(1).rstrip("/")
+            if base and base != ".":
+                dirs.append(base)
+    return dirs
+
+
 class BrokenReferences:
     meta: RuleMeta = RuleMeta(
         id="content/broken-references",
@@ -160,6 +179,13 @@ class BrokenReferences:
                         root_resolved = project_root_path.resolve()
                         if str(resolved).startswith(str(root_resolved)) and resolved.exists():
                             continue
+
+                    paths_dirs = _paths_base_dirs(skill.frontmatter)
+                    if any(
+                        (p := safe_join(project_root_path / d, ref)) is not None and p.exists()
+                        for d in paths_dirs
+                    ):
+                        continue
 
                 context.report(
                     ReportDescriptor(
