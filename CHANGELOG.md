@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.10.0] - 2026-08-17
+
 ### Added
 - `.pre-commit-hooks.yaml`: harness-eval can now be used as a pre-commit hook (both `harness-lint` and `harness-security`)
 - Codex CLI discovery: auto-detects `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, and `codex.json`
