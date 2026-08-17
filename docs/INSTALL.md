@@ -196,3 +196,49 @@ Copy `.cursor/commands/` from [this repo](https://github.com/redhat-community-ai
 The commands use `uvx` to fetch the CLI on demand. If `uvx` is not available in your Cursor environment, install the CLI manually first: `pip install harness-eval`.
 
 No API key needed for harness-review/harness-security/skill-review. Cursor evaluates in-session.
+
+## Pre-commit hook
+
+Run harness-eval automatically before every commit. The hook only fires when agent setup files change (CLAUDE.md, skills/, commands/, .claude/, .mcp.json, etc.), so it adds zero overhead to commits that only touch source code.
+
+Add to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/redhat-community-ai-tools/harness-eval
+    rev: v7.9.2  # pin to a release tag
+    hooks:
+      - id: harness-lint
+      - id: harness-security  # optional: security scan
+```
+
+Always pin `rev:` to a release tag, not a branch. Update the tag when you upgrade harness-eval.
+
+Test without installing:
+
+```bash
+pre-commit try-repo https://github.com/redhat-community-ai-tools/harness-eval harness-lint
+```
+
+## Session hook (Claude Code)
+
+Run harness-lint automatically during a Claude Code session whenever agent setup files are edited. The hook fires on Write/Edit of harness-relevant files only, so it does not add latency to other tool calls.
+
+Add to your project's `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "command": "bash -c 'FILE=\"$TOOL_INPUT_FILE_PATH\"; [[ \"$FILE\" =~ (CLAUDE\\.md|AGENTS\\.md|GEMINI\\.md|SKILL\\.md|\\.mcp\\.json|settings\\.json|\\.claude/|\\.cursor/|skills/|commands/) ]] && harness-eval harness-lint . --fail-on-error || true'"
+      }
+    ]
+  }
+}
+```
+
+To disable: remove the hook entry from `.claude/settings.json`.
+
+For a standalone hook script with more control, see `scripts/session-hook.sh` in the harness-eval repo.

@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `.pre-commit-hooks.yaml`: harness-eval can now be used as a pre-commit hook (both `harness-lint` and `harness-security`)
+- Codex CLI discovery: auto-detects `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, and `codex.json`
+- Session hook script (`scripts/session-hook.sh`) for running harness-lint during Claude Code sessions when agent setup files change
+- Pre-commit and session hook installation docs in `docs/INSTALL.md`
+- Integration test corpus with snapshot-based regression tests (`tests/fixtures/corpus/`)
+- `scripts/update_corpus_snapshots.py` for regenerating expected-findings snapshots after rule changes
+- CI jobs: actionlint for workflow validation, corpus snapshot tests, docs link checker, README rule count validation
+- Renovate config with `customManagers` regex for inline `pip install harness-eval==X.Y.Z` in workflow files
+- Dependabot auto-merge workflow (restricted to patch-level dev dependency updates)
+
+### Fixed
+- `.svg` files are no longer treated as binary; SVG files in agent config directories (`.claude/`, `.cursor/`, etc.) are now discovered and scanned
+
+### Changed
+- `.codex/` added to uncategorized file discovery scan directories
+
 ## [7.9.1] - 2026-08-17
 
 ### Fixed

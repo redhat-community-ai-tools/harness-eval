@@ -1,0 +1,65 @@
+[
+  {
+    "message": "Command is missing 'description' in frontmatter \u2014 it won't show properly in the UI menu",
+    "rule_id": "command/description-required",
+    "severity": "error",
+    "target_name": "review",
+    "target_type": "command"
+  },
+  {
+    "message": "Command 'review' shadows the built-in /review command \u2014 the built-in will be overridden, which may be unintentional",
+    "rule_id": "command/shadows-builtin",
+    "severity": "warning",
+    "target_name": "review",
+    "target_type": "command"
+  },
+  {
+    "message": "MCP server 'filesystem' is configured but no skill references its tools",
+    "rule_id": "content/mcp-skill-alignment",
+    "severity": "warning",
+    "target_name": "code-review",
+    "target_type": "skill"
+  },
+  {
+    "message": "No boundary policy found in system instructions. Consider defining which directories or resources are off-limits.",
+    "rule_id": "content/missing-boundary-policy",
+    "severity": "info",
+    "target_name": "CLAUDE.md",
+    "target_type": "claude_md"
+  },
+  {
+    "message": "Description lacks use-case context \u2014 include phrases like 'use when', 'applies to', 'relevant for' so the assistant knows when to activate it",
+    "rule_id": "frontmatter/description-quality",
+    "severity": "warning",
+    "target_name": "code-review",
+    "target_type": "skill"
+  },
+  {
+    "message": "No telemetry or logging is configured for agent activity. For enterprise use, consider enabling OpenTelemetry export or activity logging.",
+    "rule_id": "hooks/no-audit-trail",
+    "severity": "info",
+    "target_name": "hooks",
+    "target_type": "hooks"
+  },
+  {
+    "message": "Project-scoped settings define 'permissions.allow' entries, which auto-approve tool calls. Combined with hooks, this can enable code execution before the user reviews the project. Review carefully or move to user-scoped settings.",
+    "rule_id": "hooks/pre-trust-permissions",
+    "severity": "warning",
+    "target_name": "hooks",
+    "target_type": "hooks"
+  },
+  {
+    "message": "Server 'filesystem' has no 'tools' or 'allowedTools' field, exposing all available tools.",
+    "rule_id": "mcp/no-wildcard-tools",
+    "severity": "info",
+    "target_name": ".mcp.json",
+    "target_type": "mcp_config"
+  },
+  {
+    "message": "YARA scanning skipped: yara-python not installed. Install with: pip install yara-python",
+    "rule_id": "security/yara-signatures",
+    "severity": "info",
+    "target_name": "code-review",
+    "target_type": "skill"
+  }
+]

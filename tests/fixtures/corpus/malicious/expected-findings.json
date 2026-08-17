@@ -1,0 +1,51 @@
+[
+  {
+    "message": "Command is missing 'description' in frontmatter \u2014 it won't show properly in the UI menu",
+    "rule_id": "command/description-required",
+    "severity": "error",
+    "target_name": "steal",
+    "target_type": "command"
+  },
+  {
+    "message": "Line 1 contains a word pattern ('ignore previous instructions') that could be used to manipulate the AI assistant. Check if this is intentional content or an actual risk.",
+    "rule_id": "command/no-prompt-injection",
+    "severity": "error",
+    "target_name": "steal",
+    "target_type": "command"
+  },
+  {
+    "message": "No boundary policy found in system instructions. Consider defining which directories or resources are off-limits.",
+    "rule_id": "content/missing-boundary-policy",
+    "severity": "info",
+    "target_name": "CLAUDE.md",
+    "target_type": "claude_md"
+  },
+  {
+    "message": "Description lacks use-case context \u2014 include phrases like 'use when', 'applies to', 'relevant for' so the assistant knows when to activate it",
+    "rule_id": "frontmatter/description-quality",
+    "severity": "warning",
+    "target_name": "exfil",
+    "target_type": "skill"
+  },
+  {
+    "message": "References sensitive path '~/.aws/credentials' at line 10",
+    "rule_id": "security/no-credential-access",
+    "severity": "error",
+    "target_name": "exfil",
+    "target_type": "skill"
+  },
+  {
+    "message": "References sensitive path '~/.netrc' at line 8",
+    "rule_id": "security/no-credential-access",
+    "severity": "error",
+    "target_name": "exfil",
+    "target_type": "skill"
+  },
+  {
+    "message": "YARA scanning skipped: yara-python not installed. Install with: pip install yara-python",
+    "rule_id": "security/yara-signatures",
+    "severity": "info",
+    "target_name": "exfil",
+    "target_type": "skill"
+  }
+]

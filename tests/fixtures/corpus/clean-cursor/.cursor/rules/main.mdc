@@ -1,0 +1,11 @@
+---
+description: Main project rules for the frontend application
+globs: "src/**/*.{ts,tsx}"
+---
+
+# TypeScript Rules
+
+- Enable strict mode in tsconfig.json
+- Use `type` imports for type-only imports
+- Avoid `any` type; prefer `unknown` with type guards
+- Use discriminated unions for state management

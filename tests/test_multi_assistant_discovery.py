@@ -1,4 +1,4 @@
-"""Tests for multi-assistant setup discovery (Copilot, Gemini CLI, OpenCode)."""
+"""Tests for multi-assistant setup discovery (Copilot, Gemini CLI, OpenCode, Codex)."""
 
 from pathlib import Path
 
@@ -112,3 +112,40 @@ class TestMultiAssistantInspection:
         setup = discover_setup("test", opencode_setup_path)
         results = inspect_setup(setup)
         assert len(results) >= 1
+
+
+@pytest.fixture
+def codex_setup_path():
+    return str(Path(__file__).parent / "fixtures" / "sample-codex-setup")
+
+
+class TestCodexDiscovery:
+    def test_discovers_codex_instructions(self, codex_setup_path):
+        setup = discover_setup("test", codex_setup_path)
+        claude_mds = setup.by_type(ComponentType.CLAUDE_MD)
+        assert any(c.source_tool == "agents-md" for c in claude_mds)
+
+    def test_discovers_codex_specific_instructions(self, codex_setup_path):
+        setup = discover_setup("test", codex_setup_path)
+        claude_mds = setup.by_type(ComponentType.CLAUDE_MD)
+        assert any(c.source_tool == "codex" for c in claude_mds)
+
+    def test_discovers_codex_setup_script(self, codex_setup_path):
+        setup = discover_setup("test", codex_setup_path)
+        uncategorized = setup.by_type(ComponentType.UNCATEGORIZED)
+        assert any("setup.sh" in c.name for c in uncategorized)
+
+    def test_detects_codex(self, codex_setup_path):
+        tools = _detect_tools(Path(codex_setup_path))
+        assert "Codex CLI" in tools
+
+    def test_agents_md_not_double_counted(self, codex_setup_path):
+        """AGENTS.md is shared between OpenCode and Codex; it should appear only once."""
+        setup = discover_setup("test", codex_setup_path)
+        claude_mds = setup.by_type(ComponentType.CLAUDE_MD)
+        agents_md_components = [c for c in claude_mds if "AGENTS.md" in c.path]
+        assert len(agents_md_components) == 1
+
+    def test_does_not_detect_codex_when_absent(self, tmp_path):
+        tools = _detect_tools(tmp_path)
+        assert "Codex CLI" not in tools
