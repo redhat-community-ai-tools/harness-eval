@@ -300,6 +300,44 @@ class TestContentRules:
         broken = [d for d in result.diagnostics if d.rule_id == "content/broken-references"]
         assert len(broken) == 1
 
+    def test_broken_reference_resolves_via_paths_frontmatter(self, tmp_path: Path) -> None:
+        project = tmp_path / "project"
+        project.mkdir()
+        backend = project / "backend" / "admin_config"
+        backend.mkdir(parents=True)
+        (backend / "service.py").write_text("# service")
+        skill_dir = project / ".cursor" / "skills" / "backend"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: backend\ndescription: Backend domain knowledge\n"
+            "paths: backend/**\n---\n\n"
+            "Key file: `admin_config/service.py`"
+        )
+        result = lint(
+            str(skill_dir),
+            scan_state={"project_root": str(project)},
+        )
+        broken = [d for d in result.diagnostics if d.rule_id == "content/broken-references"]
+        assert len(broken) == 0
+
+    def test_broken_reference_paths_frontmatter_still_catches_missing(self, tmp_path: Path) -> None:
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / "backend").mkdir()
+        skill_dir = project / ".cursor" / "skills" / "backend"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: backend\ndescription: Backend domain knowledge\n"
+            "paths: backend/**\n---\n\n"
+            "Key file: `admin_config/service.py`"
+        )
+        result = lint(
+            str(skill_dir),
+            scan_state={"project_root": str(project)},
+        )
+        broken = [d for d in result.diagnostics if d.rule_id == "content/broken-references"]
+        assert len(broken) == 1
+
     def test_broken_reference_skips_bare_env_vars(self, tmp_path: Path) -> None:
         skill_dir = tmp_path / "env-ref"
         skill_dir.mkdir()
