@@ -1,6 +1,6 @@
 [project]
 name = "harness-eval"
-version = "7.9.1"
+version = "7.9.2"
 description = "Evaluate and compare AI agent setups through experiments, inspections, and rubric scoring."
 readme = "README.md"
 license = "Apache-2.0"
