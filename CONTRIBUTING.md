@@ -175,6 +175,20 @@ Add the tool's file patterns to `RELEVANT_PATTERNS` in `src/harness_eval/core/fi
 
 Create `tests/fixtures/sample-mytool-setup/` with representative config files and write tests verifying discovery, source_tool attribution, and tool detection.
 
+### 5. Add a corpus fixture
+
+Add a fixture to `tests/fixtures/corpus/` and regenerate snapshots:
+
+```bash
+uv run python scripts/update_corpus_snapshots.py
+```
+
+### 6. Update docs
+
+- Add the tool to the "Supported AI tools" table in `README.md`
+- Add an abbreviation to `docs/rules-reference.md`
+- Add the tool to the intro line in `README.md`
+
 ## Proposing new features
 
 Open a [GitHub Issue](https://github.com/redhat-community-ai-tools/harness-eval/issues) describing the problem and proposed solution. Feature discussions happen on issues, not in the codebase.
