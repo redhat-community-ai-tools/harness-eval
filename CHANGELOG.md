@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.10.1] - 2026-08-19
+
+### Fixed
+- `security/mcp-tool-poisoning`: homoglyph detection now requires script mixing
+  within a token, so documents written in non-Latin scripts are no longer
+  flagged for containing their own alphabet. Substituted characters inside
+  Latin identifiers are still detected.
+- `quality/unfinished-content`: a heading whose content lives in subsections is
+  no longer reported as an empty section.
+- `content/broken-references`: reference extraction no longer treats environment
+  assignments as paths, no longer segments non-Latin prose as paths, and strips
+  trailing sentence punctuation before resolution.
+
 ## [7.10.0] - 2026-08-17
 
 ### Added

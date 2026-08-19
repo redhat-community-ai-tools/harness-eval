@@ -87,6 +87,18 @@ _RTL_OVERRIDE_CHARS = {
     "⁩": "PDI",  # nosec B613
 }
 
+_TOKEN_RE = re.compile(r"[A-Za-z0-9_Ѐ-ӿͰ-Ͽ]+")
+
+
+def _is_mixed_script_token(char: str, line: str) -> bool:
+    """Return True if *char* appears in a token that also contains ASCII letters."""
+    for m in _TOKEN_RE.finditer(line):
+        token = m.group()
+        if char in token and re.search(r"[A-Za-z]", token):
+            return True
+    return False
+
+
 _HOMOGLYPH_MAP: dict[str, str] = {
     "А": "A (Cyrillic)",
     "В": "B (Cyrillic)",
@@ -209,7 +221,7 @@ class McpToolPoisoning:
                     )
 
             for char, char_name in _HOMOGLYPH_MAP.items():
-                if char in line:
+                if char in line and _is_mixed_script_token(char, line):
                     context.report(
                         ReportDescriptor(
                             message_id="mcp_unicode_deception",
