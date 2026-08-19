@@ -65,7 +65,17 @@ _KNOWN_EXTENSIONS = frozenset(
 )
 
 
+_TRAILING_PUNCT_RE = re.compile(r"[.,;:!?)]+$")
+_NON_ASCII_SEGMENT_RE = re.compile(r"[^\x00-\x7f]")
+
+
+def _strip_trailing_punctuation(ref: str) -> str:
+    return _TRAILING_PUNCT_RE.sub("", ref)
+
+
 def _is_not_a_file_ref(ref: str) -> bool:
+    if "=" in ref:
+        return True
     if _VERSION_RE.match(ref):
         return True
     if _GIT_REF_RE.search(ref):
@@ -81,6 +91,8 @@ def _is_not_a_file_ref(ref: str) -> bool:
     if ref.startswith("~"):
         return True
     if _PLACEHOLDER_RE.match(ref):
+        return True
+    if any(_NON_ASCII_SEGMENT_RE.search(seg) for seg in ref.split("/")):
         return True
     ext = ref.rsplit(".", 1)[-1].lower() if "." in ref else ""
     return bool(ext and ext not in _KNOWN_EXTENSIONS)
@@ -153,8 +165,11 @@ class BrokenReferences:
             for match in _DIR_REF_PATTERN.finditer(line_without_md_links):
                 refs_on_line.append(match.group(0).strip())
 
-            for ref in refs_on_line:
-                if ref.startswith(("http://", "https://", "#", "mailto:")):
+            for raw_ref in refs_on_line:
+                if raw_ref.startswith(("http://", "https://", "#", "mailto:")):
+                    continue
+                ref = _strip_trailing_punctuation(raw_ref)
+                if not ref:
                     continue
                 if _is_not_a_file_ref(ref):
                     continue

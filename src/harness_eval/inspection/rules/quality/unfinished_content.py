@@ -46,7 +46,7 @@ _DEFERRED_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("not yet implemented", re.compile(r"\bnot\s+yet\s+(?:implemented|done|complete)\b", re.I)),
 ]
 
-_HEADING_RE = re.compile(r"^#{1,6}\s+\S")
+_HEADING_RE = re.compile(r"^(#{1,6})\s+\S")
 
 
 class UnfinishedContent:
@@ -78,7 +78,7 @@ class UnfinishedContent:
         lines = skill.raw_content.split("\n")
         tracker = ContextTracker()
 
-        prev_heading: tuple[int, str] | None = None
+        prev_heading: tuple[int, str, int] | None = None
         prev_heading_had_content = False
 
         for i, line in enumerate(lines):
@@ -94,22 +94,26 @@ class UnfinishedContent:
             if tracker.is_fenced():
                 continue
 
-            is_heading = bool(_HEADING_RE.match(stripped))
+            m = _HEADING_RE.match(stripped)
 
-            if is_heading:
+            if m:
+                cur_depth = len(m.group(1))
                 if prev_heading is not None and not prev_heading_had_content:
-                    h_line, h_text = prev_heading
-                    context.report(
-                        ReportDescriptor(
-                            message_id="empty_section",
-                            data={"line": str(h_line + 1), "heading": h_text},
-                            location=Location(
-                                file=skill.skill_md_path,
-                                start_line=h_line + 1,
-                            ),
+                    _h_line, _h_text, prev_depth = prev_heading
+                    if cur_depth <= prev_depth:
+                        context.report(
+                            ReportDescriptor(
+                                message_id="empty_section",
+                                data={"line": str(_h_line + 1), "heading": _h_text},
+                                location=Location(
+                                    file=skill.skill_md_path,
+                                    start_line=_h_line + 1,
+                                ),
+                            )
                         )
-                    )
-                prev_heading = (i, stripped.lstrip("#").strip())
+                    else:
+                        prev_heading_had_content = True
+                prev_heading = (i, stripped.lstrip("#").strip(), cur_depth)
                 prev_heading_had_content = False
                 continue
 
@@ -119,7 +123,7 @@ class UnfinishedContent:
             self._check_line(context, skill, line, stripped, i)
 
         if prev_heading is not None and not prev_heading_had_content:
-            h_line, h_text = prev_heading
+            h_line, h_text, _ = prev_heading
             context.report(
                 ReportDescriptor(
                     message_id="empty_section",
