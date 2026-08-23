@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.11.0] - 2026-08-23
+
+### Fixed
+- Reference extraction (`content/_skill_refs.py`) now creates a component-graph
+  edge only from an explicit invocation construct (slash command, quoted or
+  backticked name, declared `skill:`/`command:` dependency, or imperative
+  invocation of a marked command). Command-line flags such as `--skill NAME`
+  and phrasing addressed to the human operator no longer create edges. This
+  removes a class of false positives in every graph-consuming rule, most
+  visibly `security/cross-component-flow`, which previously inferred
+  credential-to-network delegation from textual mentions.
+
+### Added
+- Regression tests for reference-extraction edge cases
+  (`tests/test_skill_refs_edges.py`) and an end-to-end fixture confirming a
+  genuine invocation edge is still detected.
+
 ## [7.10.1] - 2026-08-19
 
 ### Fixed
