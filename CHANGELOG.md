@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- CI validation rejects additions to existing changelog release sections while allowing entries under `[Unreleased]` and newly cut releases
+
 ## [7.11.0] - 2026-08-23
 
 ### Fixed
