@@ -14,7 +14,9 @@ All notable changes to this project will be documented in this file.
   and phrasing addressed to the human operator no longer create edges. This
   removes a class of false positives in every graph-consuming rule, most
   visibly `security/cross-component-flow`, which previously inferred
-  credential-to-network delegation from textual mentions.
+  credential-to-network delegation from textual mentions. Motivated by a
+  [corpus study](https://github.com/Benkapner/harness-eval-experiments/tree/main/paper)
+  where all nine cross-component-flow findings were false positives.
 
 ### Added
 - Regression tests for reference-extraction edge cases

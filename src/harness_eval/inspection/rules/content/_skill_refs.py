@@ -119,6 +119,16 @@ _INVOKE_MARKED_RE = re.compile(
 
 SKILL_REF_PATTERNS = [_SLASH_CMD_RE, _DECL_COLON_RE, _DECL_SPACE_RE, _INVOKE_MARKED_RE]
 
+
+def match_name(match: re.Match[str]) -> str | None:
+    """Extract the captured name from any SKILL_REF_PATTERNS match."""
+    for i in range(1, match.lastindex + 1 if match.lastindex else 1):
+        g = match.group(i)
+        if g:
+            return g
+    return None
+
+
 _HUMAN_DIRECTED_RE = re.compile(
     r"(?:tell|ask|advise|remind|instruct)\s+the\s+user"
     r"|the\s+user\s+(?:should|must|can|to|needs)"
@@ -130,11 +140,13 @@ _HUMAN_DIRECTED_RE = re.compile(
 def _preceding_window(body: str, match_start: int, max_chars: int = 120) -> str:
     start = max(0, match_start - max_chars)
     window = body[start:match_start]
+    best = -1
     for sep in (".", "!", "?", "\n"):
         idx = window.rfind(sep)
-        if idx >= 0:
-            window = window[idx + 1 :]
-            break
+        if idx > best:
+            best = idx
+    if best >= 0:
+        window = window[best + 1 :]
     return window
 
 

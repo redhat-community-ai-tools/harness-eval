@@ -7,6 +7,7 @@ from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.content._skill_refs import (
     SKILL_REF_PATTERNS,
     find_project_root,
+    match_name,
 )
 from harness_eval.inspection.types import (
     Location,
@@ -21,8 +22,8 @@ from harness_eval.inspection.types import (
 def _is_referenced(name: str, text: str) -> bool:
     """Check if a skill name appears in the given text via reference patterns or plain mention."""
     for pattern in SKILL_REF_PATTERNS:
-        for match in pattern.finditer(text):
-            if match.group(1) == name:
+        for m in pattern.finditer(text):
+            if match_name(m) == name:
                 return True
     return bool(re.search(rf"\b{re.escape(name)}\b", text))
 
