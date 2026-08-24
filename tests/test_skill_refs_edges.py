@@ -21,6 +21,7 @@ CASES = [
     ("Invoke the /seo-ops command to publish.", {"seo-ops"}),
     ("This calls `update-references` before writing.", {"update-references"}),
     ("`<db-dir>/voice-profile.json`", set()),
+    ("Run /setup.py to configure the project.", set()),
     ("Report how many runs were collected.", set()),
     ("skill: fleet-auditor handles the audit.", {"fleet-auditor"}),
     ("Use --skill fleet-auditor to filter output.", set()),

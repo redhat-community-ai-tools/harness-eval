@@ -90,8 +90,6 @@ _STOPWORDS = frozenset(
     }
 )
 
-_FILE_EXT_RE = re.compile(r"\.\w{1,5}$")
-
 _SLASH_CMD_RE = re.compile(r"(?<![.\w/\-<>])/([\w][\w-]+)")
 
 _DECL_COLON_RE = re.compile(
@@ -150,6 +148,11 @@ def _preceding_window(body: str, match_start: int, max_chars: int = 120) -> str:
     return window
 
 
+def _followed_by_extension(body: str, match: re.Match[str]) -> bool:
+    end = match.end()
+    return end < len(body) and body[end] == "." and end + 1 < len(body) and body[end + 1].isalpha()
+
+
 def _is_human_directed(body: str, match_start: int) -> bool:
     window = _preceding_window(body, match_start)
     return bool(_HUMAN_DIRECTED_RE.search(window))
@@ -167,7 +170,7 @@ def extract_references(body: str, own_name: str) -> set[str]:
 
     for match in _SLASH_CMD_RE.finditer(body):
         name = match.group(1)
-        if _FILE_EXT_RE.search(name):
+        if _followed_by_extension(body, match):
             continue
         if (
             name != own_name
@@ -193,6 +196,8 @@ def extract_references(body: str, own_name: str) -> set[str]:
             or match.group(6)
         )
         if not name:
+            continue
+        if _followed_by_extension(body, match):
             continue
         if (
             name != own_name
