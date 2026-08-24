@@ -99,6 +99,9 @@ jobs:
             echo "Skipping: PR title does not indicate a feature/fix commit."
           fi
 
+      - name: Validate CHANGELOG.md section scope
+        run: python3 scripts/validate_changelog.py --base-ref origin/main
+
   dogfood:
     runs-on: ubuntu-latest
     steps:
