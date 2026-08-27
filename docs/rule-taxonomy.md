@@ -57,8 +57,7 @@ exists.
 ## Promotion criteria
 
 A structural rule is promoted to **gating** only when the validation pipeline in
-the [harness-eval-experiments](https://github.com/Benkapner/harness-eval-experiments)
-repository shows both:
+the `harness-eval-experiments` repository shows both:
 
 1. **>=97% precision on >=50 re-derived findings** — each candidate finding is
    independently re-derived at the repository's pinned commit by a check written

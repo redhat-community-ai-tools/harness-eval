@@ -1,22 +1,13 @@
 ---
-description: "Gate the agent setup on corpus-validated rules (gating tier). Fast, no LLM, exits nonzero on any finding — suitable for CI and pre-commit"
+description: "Gate the agent setup on corpus-validated rules (gating tier). Fast, no LLM, exits nonzero on any finding. Suitable for CI and pre-commit"
 ---
 
 # Harness Gate
 
-Run the validated gate on the current project:
+Use the Skill tool to invoke `harness-gate` explicitly.
 
-```bash
-harness-eval harness-gate .
-```
+Pass through any arguments from $ARGUMENTS (e.g., a specific path to evaluate).
 
-This runs only the gating-tier rules (validated at >=97% precision on re-derived corpus findings; see `docs/rule-taxonomy.md`) and exits 1 on any finding.
-
-Useful flags:
-- `--include-provisional` — also run provisional-tier rules.
-- `--format json` or `--format sarif` — machine-readable output.
-- `--baseline <file>` — suppress findings recorded in a baseline.
-
-If `harness-eval` is not installed, run it with `uvx --from harness-eval harness-eval harness-gate .`.
-
-Report each finding as: rule id, file, and message.
+If the Skill tool is not available or the skill is not found, tell the user:
+- Check that `skills/harness-gate/SKILL.md` exists in the workspace
+- If not, reinstall the harness-eval plugin
