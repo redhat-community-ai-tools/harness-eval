@@ -135,11 +135,17 @@ capability_patterns:
     - pattern: "\\bos\\.exec"
     - pattern: "\\bshutil\\b"
   network:
-    - pattern: "\\brequests\\."
-    - pattern: "\\bhttpx\\."
-    - pattern: "\\burllib\\."
-    - pattern: "\\bsocket\\."
-    - pattern: "\\baiohttp\\."
+    # A network capability is a call that opens a connection, not an import
+    # of a module that also contains URL parsing. urllib.parse and
+    # socket.gethostname are not network access.
+    - pattern: "\\brequests\\.(?:get|post|put|patch|delete|head|request|Session)\\b"
+    - pattern: "\\bhttpx\\.(?:get|post|put|patch|delete|head|request|Client|AsyncClient)\\b"
+    - pattern: "\\burllib\\.request\\b"
+    - pattern: "\\burlopen\\("
+    - pattern: "\\bsocket\\.(?:socket|create_connection|connect)\\b"
+    - pattern: "\\baiohttp\\.(?:ClientSession|request)\\b"
+    - pattern: "\\bfetch\\(\\s*['\\\"`]?https?:"
+    - pattern: "\\b(?:curl|wget)\\s+"
   file_write:
     - pattern: "\\.write\\("
     - pattern: "open\\(.+['\"]w"

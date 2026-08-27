@@ -24,12 +24,13 @@ def _is_local_spec(spec: str) -> bool:
 def _is_npx_pinned(spec: str) -> bool:
     if _is_local_spec(spec):
         return True
-    # Has @version but not @latest
-    if "@" in spec:
-        at_idx = spec.rfind("@")
-        version = spec[at_idx + 1 :]
-        return version.lower() != "latest" and len(version) > 0
-    return False
+    # Has @version but not @latest. A scoped package (@scope/name) starts with
+    # "@", which is not a version separator, so look for "@" after position 0.
+    at_idx = spec.rfind("@")
+    if at_idx <= 0:
+        return False
+    version = spec[at_idx + 1 :]
+    return version.lower() != "latest" and len(version) > 0
 
 
 def _is_uvx_pinned(spec: str) -> bool:
@@ -50,6 +51,7 @@ def _is_docker_pinned(image: str) -> bool:
 class McpUnpinnedPackage:
     meta = RuleMeta(
         id="mcp/unpinned-package",
+        tier="gating",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag MCP servers that run unpinned third-party packages",

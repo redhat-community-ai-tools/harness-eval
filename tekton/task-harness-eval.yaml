@@ -29,8 +29,8 @@ spec:
       description: Subdirectory within the workspace to scan.
     - name: commands
       type: string
-      default: "lint,security"
-      description: Comma-separated commands to run (lint, security).
+      default: "gate,lint,security"
+      description: Comma-separated commands to run (gate, lint, security).
     - name: enforce
       type: string
       default: "strict"
@@ -56,6 +56,49 @@ spec:
     - name: grade
       description: "Report card grade: A through F."
   steps:
+    - name: gate
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: HOME
+          value: /tmp
+        - name: PARAM_COMMANDS
+          value: $(params.commands)
+        - name: PARAM_PATH
+          value: $(params.path)
+        - name: PARAM_FORMAT
+          value: $(params.format)
+        - name: PARAM_RECURSIVE
+          value: $(params.recursive)
+        - name: WORKSPACE_PATH
+          value: $(workspaces.source.path)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if ! echo "${PARAM_COMMANDS}" | grep -q "gate"; then
+          echo "Skipping gate (not in commands list)"
+          exit 0
+        fi
+
+        if ! command -v harness-eval &>/dev/null; then
+          pip install --quiet --no-cache-dir harness-eval
+        fi
+
+        SCAN_PATH="${WORKSPACE_PATH}/${PARAM_PATH}"
+
+        CMD=(harness-eval harness-gate "${SCAN_PATH}")
+        if [ "${PARAM_FORMAT}" = "json" ] || [ "${PARAM_FORMAT}" = "sarif" ]; then
+          CMD+=(--format "${PARAM_FORMAT}")
+        fi
+        if [ "${PARAM_RECURSIVE}" = "true" ]; then
+          CMD+=(--recursive)
+        fi
+
+        echo "Running: ${CMD[*]}"
+        "${CMD[@]}" || GATE_EXIT=$?
+        echo "${GATE_EXIT:-0}" > "${WORKSPACE_PATH}/.harness-eval-gate-exit"
+
     - name: lint
       image: $(params.image)
       workingDir: $(workspaces.source.path)
@@ -202,9 +245,14 @@ spec:
         printf "%s" "${GRADE}" > $(results.grade.path)
         echo "Verdict: ${VERDICT} | Grade: ${GRADE}"
 
+        GATE_EXIT_FILE="${WORKSPACE_PATH}/.harness-eval-gate-exit"
         LINT_EXIT_FILE="${WORKSPACE_PATH}/.harness-eval-lint-exit"
         SEC_EXIT_FILE="${WORKSPACE_PATH}/.harness-eval-security-exit"
         EXIT=0
+        if [ -f "${GATE_EXIT_FILE}" ] && [ "$(cat "${GATE_EXIT_FILE}")" != "0" ]; then
+          echo "Gate step failed with exit code $(cat "${GATE_EXIT_FILE}")"
+          EXIT=$(cat "${GATE_EXIT_FILE}")
+        fi
         if [ -f "${LINT_EXIT_FILE}" ] && [ "$(cat "${LINT_EXIT_FILE}")" != "0" ]; then
           echo "Lint step failed with exit code $(cat "${LINT_EXIT_FILE}")"
           EXIT=$(cat "${LINT_EXIT_FILE}")

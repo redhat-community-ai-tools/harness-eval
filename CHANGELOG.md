@@ -4,8 +4,103 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.12.0] - 2026-08-27
+
 ### Added
-- CI validation rejects additions to existing changelog release sections while allowing entries under `[Unreleased]` and newly cut releases
+- Seven configuration-integrity rules, all decidable from a file or the
+  filesystem: `mcp/json-duplicate-keys`, `hooks/json-duplicate-keys`,
+  `claude-md/include-exists`, `hooks/command-script-exists`,
+  `mcp/endpoint-integrity`, `security/credential-file-present`,
+  `structural/symlink-escape`.
+- `hooks/permission-contradiction`: a `permissions.allow` entry covered by a
+  `permissions.deny` entry is dead configuration.
+- `hooks/permission-prompt-disabled`: committed `permissions.defaultMode`
+  bypass, `enableAllProjectMcpServers`, or `skipDangerousModePermissionPrompt`.
+- `hooks/local-settings-committed`: `.claude/settings.local.json` present in
+  the repository.
+- `mcp/cross-assistant-divergence`: the same MCP server declared differently
+  in two assistants' configuration files.
+- CI validation rejects additions to existing changelog release sections while
+  allowing entries under `[Unreleased]` and newly cut releases.
+- Rule taxonomy: every rule now carries an evidence `tier`
+  (`gating`/`provisional`/`advisory`) and an analysis `scope`
+  (`FILE`/`FILE_FS`/`PAIRWISE`/`SETUP`) on `RuleMeta`. See
+  `docs/rule-taxonomy.md` for the two axes and the promotion criteria.
+- `harness-eval harness-gate <path>`: runs only the `gating`-tier rules, exits 1
+  on any finding, never loads LLM extras, and supports `--format json|sarif`,
+  `--baseline`, and `--include-provisional`. Available as a `gate` preset, a
+  GitHub Action `gate` input, a pre-commit hook, a Tekton step, `/harness-gate`
+  in the Claude Code plugin and Cursor.
+- `harness-eval rules` gains `--tier` and `--scope` filters.
+
+### Changed
+- `mcp/suspicious-endpoint` no longer flags loopback hosts (`localhost`,
+  `127.0.0.1`, `0.0.0.0`); transport security for those is owned by
+  `mcp/endpoint-integrity`. It now flags only private-network ranges.
+- `hooks/valid-structure` no longer checks whether a referenced script exists;
+  `hooks/command-script-exists` owns that check.
+- `cross/overpermissive-grants` no longer uses prefix length as evidence. The
+  old rule flagged any `Bash(<3 chars>:*)` entry, so `Bash(git:*)`, `Bash(ls:*)`
+  and `Bash(npm:*)` were reported while `Bash(python:*)` and `Bash(find:*)`
+  were not. It now reports exactly three decidable classes: `Bash(*)`, a bare
+  high-risk tool name, and a wildcard grant on a command that executes
+  arbitrary code (interpreters, `awk`/`sed`/`find`/`xargs`/`env`, package
+  runners, `docker`, `sudo`, `curl`/`wget`), each with the reason it qualifies.
+  The rule now targets the settings component directly, so it runs on setups
+  that have `settings.json` and no skills, which it previously skipped, and it
+  also reads `settings.local.json` next to it.
+- Reference extraction now distinguishes an invocation from a mention for
+  slash tokens. `/name` is an invocation edge only when backticked, preceded by
+  an invocation verb in the same clause, or opening a line or list item. A
+  slash token after a locative preposition with no verb (`output goes to
+  /build`) or continuing into a path (`/docs/api`) is a mention, exposed by
+  the new `extract_mentions()` and never used for cycle, escalation, or
+  credential-flow findings. This removes cycles manufactured from directory
+  paths that collide with component names.
+
+### Fixed
+- `lint_text_file` force-enabled all security-only rules on generic text files
+  regardless of the rule set passed in, so `harness-gate` (gating tier only) and
+  the `scan`/`pre-workflow` presets leaked security findings onto CI workflows and
+  shell scripts (e.g. `security/data-exfiltration` on a release notify webhook,
+  `security/unbounded-delegation` on "fork agent" prose). Text-file scans now honor
+  the caller's rule set: a security rule runs only when the preset enables it. A
+  bare single-file scan with no preset still runs the full security set.
+- `claude-md/include-exists` matched every `@scope/name` token, so scoped npm
+  package names (`@anthropic-ai/claude-code`), Python decorators
+  (`@app.on_event`), and `@/lib/utils`-style TypeScript path aliases in prose
+  were reported as broken imports. An import now must start with `./`, `../`,
+  `~/` or `/`, or name a file with a document extension; absolute refs require
+  a document extension.
+- Root detection for the configuration-integrity filesystem rules treated a
+  `.claude/CLAUDE.md` as a repository root, so hook script paths were resolved
+  one level too deep and reported missing. `.git` now wins and assistant config
+  directories are never roots.
+- `mcp/unpinned-package` treated every scoped npm package (`@scope/name`) as
+  pinned, because the leading `@` was read as a version separator. The most
+  common MCP package form, `@modelcontextprotocol/server-*` with no version,
+  was therefore never reported. Scoped specs are now checked for a version
+  after the scope.
+- `content/mcp-skill-alignment` now considers every component that can consume
+  a server (skills, commands, subagents, and root context files) and treats a
+  server's own name as a reference. It previously fired for every configured
+  server whenever no *skill* body contained a generic MCP phrase, ignoring a
+  `CLAUDE.md` that named the server explicitly.
+- Backticks alone no longer make a slash token an invocation edge. A skill that
+  documents another skill's user-facing commands (`` 5. `/capture keywords` ``)
+  is describing what the operator types; an edge now requires an invocation
+  verb or a line-opening position. Human-directed phrasing is also recognised
+  after the token (`run \`x\` manually`) and in `the user runs`/`they run` forms.
+- Network capability detection now requires a call that opens a connection
+  (`requests.post`, `urllib.request`, `urlopen(`, `socket.socket`, `curl`,
+  `fetch("https://`). `from urllib.parse import urlsplit` previously counted as
+  network access and produced a cross-component credential-flow finding whose
+  "network sink" was a URL parser.
+
+### Removed
+- `mcp/duplicate-server`: superseded by `mcp/json-duplicate-keys`. The id is
+  kept in a deprecated list, so a config that still references it gets a
+  deprecation warning pointing at the replacement rather than an error.
 
 ## [7.11.0] - 2026-08-23
 

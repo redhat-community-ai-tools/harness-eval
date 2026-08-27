@@ -16,6 +16,7 @@ DEFAULT_TOTAL_DESCRIPTION_BUDGET = 2000
 class TotalDescriptionBudget:
     meta = RuleMeta(
         id="content/total-description-budget",
+        scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

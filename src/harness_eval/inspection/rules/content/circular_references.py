@@ -46,6 +46,7 @@ def _find_cycles(graph: dict[str, set[str]]) -> list[list[str]]:
 class CircularReferences:
     meta = RuleMeta(
         id="content/circular-references",
+        scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Detect circular reference chains between skills and commands",

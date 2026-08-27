@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 from pathlib import Path
@@ -45,12 +46,13 @@ def _find_mcp_config(skill_path: str) -> str | None:
 class McpSkillAlignment:
     meta = RuleMeta(
         id="content/mcp-skill-alignment",
+        scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,
         description="MCP server configurations should align with skill usage",
         category=RuleCategory.CONTENT,
         messages={
-            "mcp_unused": "MCP server '{{server}}' is configured but no skill references its tools",
+            "mcp_unused": "MCP server '{{server}}' is configured but no skill, command, agent, or context file references it",
         },
         target_type=ComponentType.SKILL,
         default_suggestion="Remove the unused MCP server or add a skill that uses its tools.",
@@ -71,19 +73,35 @@ class McpSkillAlignment:
 
         has_mcp_config = mcp_config_path is not None
 
-        # Check which skills mention MCP
-        skills_mentioning_mcp: list[str] = []
-
-        for skill in all_skills:
-            if skill.body and _mentions_mcp(skill.body):
-                skills_mentioning_mcp.append(skill.dir_name)
-
-        if has_mcp_config and not skills_mentioning_mcp:
+        # Gather every component text that could consume a server: skills,
+        # commands, subagents, and the root context files. A server counts as
+        # consumed when any of them mentions MCP generically or names the
+        # server itself.
+        texts: list[str] = [skill.body or "" for skill in all_skills]
+        texts.extend(cmd.body or "" for cmd in context.all_commands)
+        if mcp_config_path is not None:
+            root = Path(mcp_config_path).parent
+            for rel in ("CLAUDE.md", "AGENTS.md", "GEMINI.md", ".github/copilot-instructions.md"):
+                p = root / rel
+                if p.is_file():
+                    with contextlib.suppress(OSError):
+                        texts.append(p.read_text(encoding="utf-8", errors="replace"))
+            for agents_dir in (root / ".claude" / "agents", root / ".github" / "agents"):
+                if agents_dir.is_dir():
+                    for p in agents_dir.rglob("*.md"):
+                        with contextlib.suppress(OSError):
+                            texts.append(p.read_text(encoding="utf-8", errors="replace"))
+        joined = "\n".join(texts)
+        generic_mcp = _mentions_mcp(joined)
+        if has_mcp_config and not generic_mcp:
             try:
                 with open(mcp_config_path, encoding="utf-8") as f:
                     mcp_data = json.load(f)
                 servers = mcp_data.get("mcpServers", {})
+                lowered = joined.lower()
                 for server_name in servers:
+                    if re.search(rf"(?<![\w-]){re.escape(server_name.lower())}(?![\w-])", lowered):
+                        continue
                     context.report(
                         ReportDescriptor(
                             message_id="mcp_unused",

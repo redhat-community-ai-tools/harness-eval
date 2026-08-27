@@ -24,6 +24,7 @@ from harness_eval.inspection.types import (
 class CrossComponentFlow:
     meta = RuleMeta(
         id="security/cross-component-flow",
+        scope="SETUP",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect security issues that span component boundaries",

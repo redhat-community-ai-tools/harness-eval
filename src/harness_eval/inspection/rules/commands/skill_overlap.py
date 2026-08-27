@@ -17,6 +17,7 @@ OVERLAP_THRESHOLD = 0.80
 class CommandSkillOverlap:
     meta = RuleMeta(
         id="command/skill-overlap",
+        scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Detect commands that duplicate content already in a skill",

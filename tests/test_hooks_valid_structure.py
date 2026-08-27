@@ -50,12 +50,8 @@ class TestHooksValidStructure:
         diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
         assert len(diags) == 0
 
-    def test_script_not_found(self, tmp_path: Path) -> None:
-        """Reference to nonexistent script should flag."""
-        # Create a hook referencing scripts/check.py but don't create the script file.
-        # The rule resolves relative script paths against project_root = parent.parent
-        # of the settings file. So for tmp_path/settings.json, project_root = tmp_path.parent.
-        # We need settings at tmp_path/.claude/settings.json so project_root = tmp_path.
+    def test_missing_script_not_flagged_here(self, tmp_path: Path) -> None:
+        """Missing script paths are owned by hooks/command-script-exists, not this rule."""
         claude_dir = tmp_path / ".claude"
         claude_dir.mkdir()
         settings = {
@@ -69,4 +65,4 @@ class TestHooksValidStructure:
         settings_path.write_text(json.dumps(settings))
         result = lint_hooks(str(settings_path), RULE_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
-        assert any("script_missing" in d.rule_id or "does not exist" in d.message for d in diags)
+        assert not any("does not exist" in d.message for d in diags)

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from harness_eval.inspection.engine import inspect_setup, lint
 from harness_eval.inspection.parsers import parse_hooks
-from harness_eval.inspection.registry import _registry, get_all_rules
+from harness_eval.inspection.registry import _registry
 from harness_eval.inspection.rules import register_all_rules
 from harness_eval.inspection.types import (
     ReportDescriptor,
@@ -676,12 +676,3 @@ class TestScopeGrabDescription:
             d for d in result.diagnostics if d.rule_id == "quality/scope-grab-description"
         ]
         assert len(grab_findings) == 0
-
-
-class TestRuleCount:
-    """Meta-test: verify total rule count after additions."""
-
-    def test_total_rule_count(self) -> None:
-        _ensure_rules()
-        rules = get_all_rules()
-        assert len(rules) == 97

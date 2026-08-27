@@ -50,6 +50,8 @@ def _split_sections(content: str) -> dict[str, str]:
 class MultiAssistantDrift:
     meta = RuleMeta(
         id="cross/multi-assistant-drift",
+        tier="gating",
+        scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

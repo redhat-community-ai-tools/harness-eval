@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import re
 from pathlib import Path
 
@@ -9,6 +10,16 @@ import harness_eval.inspection  # noqa: F401 — triggers register_all_rules
 from harness_eval.inspection.registry import get_all_rules
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _load_gen_module():
+    spec = importlib.util.spec_from_file_location(
+        "gen_rules_reference", ROOT / "scripts" / "gen_rules_reference.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 
 TOTAL_RULES_PATTERN = re.compile(r"(\d+)\s+(?:deterministic\s+)?(?:lint\s+)?rules")
 SECURITY_RULES_PATTERN = re.compile(r"(\d+)\s+security\s+rules")
@@ -102,6 +113,28 @@ class TestRulesReferenceCompleteness:
         assert missing == [], (
             f"{len(missing)} rules missing from docs/rules-reference.md: "
             + ", ".join(sorted(missing))
+        )
+
+
+class TestGeneratedTierScopeTables:
+    """The tier/scope tables must match what gen_rules_reference.py renders now."""
+
+    def test_rules_reference_table_current(self) -> None:
+        gen = _load_gen_module()
+        content = (ROOT / "docs" / "rules-reference.md").read_text()
+        assert gen.render_rule_table() in content, (
+            "docs/rules-reference.md tier/scope table is stale. "
+            "Run: uv run scripts/gen_rules_reference.py"
+        )
+
+    def test_readme_count_tables_current(self) -> None:
+        gen = _load_gen_module()
+        readme = (ROOT / "README.md").read_text()
+        assert gen.render_tier_counts() in readme, (
+            "README.md tier counts are stale. Run: uv run scripts/gen_rules_reference.py"
+        )
+        assert gen.render_scope_counts() in readme, (
+            "README.md scope counts are stale. Run: uv run scripts/gen_rules_reference.py"
         )
 
 

@@ -17,6 +17,7 @@ DEFAULT_THRESHOLD_PERCENT = 30
 class TotalContextBudget:
     meta = RuleMeta(
         id="content/total-context-budget",
+        scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Total skill token usage should not exceed context window budget",

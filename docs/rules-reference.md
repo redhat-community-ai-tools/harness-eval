@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 97 deterministic lint rules and the LLM-based review system.
+Complete reference for all 107 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -36,6 +36,129 @@ Rules marked exact should be fixed. Heuristic and advisory findings are conversa
 - `security/no-prompt-injection` (heuristic): fires on documentation that quotes injection phrases as examples.
 - `hooks/silent-failure-masking` (heuristic): fires on intentional `|| true` in cleanup steps.
 
+### Tier and scope
+
+Every rule also carries an evidence **tier** (`gating`, `provisional`, `advisory`)
+and an analysis **scope** (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`). See
+[`rule-taxonomy.md`](rule-taxonomy.md) for what each value means and how a rule is
+promoted to `gating`. `harness-gate` runs the `gating` set (add
+`--include-provisional` for the provisional set).
+
+The table below is generated from `RuleMeta` by `scripts/gen_rules_reference.py`
+and verified against the registry in CI. Do not edit it by hand.
+
+<!-- BEGIN GENERATED: rule-tiers -->
+| Rule | Tier | Scope |
+|------|------|-------|
+| `agent/constraint-body-match` | advisory | FILE |
+| `agent/data-exfiltration` | advisory | FILE |
+| `agent/description-required` | gating | FILE |
+| `agent/disallowed-tools-parseable` | advisory | FILE |
+| `agent/excessive-permissions` | advisory | FILE |
+| `agent/memory-write-unscoped` | advisory | FILE |
+| `agent/model-specified` | advisory | FILE |
+| `agent/no-credential-access` | advisory | FILE |
+| `agent/no-prompt-injection` | advisory | FILE |
+| `agent/obfuscation` | advisory | FILE |
+| `agent/referenced-skills-exist` | advisory | PAIRWISE |
+| `agent/reverse-shell` | advisory | FILE |
+| `agent/unbounded-delegation` | advisory | FILE |
+| `claude-md/exists` | advisory | FILE |
+| `claude-md/generic-advice` | advisory | FILE |
+| `claude-md/include-exists` | advisory | FILE_FS |
+| `claude-md/skill-duplication` | advisory | PAIRWISE |
+| `command/allowed-tools-coverage` | advisory | FILE |
+| `command/data-exfiltration` | advisory | FILE |
+| `command/description-required` | advisory | FILE |
+| `command/duplicate-detection` | advisory | PAIRWISE |
+| `command/no-credential-access` | advisory | FILE |
+| `command/no-prompt-injection` | advisory | FILE |
+| `command/obfuscation` | advisory | FILE |
+| `command/references-nonexistent-skill` | advisory | PAIRWISE |
+| `command/reverse-shell` | advisory | FILE |
+| `command/script-exists` | advisory | FILE |
+| `command/shadows-builtin` | advisory | FILE |
+| `command/skill-overlap` | advisory | PAIRWISE |
+| `content/allowed-tools-auto-approve` | advisory | FILE |
+| `content/broken-references` | advisory | FILE_FS |
+| `content/circular-references` | advisory | SETUP |
+| `content/description-length` | advisory | FILE |
+| `content/duplicate-detection` | advisory | PAIRWISE |
+| `content/hardcoded-machine-path` | gating | FILE |
+| `content/mcp-skill-alignment` | advisory | SETUP |
+| `content/missing-boundary-policy` | advisory | FILE |
+| `content/orphan-skills` | advisory | SETUP |
+| `content/permission-escalation` | advisory | SETUP |
+| `content/token-budget` | advisory | FILE |
+| `content/total-context-budget` | advisory | SETUP |
+| `content/total-description-budget` | advisory | SETUP |
+| `cross/config-instruction-conflict` | advisory | PAIRWISE |
+| `cross/multi-assistant-drift` | gating | PAIRWISE |
+| `cross/overpermissive-grants` | gating | FILE |
+| `frontmatter/description-quality` | advisory | FILE |
+| `frontmatter/description-required` | advisory | FILE |
+| `frontmatter/format-valid` | gating | FILE |
+| `hooks/api-key-helper` | advisory | FILE |
+| `hooks/base-url-override` | advisory | FILE |
+| `hooks/command-script-exists` | provisional | FILE_FS |
+| `hooks/dangerous-command` | advisory | FILE |
+| `hooks/env-credential-override` | advisory | FILE |
+| `hooks/env-leakage` | advisory | FILE |
+| `hooks/json-duplicate-keys` | advisory | FILE |
+| `hooks/local-settings-committed` | provisional | FILE_FS |
+| `hooks/matcher-matches-no-tool` | advisory | FILE |
+| `hooks/network-access` | advisory | FILE |
+| `hooks/no-audit-trail` | advisory | FILE |
+| `hooks/no-commit-guard` | advisory | FILE |
+| `hooks/permission-contradiction` | advisory | FILE |
+| `hooks/permission-prompt-disabled` | provisional | FILE |
+| `hooks/pre-trust-permissions` | advisory | FILE |
+| `hooks/script-boundary` | advisory | FILE |
+| `hooks/silent-failure-masking` | advisory | FILE |
+| `hooks/valid-structure` | advisory | FILE |
+| `mcp/auto-approve-risk` | advisory | FILE |
+| `mcp/cross-assistant-divergence` | advisory | PAIRWISE |
+| `mcp/endpoint-integrity` | provisional | FILE |
+| `mcp/json-duplicate-keys` | advisory | FILE |
+| `mcp/no-plaintext-secrets` | advisory | FILE |
+| `mcp/no-wildcard-tools` | advisory | FILE |
+| `mcp/suspicious-endpoint` | advisory | FILE |
+| `mcp/unpinned-package` | gating | FILE |
+| `mcp/valid-config` | advisory | FILE |
+| `quality/example-gap` | advisory | FILE |
+| `quality/imprecise-instruction` | advisory | FILE |
+| `quality/negative-only` | advisory | FILE |
+| `quality/redundant-guidance` | advisory | FILE |
+| `quality/scope-grab-description` | advisory | FILE |
+| `quality/scope-overreach` | advisory | FILE |
+| `quality/stale-references` | advisory | FILE |
+| `quality/trigger-manipulation` | advisory | FILE |
+| `quality/unfinished-content` | advisory | FILE |
+| `security/ast-behavioral` | advisory | FILE |
+| `security/bash-taint-flow` | advisory | FILE |
+| `security/coercive-override` | advisory | FILE |
+| `security/credential-file-present` | advisory | FILE_FS |
+| `security/cross-component-flow` | advisory | SETUP |
+| `security/cve-lookup` | advisory | FILE |
+| `security/dangerous-permission-grant` | advisory | FILE |
+| `security/data-exfiltration` | advisory | FILE |
+| `security/mcp-least-privilege` | advisory | FILE |
+| `security/mcp-tool-poisoning` | advisory | FILE |
+| `security/memory-write-unscoped` | advisory | FILE |
+| `security/no-credential-access` | advisory | FILE |
+| `security/no-prompt-injection` | advisory | FILE |
+| `security/obfuscation` | advisory | FILE |
+| `security/prompt-exfiltration` | advisory | FILE |
+| `security/reverse-shell` | advisory | FILE |
+| `security/stealth-persistence` | advisory | FILE |
+| `security/taint-flow` | advisory | FILE |
+| `security/unbounded-delegation` | advisory | FILE |
+| `security/yara-signatures` | advisory | FILE |
+| `structural/skill-md-exists` | advisory | FILE_FS |
+| `structural/symlink-escape` | advisory | FILE_FS |
+| `submission/file-completeness` | advisory | FILE_FS |
+<!-- END GENERATED: rule-tiers -->
+
 ---
 
 ## Skills (SKILL.md)
@@ -53,7 +176,7 @@ These rules run against every discovered skill. Applies to: CC, CU, CP.
 | `content/circular-references` | content | Catches reference loops between skills. Circular references waste context and can confuse the AI into loading an infinite chain. | Skill A says "see skill B", skill B says "see skill A" | Graph cycle detection |
 | `content/token-budget` | content | Skills should stay under ~3000 tokens and 500 lines. Oversized skills eat up the context window, leaving less room for the actual conversation. | A 6000-token skill with a lot of boilerplate that could be trimmed or split | Token counting (tiktoken) |
 | `content/orphan-skills` | content | Skills that nothing references (no command, no CLAUDE.md, no agent) may be dead weight. They could be loaded unnecessarily or never loaded at all. | A skill exists but is never mentioned anywhere in the project | Reference graph search |
-| `content/mcp-skill-alignment` | content | When a skill references MCP tools, the corresponding MCP server should be configured. Misalignment means the tool calls will fail at runtime. | Skill uses `mcp__github__search` but `.mcp.json` has no `github` server | Cross-file reference matching |
+| `content/mcp-skill-alignment` | content | When any component that can consume an MCP server (a skill, command, subagent, or root context file such as CLAUDE.md) references MCP tools, the corresponding MCP server should be configured. Misalignment means the tool calls will fail at runtime. A server's own name counts as a reference. | A skill uses `mcp__github__search` but `.mcp.json` has no `github` server | Cross-file reference matching |
 | `content/total-context-budget` | content | The total tokens across all skills should not exceed a reasonable share of the context window. Too many skills crowd out the actual conversation. | 50 skills totaling 200K tokens when the context window is 128K | Aggregate token counting |
 | `content/permission-escalation` | content | A skill should not silently gain dangerous capabilities by invoking another skill that has them. This creates hidden privilege chains. | Skill A (read-only) invokes skill B (has network + shell access), so A effectively gains those too | Reference graph + capability detection |
 | `quality/imprecise-instruction` | quality | Instructions should be direct and clear. Hedging language ("try to", "consider", "you might want to") makes the AI unsure what to do. | `"Try to use descriptive variable names"` instead of `"Use descriptive variable names"` | Pattern matching (hedging phrases) |
@@ -144,8 +267,7 @@ These rules run against MCP server configuration files. Applies to: CC, CU.
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
 | `mcp/valid-config` | structural | The `.mcp.json` file must have valid structure with the expected fields and types. Malformed config means MCP servers won't connect. | Missing `mcpServers` key, or `command` field is a number instead of a string | JSON schema validation |
-| `mcp/duplicate-server` | content | Flags MCP servers that appear more than once (same name or same URL). Duplicates cause confusion about which instance to use. | Two entries both named `github` with different configs | Key deduplication |
-| `mcp/suspicious-endpoint` | security | Flags MCP servers pointing to localhost or private IP addresses. These often indicate development configs accidentally left in a shared project. | `http://192.168.1.1:8080` or `http://localhost:3000` as an MCP server URL | Pattern matching (IP ranges) |
+| `mcp/suspicious-endpoint` | security | Flags MCP servers pointing to private IP addresses. These often indicate development configs accidentally left in a shared project. (Loopback hosts are covered by `mcp/endpoint-integrity`.) | `http://192.168.1.1:8080` as an MCP server URL | Pattern matching (IP ranges) |
 | `mcp/no-wildcard-tools` | security | Flags MCP servers that expose all their tools without restriction. Least privilege means only exposing the tools the project actually needs. | An MCP server with no `allowedTools` filter, granting access to every tool it offers | Config field check |
 | `mcp/no-plaintext-secrets` | security | Flags MCP server configs that contain plaintext secrets (API keys, tokens, passwords) in `env` or `args`. Secrets should come from environment variables or secret managers, not be hardcoded. | `"env": {"API_KEY": "sk-abc123..."}` in `.mcp.json` | Regex pattern matching (known secret prefixes) |
 | `mcp/unpinned-package` | security | Flags MCP servers installed via `npx -y` or `@latest` without version pinning. Unpinned packages pull whatever version is current, which could include malicious updates. | `"command": "npx -y @modelcontextprotocol/server-github"` without a version pin | Package reference parsing |
@@ -179,7 +301,18 @@ These rules analyze relationships between multiple components. They run once per
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
 | `security/cross-component-flow` | security | Builds a graph of all components and traces data flows across boundaries. Edges are created only from explicit invocation constructs (slash commands, `skill:`/`command:` declarations, imperative verbs with marked targets), not from plain-text mentions or CLI flags. Catches three things: (1) **exfiltration chains** where one skill reads credentials and invokes another with network access; (2) **confused deputy attacks** where an agent disallows a tool but delegates to a skill that has the equivalent capability; (3) **phantom MCP calls** where a skill references an MCP server that isn't configured. | Skill A has `os.environ.get("API_KEY")` in its scripts and says "invoke `/uploader`"; skill B has `requests.post()` in its scripts. The credentials could flow from A to B and out to the network. | Component graph + capability analysis |
-| `cross/overpermissive-grants` | security | Flags `permissions.allow` entries in settings.json that grant broad or unrestricted tool access. `Bash(*)` gives unrestricted shell, bare tool names like `Bash` or `Edit` cover all invocations, and very short Bash wildcard prefixes are too broad to be meaningful. | `permissions.allow` contains `Bash(*)` or bare `Edit`, granting the agent unrestricted access to those tools | Grant-breadth classification |
+| `cross/overpermissive-grants` | security | Flags `permissions.allow` entries in settings.json (and settings.local.json) that pre-approve arbitrary command execution: `Bash(*)`, bare tool names like `Bash` or `Edit`, and wildcard grants on commands that run arbitrary code (`awk`, `sed`, `find`, `python`, `perl`, `node`, `npx`, `xargs`, `env`, `docker`, `curl`, and others). A short prefix is not itself reported: `Bash(git:*)` is silent, `Bash(awk:*)` is not. | `permissions.allow` contains `Bash(python:*)`, which is `python -c anything` behind a scoped-looking entry | Explicit arbitrary-execution command list |
+| `hooks/permission-contradiction` | cross_component | Flags a `permissions.allow` entry that a `permissions.deny` entry also matches. Deny wins, so the allow is dead configuration and the author's mental model of what is permitted is wrong. | `allow: ["Bash(git commit:*)"]` with `deny: ["Bash(git:*)"]` | Grant pattern containment |
+| `hooks/permission-prompt-disabled` | security | Flags committed settings that remove the human from the loop for every user of the repository: `permissions.defaultMode` set to `bypassPermissions`, `dontAsk`, or `acceptEdits`; `enableAllProjectMcpServers: true`; `skipDangerousModePermissionPrompt: true`. | `{"permissions": {"defaultMode": "bypassPermissions"}}` in project `settings.json` | Key presence |
+| `hooks/local-settings-committed` | structural | Flags a `.claude/settings.local.json` present in the repository tree. It is a per-machine file that Claude Code gitignores on creation; in a shared repo it ships one person's approved grants to every clone. | `.claude/settings.local.json` committed with 40 `permissions.allow` entries | File presence |
+| `mcp/cross-assistant-divergence` | cross_component | Flags an MCP server declared under the same name with a different command, args, URL, or transport in two assistants' configs (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `.gemini/settings.json`, `opencode.json`). The MCP counterpart of context-file drift: two assistants run different servers under one name and only one was reviewed. | `.mcp.json` pins `server-filesystem@1.0.0`, `.cursor/mcp.json` runs it unpinned | Pairwise config comparison |
+| `mcp/json-duplicate-keys` | structural | Flags duplicate object keys in an MCP configuration. `json.loads` keeps the last key, so two `github` servers parse cleanly and the first is silently dropped. | `"gh": {...}, "gh": {...}` in `.mcp.json` | Object-pairs parse |
+| `hooks/json-duplicate-keys` | structural | Same check for `settings.json` and `hooks.json`. | Two `permissions` blocks | Object-pairs parse |
+| `claude-md/include-exists` | structural | Flags `@path` imports in a context file whose target does not exist; the runtime skips them silently. `~/` imports are per-machine and not checked. | `@docs/standards.md` with no such file | Path resolution relative to the context file |
+| `hooks/command-script-exists` | structural | Flags a hook command that references a relative or `$CLAUDE_PROJECT_DIR` script path that does not exist. Absolute and `~` paths are per-machine and skipped. | `uv run "$CLAUDE_PROJECT_DIR/.ai/start.py"` with no such file | Token scan + path resolution |
+| `mcp/endpoint-integrity` | security | Flags an MCP server whose relative `command`/`cwd` does not exist, whose `url` is `http://` to a non-loopback host, or whose `url` embeds credentials. | `"url": "http://evil.example/sse"` | Path + URL parse |
+| `security/credential-file-present` | security | Flags a file inside a skill directory whose name matches a secret-file pattern (`.env`, `*.pem`, `*.key`, `id_rsa`, `credentials.json`, `*-service-account*.json`). `.env.example` and `*.pub` are allowed. | `skills/deploy/.env` committed | Filename glob |
+| `structural/symlink-escape` | security | Flags a symlink inside a skill directory that resolves outside the repository; its content is not under review. | `scripts/run.sh -> /tmp/evil` | Symlink resolution |
 | `cross/config-instruction-conflict` | quality | Detects contradictions between settings.json config and CLAUDE.md instructions. When config and instructions disagree, the AI gets conflicting signals. | CLAUDE.md says "never use Bash" but `permissions.allow` includes `Bash(*)` | Cross-file comparison |
 | `cross/multi-assistant-drift` | quality | Flags significant differences between configurations for different AI tools in the same project. Drift means different tools get different instructions, causing inconsistent behavior. | `.cursorrules` has strict formatting rules but `CLAUDE.md` has none | Cross-tool comparison |
 | `content/hardcoded-machine-path` | content | Flags absolute paths that are specific to one developer's machine. These break on other machines and in CI. | `/Users/alice/projects/myapp` or `/home/bob/.config` in a skill body | Path pattern matching |

@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from harness_eval.inspection.parsers import parse_hooks
-from harness_eval.inspection.registry import _registry, get_all_rules
+from harness_eval.inspection.registry import _registry
 from harness_eval.inspection.rules import register_all_rules
 from harness_eval.inspection.types import ReportDescriptor, RuleContext, Severity
 
@@ -172,10 +172,3 @@ class TestMissingBoundaryPolicy:
         result = lint_claude_md(str(claude_md))
         findings = [d for d in result.diagnostics if d.rule_id == "content/missing-boundary-policy"]
         assert len(findings) == 0
-
-
-class TestRuleCount:
-    def test_total_rule_count(self) -> None:
-        _ensure_rules()
-        rules = get_all_rules()
-        assert len(rules) == 97

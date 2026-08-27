@@ -57,6 +57,7 @@ def _read_agent_bodies(project_root: Path) -> list[str]:
 class OrphanSkills:
     meta = RuleMeta(
         id="content/orphan-skills",
+        scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Skills not referenced by any command, CLAUDE.md, or agent waste context budget",

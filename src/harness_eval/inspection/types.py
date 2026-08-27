@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from harness_eval.core.types import ComponentType
 
@@ -82,6 +82,13 @@ class RuleMeta:
     tools: tuple[str, ...] | None = None
     frameworks: dict[str, str] | None = None
     default_suggestion: str | None = None
+    # Evidence class: gating and provisional are structural rules validated on the
+    # corpus (see docs/rule-taxonomy.md); everything else is advisory.
+    tier: Literal["gating", "provisional", "advisory"] = "advisory"
+    # Analysis scope: what a rule needs to see. FILE = one component's text or one
+    # config file; FILE_FS = also touches the filesystem; PAIRWISE = compares two
+    # components; SETUP = needs the whole component graph or an aggregate.
+    scope: Literal["FILE", "FILE_FS", "PAIRWISE", "SETUP"] = "FILE"
 
 
 @dataclass

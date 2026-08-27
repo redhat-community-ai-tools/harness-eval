@@ -1,220 +1,139 @@
-"""Tests for cross/overpermissive-grants rule."""
+"""Tests for cross/overpermissive-grants rule.
+
+The rule targets the settings component directly, so it runs on setups that
+have a settings.json and no skills. It reports three classes: Bash(*), bare
+high-risk tools, and wildcard grants on commands that execute arbitrary code.
+A short prefix is not evidence of anything, so Bash(git:*) is silent.
+"""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from harness_eval.inspection.engine import lint
-from harness_eval.inspection.parsers import parse_skill
+import pytest
+
+from harness_eval.inspection.engine import lint_hooks
+from harness_eval.inspection.rules.cross.overpermissive_grants import _classify_entry
 
 RULE_ID = "cross/overpermissive-grants"
 RULE_CONFIG = {RULE_ID: "warning"}
 
 
-def _make_skill(tmp_path: Path, name: str = "test-skill") -> Path:
-    skill_dir = tmp_path / name
-    skill_dir.mkdir(parents=True, exist_ok=True)
-    (skill_dir / "SKILL.md").write_text(
-        f"---\nname: {name}\ndescription: Test skill\n---\n\nA skill."
-    )
-    return skill_dir
-
-
-def _make_settings(
-    tmp_path: Path,
-    allow_list: list[str] | None = None,
-    deny_list: list[str] | None = None,
-) -> None:
+def _make_settings(tmp_path: Path, allow_list: list[str], name: str = "settings.json") -> Path:
     claude_dir = tmp_path / ".claude"
     claude_dir.mkdir(exist_ok=True)
-    permissions: dict = {}
-    if allow_list is not None:
-        permissions["allow"] = allow_list
-    if deny_list is not None:
-        permissions["deny"] = deny_list
-    (claude_dir / "settings.json").write_text(json.dumps({"permissions": permissions}))
+    p = claude_dir / name
+    p.write_text(json.dumps({"permissions": {"allow": allow_list}}))
+    return p
 
 
-def _lint(tmp_path: Path, skill_dir: Path) -> list:
-    all_skills = [parse_skill(str(skill_dir))]
-    scan_state: dict = {}
-    result = lint(
-        str(skill_dir),
-        RULE_CONFIG,
-        scan_state=scan_state,
-        all_skills=all_skills,
-        all_commands=[],
-    )
+def _lint(settings_path: Path, scan_state: dict | None = None) -> list:
+    result = lint_hooks(str(settings_path), RULE_CONFIG, scan_state=scan_state)
     return [d for d in result.diagnostics if d.rule_id == RULE_ID]
 
 
-class TestOverpermissiveGrants:
-    def test_flags_bash_star(self, tmp_path: Path) -> None:
-        """Bash(*) should be flagged; severity follows config, not per-finding override."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash(*)"])
+class TestClassification:
+    @pytest.mark.parametrize(
+        "entry",
+        [
+            "Bash(awk:*)",
+            "Bash(sed:*)",
+            "Bash(find:*)",
+            "Bash(python:*)",
+            "Bash(python3:*)",
+            "Bash(python3 -c:*)",
+            "Bash(perl -e:*)",
+            "Bash(node:*)",
+            "Bash(npx:*)",
+            "Bash(npx *)",
+            "Bash(xargs:*)",
+            "Bash(env:*)",
+            "Bash(sudo:*)",
+            "Bash(docker run:*)",
+            "Bash(/usr/bin/python3:*)",
+            "Bash(curl:*)",
+        ],
+    )
+    def test_arbitrary_exec_grants_flagged(self, entry: str) -> None:
+        result = _classify_entry(entry)
+        assert result is not None, entry
+        assert "arbitrary command execution" in result[0]
 
-        diags = _lint(tmp_path, skill_dir)
+    @pytest.mark.parametrize(
+        "entry",
+        [
+            "Bash(git:*)",
+            "Bash(ls:*)",
+            "Bash(npm:*)",
+            "Bash(cat:*)",
+            "Bash(pip:*)",
+            "Bash(git commit:*)",
+            "Bash(pytest:*)",
+            "Bash(python -m pytest:*)",
+            "Bash(npm run build)",
+            "Read",
+            "Grep",
+            "Read(src/**)",
+        ],
+    )
+    def test_scoped_or_benign_grants_silent(self, entry: str) -> None:
+        assert _classify_entry(entry) is None, entry
+
+    def test_bash_star_is_unrestricted(self) -> None:
+        assert "unrestricted shell" in _classify_entry("Bash(*)")[0]
+
+    @pytest.mark.parametrize("entry", ["Bash", "Edit", "Write", "WebFetch"])
+    def test_bare_high_risk_tools(self, entry: str) -> None:
+        assert "covers all invocations" in _classify_entry(entry)[0]
+
+
+class TestOverpermissiveGrants:
+    def test_runs_without_skills(self, tmp_path: Path) -> None:
+        """A settings-only setup must still be checked."""
+        p = _make_settings(tmp_path, ["Bash(awk:*)"])
+        diags = _lint(p)
+        assert len(diags) == 1
+        assert "awk" in diags[0].message
+
+    def test_flags_bash_star(self, tmp_path: Path) -> None:
+        p = _make_settings(tmp_path, ["Bash(*)"])
+        diags = _lint(p)
         assert len(diags) == 1
         assert "unrestricted shell" in diags[0].message
-        assert diags[0].severity.value == "warning"
 
     def test_flags_bare_bash(self, tmp_path: Path) -> None:
-        """Bare 'Bash' without parens should be flagged."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash"])
+        assert len(_lint(_make_settings(tmp_path, ["Bash"]))) == 1
 
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 1
-        assert "bare" in diags[0].message
+    def test_no_flag_short_benign_prefix(self, tmp_path: Path) -> None:
+        assert _lint(_make_settings(tmp_path, ["Bash(git:*)", "Bash(ls:*)", "Bash(npm:*)"])) == []
 
-    def test_flags_bare_edit(self, tmp_path: Path) -> None:
-        """Bare 'Edit' should be flagged."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Edit"])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 1
-        assert "Edit" in diags[0].message
-
-    def test_flags_bare_write(self, tmp_path: Path) -> None:
-        """Bare 'Write' should be flagged."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Write"])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 1
-        assert "Write" in diags[0].message
-
-    def test_flags_bare_webfetch(self, tmp_path: Path) -> None:
-        """Bare 'WebFetch' should be flagged."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["WebFetch"])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 1
-        assert "WebFetch" in diags[0].message
-
-    def test_flags_broad_bash_wildcard(self, tmp_path: Path) -> None:
-        """Bash(g*) with a very short prefix should be flagged."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash(g*)"])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 1
-        assert "too broad" in diags[0].message
-
-    def test_no_flag_scoped_bash(self, tmp_path: Path) -> None:
-        """Bash(npm test:*) is scoped enough, should not flag."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash(npm test:*)"])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 0
-
-    def test_no_flag_read(self, tmp_path: Path) -> None:
-        """Bare 'Read' is not in the high-risk set, should not flag."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Read"])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 0
-
-    def test_no_flag_empty_allow(self, tmp_path: Path) -> None:
-        """Empty allow list should not produce findings."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=[])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 0
-
-    def test_no_flag_without_settings(self, tmp_path: Path) -> None:
-        """Without settings.json, no findings."""
-        skill_dir = _make_skill(tmp_path)
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 0
+    def test_flags_long_interpreter_prefix(self, tmp_path: Path) -> None:
+        diags = _lint(_make_settings(tmp_path, ["Bash(python:*)", "Bash(find:*)"]))
+        assert {d.message.split("'")[1] for d in diags} == {"Bash(python:*)", "Bash(find:*)"}
 
     def test_multiple_entries(self, tmp_path: Path) -> None:
-        """Multiple overpermissive entries should each produce a finding."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash(*)", "Edit", "Write"])
+        assert len(_lint(_make_settings(tmp_path, ["Bash(*)", "Edit", "Bash(awk:*)", "Read"]))) == 3
 
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 3
-
-    def test_scan_state_runs_once(self, tmp_path: Path) -> None:
-        """Rule should only run once across multiple skills."""
-        skill_a = _make_skill(tmp_path, "skill-a")
-        skill_b = _make_skill(tmp_path, "skill-b")
-        _make_settings(tmp_path, allow_list=["Bash(*)"])
-
-        all_skills = [parse_skill(str(skill_a)), parse_skill(str(skill_b))]
-        scan_state: dict = {}
-
-        result_a = lint(
-            str(skill_a),
-            RULE_CONFIG,
-            scan_state=scan_state,
-            all_skills=all_skills,
-            all_commands=[],
-        )
-        result_b = lint(
-            str(skill_b),
-            RULE_CONFIG,
-            scan_state=scan_state,
-            all_skills=all_skills,
-            all_commands=[],
-        )
-
-        diags_a = [d for d in result_a.diagnostics if d.rule_id == RULE_ID]
-        diags_b = [d for d in result_b.diagnostics if d.rule_id == RULE_ID]
-
-        assert len(diags_a) == 1
-        assert len(diags_b) == 0
+    def test_no_flag_empty_allow(self, tmp_path: Path) -> None:
+        assert _lint(_make_settings(tmp_path, [])) == []
 
     def test_settings_local_also_checked(self, tmp_path: Path) -> None:
-        """settings.local.json should also be checked."""
-        skill_dir = _make_skill(tmp_path)
-        claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir(exist_ok=True)
-        (claude_dir / "settings.local.json").write_text(
-            json.dumps({"permissions": {"allow": ["Bash(*)"]}})
-        )
-
-        diags = _lint(tmp_path, skill_dir)
+        p = _make_settings(tmp_path, ["Read"])
+        _make_settings(tmp_path, ["Bash(*)"], name="settings.local.json")
+        diags = _lint(p)
         assert len(diags) == 1
+        assert "settings.local.json" in diags[0].message
 
-    def test_no_flag_scoped_entry_with_colon_wildcard(self, tmp_path: Path) -> None:
-        """Bash(uv run ruff:*) is well-scoped, should not flag."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash(uv run ruff:*)"])
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 0
-
-    def test_flags_colon_star_short_prefix(self, tmp_path: Path) -> None:
-        """Bash(g:*) should be flagged as too broad."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash(g:*)"])
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 1
-        assert "too broad" in diags[0].message
-
-    def test_no_flag_colon_star_long_prefix(self, tmp_path: Path) -> None:
-        """Bash(npm test:*) with colon-star should not flag."""
-        skill_dir = _make_skill(tmp_path)
-        _make_settings(tmp_path, allow_list=["Bash(npm test:*)"])
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 0
+    def test_scan_state_runs_once(self, tmp_path: Path) -> None:
+        p = _make_settings(tmp_path, ["Bash(*)"])
+        state: dict = {}
+        assert len(_lint(p, state)) == 1
+        assert _lint(p, state) == []
 
     def test_malformed_settings_ignored(self, tmp_path: Path) -> None:
-        """Malformed JSON should not crash."""
-        skill_dir = _make_skill(tmp_path)
         claude_dir = tmp_path / ".claude"
-        claude_dir.mkdir(exist_ok=True)
-        (claude_dir / "settings.json").write_text("not json")
-
-        diags = _lint(tmp_path, skill_dir)
-        assert len(diags) == 0
+        claude_dir.mkdir()
+        p = claude_dir / "settings.json"
+        p.write_text("{not json")
+        assert _lint(p) == []

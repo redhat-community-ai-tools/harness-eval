@@ -1,6 +1,6 @@
 [
   {
-    "message": "MCP server 'postgres' is configured but no skill references its tools",
+    "message": "MCP server 'postgres' is configured but no skill, command, agent, or context file references it",
     "rule_id": "content/mcp-skill-alignment",
     "severity": "warning",
     "target_name": "deploy",
@@ -31,6 +31,13 @@
     "message": "Server 'postgres' has no 'tools' or 'allowedTools' field, exposing all available tools.",
     "rule_id": "mcp/no-wildcard-tools",
     "severity": "info",
+    "target_name": ".mcp.json",
+    "target_type": "mcp_config"
+  },
+  {
+    "message": "MCP server 'postgres': runs unpinned package '@modelcontextprotocol/server-postgres' -- version is re-resolved every session. Pin an exact version.",
+    "rule_id": "mcp/unpinned-package",
+    "severity": "warning",
     "target_name": ".mcp.json",
     "target_type": "mcp_config"
   }

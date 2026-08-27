@@ -94,3 +94,48 @@ def test_match_name_all_patterns() -> None:
             if m:
                 assert match_name(m) == expected, f"Failed on {text!r} with {pattern.pattern}"
                 break
+
+
+# --- Path mentions that collide with component names must not become edges ---
+
+from harness_eval.inspection.rules.content._skill_refs import extract_mentions  # noqa: E402
+
+PATH_MENTION_CASES = [
+    ("After the build, output goes to /build and the README should mention it.", set(), {"build"}),
+    ("Generated API docs live in /docs after a run. Do not edit /docs by hand.", set(), {"docs"}),
+    ("See /docs/api for details.", set(), set()),
+    ("Run /build to compile.", {"build"}, set()),
+    ("Then `/build` and check the output.", {"build"}, set()),
+    ("Steps:\n- /build\n- /test-all", {"build", "test-all"}, set()),
+    ("Files under /tmp are scratch.", set(), {"tmp"}),
+]
+
+
+@pytest.mark.parametrize(
+    "body,inv,mention", PATH_MENTION_CASES, ids=[c[0][:40] for c in PATH_MENTION_CASES]
+)
+def test_path_mentions_are_not_invocations(body: str, inv: set[str], mention: set[str]) -> None:
+    assert extract_references(body, "self") == inv
+    assert extract_mentions(body, "self") == mention
+
+
+# --- Backticks alone are documentation, not delegation ---
+
+DOC_CASES = [
+    ("5. `/capture keywords {site}` fills the keyword universe.", set()),
+    ("The user sees a prompt every time they run `/setup`.", set()),
+    ("Now invoke `/beta` to continue.", {"beta"}),
+    ("run `update-agent-onboarding` manually after the change.", set()),
+    ("stop and run `migrate-aiboarding` instead.", {"migrate-aiboarding"}),
+]
+
+
+@pytest.mark.parametrize("body,expected", DOC_CASES, ids=[c[0][:40] for c in DOC_CASES])
+def test_backticks_alone_are_not_invocations(body: str, expected: set[str]) -> None:
+    assert extract_references(body, "self") == expected
+
+
+def test_quoted_display_text_is_not_an_invocation() -> None:
+    body = 'none -> abort with "clarify-intent must run first. Run /clarify-intent first."'
+    assert extract_references(body, "make-outline-plan") == set()
+    assert extract_references("Then invoke /clarify-intent.", "x") == {"clarify-intent"}

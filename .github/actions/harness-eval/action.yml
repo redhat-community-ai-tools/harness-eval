@@ -1,5 +1,5 @@
 name: "harness-eval"
-description: "Lint and security-scan AI agent setups (CLAUDE.md, skills, commands, hooks, MCP configs, agents). 97 deterministic rules, no LLM required."
+description: "Lint and security-scan AI agent setups (CLAUDE.md, skills, commands, hooks, MCP configs, agents). 107 deterministic rules, no LLM required."
 author: "redhat-community-ai-tools"
 
 branding:
@@ -13,6 +13,12 @@ inputs:
   preset:
     description: "Rule preset: recommended, strict, security, or pre-workflow"
     default: "recommended"
+  gate:
+    description: "Run the validated gate (harness-gate: gating-tier rules only, exits 1 on any finding, no LLM). Set to 'false' to skip."
+    default: "true"
+  gate-include-provisional:
+    description: "Include provisional-tier rules in the gate."
+    default: "false"
   security-gate:
     description: "Run security scan (--fail-on-warning). Set to 'false' to skip."
     default: "true"
@@ -39,6 +45,9 @@ inputs:
     default: ""
 
 outputs:
+  gate-passed:
+    description: "Whether the validated gate passed"
+    value: ${{ steps.gate.outcome == 'success' || inputs.gate != 'true' }}
   security-passed:
     description: "Whether the security gate passed"
     value: ${{ steps.security.outcome == 'success' || inputs.security-gate != 'true' }}
@@ -62,9 +71,37 @@ runs:
         fi
         echo "Installed: $(harness-eval --version)"
 
+    - name: Gate
+      id: gate
+      if: inputs.gate == 'true'
+      shell: bash
+      run: |
+        echo "=== Harness Gate (validated rules) ==="
+        recursive_flag=""
+        if [ "${{ inputs.recursive }}" = "true" ]; then
+          recursive_flag="--recursive"
+        fi
+        provisional_flag=""
+        if [ "${{ inputs.gate-include-provisional }}" = "true" ]; then
+          provisional_flag="--include-provisional"
+        fi
+        failed=0
+        while IFS= read -r dir; do
+          dir=$(echo "$dir" | xargs)
+          [ -z "$dir" ] && continue
+          set +e
+          harness-eval harness-gate "$dir" $recursive_flag $provisional_flag
+          rc=$?
+          set -e
+          if [ $rc -ne 0 ]; then
+            failed=1
+          fi
+        done <<< "${{ inputs.path }}"
+        exit $failed
+
     - name: Security gate
       id: security
-      if: inputs.security-gate == 'true'
+      if: inputs.security-gate == 'true' && always()
       shell: bash
       run: |
         echo "=== Security Scan ==="
@@ -242,13 +279,13 @@ runs:
         total_errors=$(echo "$details" | grep "^total_errors=" | cut -d= -f2)
         total_warnings=$(echo "$details" | grep "^total_warnings=" | cut -d= -f2)
 
-        sec_icon="✓"; sec_msg="passed (19 security rules)"
+        sec_icon="✓"; sec_msg="passed (20 security rules)"
         [ "${{ inputs.security-gate }}" != "true" ] && { sec_icon="○"; sec_msg="skipped"; }
         [ "${{ steps.security.outcome }}" != "success" ] && [ "${{ inputs.security-gate }}" = "true" ] && { sec_icon="✗"; sec_msg="findings detected"; }
 
         warnings_note=""
         [ "${total_warnings:-0}" -gt 0 ] && warnings_note=", ${total_warnings} warnings (non-blocking)"
-        lint_icon="✓"; lint_msg="passed (97 rules, ${total_errors:-0} errors${warnings_note})"
+        lint_icon="✓"; lint_msg="passed (107 rules, ${total_errors:-0} errors${warnings_note})"
         [ "${{ inputs.lint-gate }}" != "true" ] && { lint_icon="○"; lint_msg="skipped"; }
         [ "${{ steps.lint.outcome }}" != "success" ] && [ "${{ inputs.lint-gate }}" = "true" ] && { lint_icon="✗"; lint_msg="${total_errors:-0} errors${warnings_note}"; }
 
@@ -302,7 +339,7 @@ runs:
         ${cat_table}
 
         ---
-        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 97 rules | preset: ${{ inputs.preset }}*"
+        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 107 rules | preset: ${{ inputs.preset }}*"
 
         body=$(echo "$body" | sed 's/^        //')
 

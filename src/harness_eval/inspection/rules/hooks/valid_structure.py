@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from harness_eval.core.types import ComponentType
 from harness_eval.inspection.types import (
@@ -32,7 +31,6 @@ class HooksValidStructure:
         messages={
             "missing_command": "Hook for event '{{event}}' has no command defined",
             "dangerous_pattern": "Hook for event '{{event}}' contains dangerous pattern: '{{pattern}}'",
-            "script_missing": "Hook for event '{{event}}' references script '{{script}}' which does not exist",
         },
         target_type=ComponentType.HOOKS,
         default_suggestion="Add a 'command' field to the hook definition.",
@@ -67,17 +65,3 @@ class HooksValidStructure:
                             location=loc,
                         )
                     )
-
-            script_match = re.search(r"[\w./-]+\.(?:py|sh|bash)\b", command)
-            if script_match:
-                script_path = Path(script_match.group(0))
-                if not script_path.is_absolute():
-                    project_root = Path(hooks_data.file_path).parent.parent
-                    if not (project_root / script_path).exists():
-                        context.report(
-                            ReportDescriptor(
-                                message_id="script_missing",
-                                data={"event": event, "script": str(script_path)},
-                                location=loc,
-                            )
-                        )

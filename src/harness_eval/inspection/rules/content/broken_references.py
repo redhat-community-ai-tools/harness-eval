@@ -129,6 +129,7 @@ def _paths_base_dirs(frontmatter: dict[str, Any]) -> list[str]:
 class BrokenReferences:
     meta: RuleMeta = RuleMeta(
         id="content/broken-references",
+        scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,
         description="File references in skill content must point to existing files",

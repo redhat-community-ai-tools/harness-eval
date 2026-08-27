@@ -18,6 +18,7 @@ _STATE_KEY = "content/duplicate-detection"
 class DuplicateDetection:
     meta: RuleMeta = RuleMeta(
         id="content/duplicate-detection",
+        scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Detect near-duplicate skills",
