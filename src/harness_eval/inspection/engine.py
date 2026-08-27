@@ -552,13 +552,20 @@ def lint_text_file(
     raw_content = path.read_text(encoding="utf-8", errors="replace")
     tokens = count_tokens(raw_content)
 
-    security_config: dict[str, str | list[Any]] = {}
     base = config_rules or {}
-    for rule_id in _SECURITY_ONLY_RULES:
-        if rule_id in base:
-            security_config[rule_id] = base[rule_id]
-        else:
-            security_config[rule_id] = "warning"
+    if base:
+        # An explicit rule set (a preset or the gate) was passed: honor it, so a
+        # security rule runs only if the set enables it; disable the rest. Without
+        # this, presets that omit these rules on purpose (gate, scan, pre-workflow)
+        # would still fire them on generic text files (CI workflows, shell scripts)
+        # and leak false positives. Keep every key present (unlisted -> "off") so the
+        # config stays non-empty: an empty config means "no filter, run everything".
+        security_config: dict[str, str | list[Any]] = {
+            rid: base.get(rid, "off") for rid in _SECURITY_ONLY_RULES
+        }
+    else:
+        # No explicit config (bare single-file scan): run the full security set.
+        security_config = {rid: "warning" for rid in _SECURITY_ONLY_RULES}
 
     dummy_skill = ParsedSkill(
         dir_path=str(path.parent),

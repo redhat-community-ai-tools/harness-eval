@@ -59,6 +59,13 @@ All notable changes to this project will be documented in this file.
   paths that collide with component names.
 
 ### Fixed
+- `lint_text_file` force-enabled all security-only rules on generic text files
+  regardless of the rule set passed in, so `harness-gate` (gating tier only) and
+  the `scan`/`pre-workflow` presets leaked security findings onto CI workflows and
+  shell scripts (e.g. `security/data-exfiltration` on a release notify webhook,
+  `security/unbounded-delegation` on "fork agent" prose). Text-file scans now honor
+  the caller's rule set: a security rule runs only when the preset enables it. A
+  bare single-file scan with no preset still runs the full security set.
 - `claude-md/include-exists` matched every `@scope/name` token, so scoped npm
   package names (`@anthropic-ai/claude-code`), Python decorators
   (`@app.on_event`), and `@/lib/utils`-style TypeScript path aliases in prose
