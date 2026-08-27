@@ -113,12 +113,12 @@ class TestOpenCodeMcp:
             tmp_path,
             {
                 "mcp": {
-                    "remote": {"type": "remote", "url": "http://127.0.0.1:8080", "enabled": True}
+                    "remote": {"type": "remote", "url": "http://192.168.1.10:8080", "enabled": True}
                 }
             },
         )
         setup = discover_setup("opencode", str(tmp_path))
-        # suspicious-endpoint reads url via the shared extractor -> should flag localhost
+        # suspicious-endpoint reads url via the shared extractor -> flags private-net host
         ids = [rid for rid, _ in _diag_ids(setup, {"mcp/suspicious-endpoint": "warning"})]
         assert "mcp/suspicious-endpoint" in ids
 

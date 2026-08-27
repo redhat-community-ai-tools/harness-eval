@@ -9,6 +9,13 @@ logger = logging.getLogger(__name__)
 
 _registry: dict[str, Rule] = {}
 
+# Rule IDs that have been removed. A config or suppression that still references
+# one gets a deprecation warning (pointing at the replacement) instead of the
+# generic "unknown rule" warning, and never an error.
+DEPRECATED_RULES: dict[str, str] = {
+    "mcp/duplicate-server": "mcp/json-duplicate-keys",
+}
+
 
 def register_rule(rule: Rule) -> None:
     if rule.meta.id in _registry:

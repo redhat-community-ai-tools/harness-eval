@@ -14,6 +14,7 @@ from harness_eval.inspection.types import (
 class AgentDescriptionRequired:
     meta: RuleMeta = RuleMeta(
         id="agent/description-required",
+        tier="gating",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Agent must have a description in frontmatter",

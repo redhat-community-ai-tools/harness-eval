@@ -110,6 +110,7 @@ def _deny_matches_instruction(deny_entry: str, instructed: str) -> bool:
 class ConfigInstructionConflict:
     meta = RuleMeta(
         id="cross/config-instruction-conflict",
+        scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

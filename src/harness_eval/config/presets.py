@@ -25,7 +25,6 @@ RECOMMENDED: dict[str, str] = {
     "security/mcp-tool-poisoning": "warning",
     # MCP rules
     "mcp/valid-config": "warning",
-    "mcp/duplicate-server": "warning",
     "mcp/suspicious-endpoint": "warning",
     "mcp/no-wildcard-tools": "info",
     "mcp/no-plaintext-secrets": "error",
@@ -84,6 +83,17 @@ RECOMMENDED: dict[str, str] = {
     # Command rules (new)
     "command/allowed-tools-coverage": "warning",
     "cross/overpermissive-grants": "warning",
+    "hooks/permission-contradiction": "warning",
+    "hooks/permission-prompt-disabled": "error",
+    "hooks/local-settings-committed": "warning",
+    "mcp/cross-assistant-divergence": "warning",
+    "claude-md/include-exists": "error",
+    "hooks/command-script-exists": "error",
+    "mcp/endpoint-integrity": "error",
+    "security/credential-file-present": "error",
+    "mcp/json-duplicate-keys": "error",
+    "hooks/json-duplicate-keys": "error",
+    "structural/symlink-escape": "error",
     # Pre-trust config rules
     "hooks/base-url-override": "error",
     "hooks/api-key-helper": "error",
@@ -128,7 +138,6 @@ STRICT: dict[str, str] = {
     "security/unbounded-delegation": "error",
     "agent/unbounded-delegation": "error",
     "mcp/valid-config": "error",
-    "mcp/duplicate-server": "error",
     "mcp/suspicious-endpoint": "error",
     "mcp/no-wildcard-tools": "warning",
     "mcp/no-plaintext-secrets": "error",
@@ -142,6 +151,17 @@ STRICT: dict[str, str] = {
     "cross/multi-assistant-drift": "error",
     "command/allowed-tools-coverage": "error",
     "cross/overpermissive-grants": "error",
+    "hooks/permission-contradiction": "error",
+    "hooks/permission-prompt-disabled": "error",
+    "hooks/local-settings-committed": "error",
+    "mcp/cross-assistant-divergence": "error",
+    "claude-md/include-exists": "error",
+    "hooks/command-script-exists": "error",
+    "mcp/endpoint-integrity": "error",
+    "security/credential-file-present": "error",
+    "mcp/json-duplicate-keys": "error",
+    "hooks/json-duplicate-keys": "error",
+    "structural/symlink-escape": "error",
     # Pre-trust config rules
     "hooks/base-url-override": "error",
     "hooks/api-key-helper": "error",
@@ -191,7 +211,6 @@ SECURITY: dict[str, str] = {
     "security/unbounded-delegation": "error",
     "agent/unbounded-delegation": "error",
     "mcp/valid-config": "off",
-    "mcp/duplicate-server": "off",
     "mcp/suspicious-endpoint": "warning",
     "mcp/no-wildcard-tools": "off",
     "mcp/no-plaintext-secrets": "error",
@@ -237,6 +256,17 @@ SECURITY: dict[str, str] = {
     "security/stealth-persistence": "error",
     "security/prompt-exfiltration": "error",
     "cross/overpermissive-grants": "error",
+    "hooks/permission-contradiction": "error",
+    "hooks/permission-prompt-disabled": "error",
+    "hooks/local-settings-committed": "error",
+    "mcp/cross-assistant-divergence": "error",
+    "claude-md/include-exists": "error",
+    "hooks/command-script-exists": "error",
+    "mcp/endpoint-integrity": "error",
+    "security/credential-file-present": "error",
+    "mcp/json-duplicate-keys": "error",
+    "hooks/json-duplicate-keys": "error",
+    "structural/symlink-escape": "error",
     # Pre-trust config rules
     "hooks/base-url-override": "error",
     "hooks/api-key-helper": "error",
@@ -271,7 +301,6 @@ PRE_WORKFLOW: dict[str, str] = {
     "security/taint-flow": "error",
     "security/bash-taint-flow": "error",
     "mcp/valid-config": "off",
-    "mcp/duplicate-server": "off",
     "mcp/suspicious-endpoint": "off",
     "mcp/no-wildcard-tools": "off",
     "claude-md/exists": "off",
@@ -296,6 +325,20 @@ PRE_WORKFLOW: dict[str, str] = {
     "agent/obfuscation": "error",
     "agent/data-exfiltration": "error",
     "agent/model-specified": "off",
+    # Config-integrity rules: security-critical ones gate a pre-workflow run,
+    # the rest are consistency/integrity checks left off to keep this preset
+    # focused on "is it dangerous to run this now?".
+    "mcp/endpoint-integrity": "error",
+    "security/credential-file-present": "error",
+    "structural/symlink-escape": "error",
+    "hooks/permission-prompt-disabled": "error",
+    "mcp/json-duplicate-keys": "off",
+    "hooks/json-duplicate-keys": "off",
+    "claude-md/include-exists": "off",
+    "hooks/command-script-exists": "off",
+    "hooks/permission-contradiction": "off",
+    "hooks/local-settings-committed": "off",
+    "mcp/cross-assistant-divergence": "off",
     # Quality rules
     "quality/imprecise-instruction": "off",
     "quality/redundant-guidance": "off",
@@ -405,7 +448,6 @@ SKILL_SUBMISSION: dict[str, str] = {
     "hooks/valid-structure": "off",
     # --- OFF: MCP rules ---
     "mcp/auto-approve-risk": "off",
-    "mcp/duplicate-server": "off",
     "mcp/no-plaintext-secrets": "off",
     "mcp/no-wildcard-tools": "off",
     "mcp/suspicious-endpoint": "off",
@@ -415,7 +457,35 @@ SKILL_SUBMISSION: dict[str, str] = {
     "cross/config-instruction-conflict": "off",
     "cross/multi-assistant-drift": "off",
     "cross/overpermissive-grants": "off",
+    "hooks/permission-contradiction": "off",
+    "hooks/permission-prompt-disabled": "off",
+    "hooks/local-settings-committed": "off",
+    "mcp/cross-assistant-divergence": "off",
+    "claude-md/include-exists": "off",
+    "hooks/command-script-exists": "off",
+    "mcp/endpoint-integrity": "off",
+    "security/credential-file-present": "off",
+    "mcp/json-duplicate-keys": "off",
+    "hooks/json-duplicate-keys": "off",
+    "structural/symlink-escape": "off",
 }
+
+
+def gate_rules(include_provisional: bool = False) -> dict[str, str]:
+    """Rules for the harness-gate command, derived from the registry so the set
+    can never drift from RuleMeta.tier. Gating tier only by default; provisional
+    tier is added on request. Loads no LLM extras."""
+    import harness_eval.inspection  # noqa: F401 — registers all rules
+    from harness_eval.inspection.registry import get_all_rules
+
+    tiers = {"gating", "provisional"} if include_provisional else {"gating"}
+    return {
+        r.meta.id: r.meta.default_severity.value for r in get_all_rules() if r.meta.tier in tiers
+    }
+
+
+# The gate preset enables exactly the gating-tier rules (see docs/rule-taxonomy.md).
+GATE: dict[str, str] = gate_rules()
 
 PRESETS: dict[str, dict[str, str]] = {
     "recommended": RECOMMENDED,
@@ -423,6 +493,7 @@ PRESETS: dict[str, dict[str, str]] = {
     "security": SECURITY,
     "pre-workflow": PRE_WORKFLOW,
     "skill-submission": SKILL_SUBMISSION,
+    "gate": GATE,
 }
 
 __all__ = [
@@ -432,4 +503,6 @@ __all__ = [
     "SECURITY",
     "PRE_WORKFLOW",
     "SKILL_SUBMISSION",
+    "GATE",
+    "gate_rules",
 ]

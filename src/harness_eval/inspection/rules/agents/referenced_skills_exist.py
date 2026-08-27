@@ -14,6 +14,7 @@ from harness_eval.inspection.types import (
 class ReferencedSkillsExist:
     meta: RuleMeta = RuleMeta(
         id="agent/referenced-skills-exist",
+        scope="PAIRWISE",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Every skill referenced in agent frontmatter must have a matching SKILL.md",

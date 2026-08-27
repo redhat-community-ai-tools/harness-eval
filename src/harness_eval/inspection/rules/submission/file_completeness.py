@@ -21,6 +21,7 @@ _EXCLUDED_DIRS = {".git", "node_modules", "vendor", "__pycache__", ".venv"}
 class FileCompleteness:
     meta: RuleMeta = RuleMeta(
         id="submission/file-completeness",
+        scope="FILE_FS",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Submission files must have meaningful content",

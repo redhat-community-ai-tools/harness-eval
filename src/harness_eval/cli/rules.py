@@ -24,12 +24,31 @@ from harness_eval.cli import cli
     help="Filter by security framework (owasp_llm, owasp_agentic, mitre_atlas).",
 )
 @click.option(
+    "--tier",
+    type=click.Choice(["gating", "provisional", "advisory"]),
+    default=None,
+    help="Filter by evidence tier (gating, provisional, advisory).",
+)
+@click.option(
+    "--scope",
+    type=click.Choice(["FILE", "FILE_FS", "PAIRWISE", "SETUP"]),
+    default=None,
+    help="Filter by analysis scope (FILE, FILE_FS, PAIRWISE, SETUP).",
+)
+@click.option(
     "--format",
     "fmt",
     type=click.Choice(["terminal", "json"]),
     default="terminal",
 )
-def list_rules(category: str | None, target: str | None, framework: str | None, fmt: str) -> None:
+def list_rules(
+    category: str | None,
+    target: str | None,
+    framework: str | None,
+    tier: str | None,
+    scope: str | None,
+    fmt: str,
+) -> None:
     """List all available lint rules with ID, severity, target, and description."""
     from harness_eval.inspection.registry import get_all_rules
 
@@ -37,6 +56,12 @@ def list_rules(category: str | None, target: str | None, framework: str | None, 
 
     if category:
         rules = [r for r in rules if r.meta.id.startswith(f"{category}/")]
+
+    if tier:
+        rules = [r for r in rules if r.meta.tier == tier]
+
+    if scope:
+        rules = [r for r in rules if r.meta.scope == scope]
 
     if target:
         rules = [
@@ -61,6 +86,8 @@ def list_rules(category: str | None, target: str | None, framework: str | None, 
                 if hasattr(r.meta.target_type, "value")
                 else str(r.meta.target_type),
                 "category": r.meta.category.value,
+                "tier": r.meta.tier,
+                "scope": r.meta.scope,
                 "fixable": r.meta.fixable,
                 "description": r.meta.description,
             }

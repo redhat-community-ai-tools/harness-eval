@@ -47,10 +47,10 @@ def parse_suppressions(
 
 def _warn_unknown_rule_ids(rule_ids: list[str], file_path: str) -> None:
     """Log warnings for suppressed rule IDs that don't match any registered rule."""
-    from harness_eval.inspection.registry import get_rule, suggest_rule_id
+    from harness_eval.inspection.registry import DEPRECATED_RULES, get_rule, suggest_rule_id
 
     for rule_id in rule_ids:
-        if get_rule(rule_id) is not None:
+        if get_rule(rule_id) is not None or rule_id in DEPRECATED_RULES:
             continue
         suggestions = suggest_rule_id(rule_id)
         location = f" in {file_path}" if file_path else ""

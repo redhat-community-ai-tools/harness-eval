@@ -43,6 +43,7 @@ def register_all_rules() -> None:
     # CLAUDE.md rules
     from harness_eval.inspection.rules.claude_md.exists import ClaudeMdExists
     from harness_eval.inspection.rules.claude_md.generic_advice import ClaudeMdGenericAdvice
+    from harness_eval.inspection.rules.claude_md.include_exists import ClaudeMdIncludeExists
     from harness_eval.inspection.rules.claude_md.skill_duplication import (
         ClaudeMdSkillDuplication,
     )
@@ -106,15 +107,25 @@ def register_all_rules() -> None:
     # Hooks rules
     from harness_eval.inspection.rules.hooks.api_key_helper import HooksApiKeyHelper
     from harness_eval.inspection.rules.hooks.base_url_override import HooksBaseUrlOverride
+    from harness_eval.inspection.rules.hooks.command_script_exists import HooksCommandScriptExists
     from harness_eval.inspection.rules.hooks.dangerous_command import HooksDangerousCommand
     from harness_eval.inspection.rules.hooks.env_credential_override import (
         HooksEnvCredentialOverride,
     )
     from harness_eval.inspection.rules.hooks.env_leakage import HooksEnvLeakage
+    from harness_eval.inspection.rules.hooks.local_settings_committed import (
+        HooksLocalSettingsCommitted,
+    )
     from harness_eval.inspection.rules.hooks.matcher_matches_no_tool import (
         HooksMatcherMatchesNoTool,
     )
     from harness_eval.inspection.rules.hooks.network_access import HooksNetworkAccess
+    from harness_eval.inspection.rules.hooks.permission_contradiction import (
+        HooksPermissionContradiction,
+    )
+    from harness_eval.inspection.rules.hooks.permission_prompt_disabled import (
+        HooksPermissionPromptDisabled,
+    )
     from harness_eval.inspection.rules.hooks.pre_trust_permissions import (
         HooksPreTrustPermissions,
     )
@@ -126,7 +137,10 @@ def register_all_rules() -> None:
 
     # MCP rules
     from harness_eval.inspection.rules.mcp.auto_approve_risk import McpAutoApproveRisk
-    from harness_eval.inspection.rules.mcp.duplicate_server import McpDuplicateServer
+    from harness_eval.inspection.rules.mcp.cross_assistant_divergence import (
+        McpCrossAssistantDivergence,
+    )
+    from harness_eval.inspection.rules.mcp.endpoint_integrity import McpEndpointIntegrity
     from harness_eval.inspection.rules.mcp.no_plaintext_secrets import McpNoPlaintextSecrets
     from harness_eval.inspection.rules.mcp.no_wildcard_tools import McpNoWildcardTools
     from harness_eval.inspection.rules.mcp.suspicious_endpoint import McpSuspiciousEndpoint
@@ -146,6 +160,9 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.security.ast_behavioral import AstBehavioral
     from harness_eval.inspection.rules.security.bash_taint_tracking import BashTaintTracking
     from harness_eval.inspection.rules.security.coercive_override import CoerciveOverride
+    from harness_eval.inspection.rules.security.credential_file_present import (
+        SecurityCredentialFilePresent,
+    )
     from harness_eval.inspection.rules.security.cross_component_flow import CrossComponentFlow
     from harness_eval.inspection.rules.security.cve_lookup import CveLookup
     from harness_eval.inspection.rules.security.data_exfiltration import DataExfiltration
@@ -165,7 +182,12 @@ def register_all_rules() -> None:
     from harness_eval.inspection.rules.security.taint_tracking import TaintTracking
     from harness_eval.inspection.rules.security.unbounded_delegation import UnboundedDelegation
     from harness_eval.inspection.rules.security.yara_scan import YaraScan
+    from harness_eval.inspection.rules.structural.json_duplicate_keys import (
+        StructuralJsonDuplicateKeysMcp,
+        StructuralJsonDuplicateKeysSettings,
+    )
     from harness_eval.inspection.rules.structural.skill_md_exists import SkillMdExists
+    from harness_eval.inspection.rules.structural.symlink_escape import StructuralSymlinkEscape
     from harness_eval.inspection.rules.submission.file_completeness import FileCompleteness
 
     for rule_cls in [
@@ -216,7 +238,6 @@ def register_all_rules() -> None:
         BashTaintTracking,
         McpLeastPrivilege,
         McpValidConfig,
-        McpDuplicateServer,
         McpSuspiciousEndpoint,
         McpNoWildcardTools,
         McpToolPoisoning,
@@ -251,6 +272,17 @@ def register_all_rules() -> None:
         MultiAssistantDrift,
         CommandAllowedToolsCoverage,
         OverpermissiveGrants,
+        HooksPermissionContradiction,
+        HooksPermissionPromptDisabled,
+        HooksLocalSettingsCommitted,
+        McpCrossAssistantDivergence,
+        ClaudeMdIncludeExists,
+        HooksCommandScriptExists,
+        McpEndpointIntegrity,
+        SecurityCredentialFilePresent,
+        StructuralJsonDuplicateKeysMcp,
+        StructuralJsonDuplicateKeysSettings,
+        StructuralSymlinkEscape,
         HooksSilentFailureMasking,
         McpAutoApproveRisk,
         HooksBaseUrlOverride,

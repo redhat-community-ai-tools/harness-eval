@@ -15,6 +15,7 @@ from harness_eval.inspection.types import (
 class PermissionEscalation:
     meta = RuleMeta(
         id="content/permission-escalation",
+        scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Skills should not gain capabilities through transitive references",

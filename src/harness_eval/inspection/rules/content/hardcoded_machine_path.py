@@ -51,6 +51,7 @@ def _is_in_url(text: str, match_start: int) -> bool:
 class HardcodedMachinePath:
     meta = RuleMeta(
         id="content/hardcoded-machine-path",
+        tier="gating",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag machine-specific absolute paths that break portability",

@@ -95,3 +95,31 @@ class TestMcpUnpinnedPackage:
         result = lint_mcp_config(path, RULE_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/unpinned-package"]
         assert len(diags) == 0
+
+
+class TestScopedPackages:
+    def test_scoped_unpinned_flagged(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "fs": {
+                    "command": "npx",
+                    "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        assert len([d for d in result.diagnostics if d.rule_id == "mcp/unpinned-package"]) == 1
+
+    def test_scoped_pinned_silent(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "fs": {
+                    "command": "npx",
+                    "args": ["-y", "@modelcontextprotocol/server-filesystem@0.6.2"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        assert [d for d in result.diagnostics if d.rule_id == "mcp/unpinned-package"] == []

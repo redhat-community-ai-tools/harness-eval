@@ -18,49 +18,97 @@ from harness_eval.inspection.types import (
 # arbitrary write, execute, or exfiltration.
 _HIGH_RISK_BARE_TOOLS = {"Bash", "Edit", "Write", "WebFetch"}
 
-# Matches Bash(<prefix>*) or Bash(<prefix>:*) with a very short prefix,
-# meaning the scope is too broad to be meaningful.
-_BROAD_BASH_RE = re.compile(r"^Bash\((.{0,3})\*\)$|^Bash\((.{0,3}):\*\)$")
+# Commands whose wildcard grant is equivalent to Bash(*): each one can run
+# arbitrary code through an interpreter, an -exec/-e flag, or a shell escape.
+# The reason string is what the finding reports, so it must be true of the
+# command as commonly installed rather than of an exotic build.
+_ARBITRARY_EXEC_COMMANDS: dict[str, str] = {
+    "sh": "is a shell",
+    "bash": "is a shell",
+    "zsh": "is a shell",
+    "dash": "is a shell",
+    "fish": "is a shell",
+    "env": "runs any command passed as its argument",
+    "eval": "evaluates arbitrary shell text",
+    "exec": "replaces the shell with any command",
+    "xargs": "runs any command over its input",
+    "nohup": "runs any command detached",
+    "timeout": "runs any command",
+    "watch": "runs any command repeatedly",
+    "sudo": "runs any command with elevated privileges",
+    "doas": "runs any command with elevated privileges",
+    "python": "runs arbitrary code with -c or a script",
+    "python3": "runs arbitrary code with -c or a script",
+    "perl": "runs arbitrary code with -e",
+    "ruby": "runs arbitrary code with -e",
+    "node": "runs arbitrary code with -e",
+    "bun": "runs arbitrary code",
+    "deno": "runs arbitrary code",
+    "php": "runs arbitrary code with -r",
+    "lua": "runs arbitrary code with -e",
+    "awk": "runs arbitrary commands via system()",
+    "gawk": "runs arbitrary commands via system()",
+    "mawk": "runs arbitrary commands via system()",
+    "nawk": "runs arbitrary commands via system()",
+    "sed": "runs arbitrary commands via the GNU e flag",
+    "find": "runs arbitrary commands via -exec",
+    "vim": "runs arbitrary commands via :!",
+    "vi": "runs arbitrary commands via :!",
+    "nvim": "runs arbitrary commands via :!",
+    "less": "runs arbitrary commands via !",
+    "man": "runs arbitrary commands via the pager",
+    "npx": "downloads and runs arbitrary packages",
+    "bunx": "downloads and runs arbitrary packages",
+    "uvx": "downloads and runs arbitrary packages",
+    "pipx": "downloads and runs arbitrary packages",
+    "docker": "runs arbitrary containers with host access",
+    "podman": "runs arbitrary containers with host access",
+    "make": "runs arbitrary recipes",
+    "ssh": "runs arbitrary commands on a remote host",
+    "curl": "fetches arbitrary URLs and can exfiltrate data",
+    "wget": "fetches arbitrary URLs and can exfiltrate data",
+}
 
-
-def _find_settings_files(search_paths: list[str]) -> list[Path]:
-    """Find .claude/settings.json and .claude/settings.local.json by walking up."""
-    seen_roots: set[Path] = set()
-    settings_files: list[Path] = []
-
-    for dir_path in search_paths:
-        current = Path(dir_path).resolve()
-        while current != current.parent:
-            claude_dir = current / ".claude"
-            if claude_dir.is_dir() and current not in seen_roots:
-                seen_roots.add(current)
-                for name in ("settings.json", "settings.local.json"):
-                    candidate = claude_dir / name
-                    if candidate.is_file():
-                        settings_files.append(candidate)
-            current = current.parent
-
-    return settings_files
+# Bash(<pattern>) where <pattern> is "<cmd>:*" or "<cmd> *" or "<cmd>*".
+# Captures the leading command token, with or without a path prefix.
+_BASH_GRANT_RE = re.compile(
+    r"^Bash\(\s*(?:[\w./-]*/)?([\w.+-]+)"  # command token, path prefix stripped
+    r"(?:\s+(-c|-e|-r|--eval|-exec|run))?"  # optional first argument
+    r"(?::\s*\*|\s+\*|\*)\s*\)$"  # wildcard tail
+)
 
 
 def _classify_entry(entry: str) -> tuple[str, Severity] | None:
-    """Classify a single permissions.allow entry. Returns (reason, severity) or None."""
-    # Bash(*) — unrestricted shell
-    if entry == "Bash(*)":
+    """Classify a single permissions.allow entry. Returns (reason, severity) or None.
+
+    Three classes are reported, each decidable from the entry text alone:
+    ``Bash(*)`` (unrestricted shell), a bare high-risk tool name, and a
+    wildcard grant on a command that can execute arbitrary code. A short
+    prefix is not by itself evidence of anything, so ``Bash(git:*)`` and
+    ``Bash(ls:*)`` are not reported.
+    """
+    # Bash(*) -- unrestricted shell
+    if entry == "Bash(*)" or entry == "Bash(:*)":
         return "grants unrestricted shell access", Severity.ERROR
 
     # Bare high-risk tool name (no parens = all invocations)
     if entry in _HIGH_RISK_BARE_TOOLS and "(" not in entry:
         return f"bare '{entry}' covers all invocations without scoping", Severity.WARNING
 
-    # Broad Bash wildcard with a very short prefix
-    m = _BROAD_BASH_RE.match(entry)
+    m = _BASH_GRANT_RE.match(entry)
     if m:
-        prefix = m.group(1) or m.group(2)
-        return (
-            f"Bash wildcard with {len(prefix)}-char prefix '{prefix}' is too broad",
-            Severity.WARNING,
-        )
+        cmd = m.group(1).lower()
+        first_arg = m.group(2)
+        reason = _ARBITRARY_EXEC_COMMANDS.get(cmd)
+        # "python -c:*" or "docker run:*" is still an arbitrary-code grant;
+        # a narrower first argument such as "python -m pytest:*" is not matched.
+        if reason is not None and first_arg is not None:
+            reason = f"{reason} and the grant covers that form"
+        if reason is not None:
+            return (
+                f"wildcard grant on '{cmd}' is arbitrary command execution ({cmd} {reason})",
+                Severity.ERROR,
+            )
 
     return None
 
@@ -68,9 +116,14 @@ def _classify_entry(entry: str) -> tuple[str, Severity] | None:
 class OverpermissiveGrants:
     meta = RuleMeta(
         id="cross/overpermissive-grants",
+        tier="gating",
+        scope="FILE",
         default_severity=Severity.WARNING,
         fixable=False,
-        description=("Flag permissions.allow entries that grant broad or unrestricted tool access"),
+        description=(
+            "Flag permissions.allow entries that grant unrestricted shell access, bare"
+            " high-risk tools, or wildcard grants on commands that execute arbitrary code"
+        ),
         category=RuleCategory.CROSS_COMPONENT,
         messages={
             "overpermissive": (
@@ -78,26 +131,32 @@ class OverpermissiveGrants:
                 " Scope tool grants to specific commands or paths."
             ),
         },
-        target_type=ComponentType.SKILL,
+        target_type=ComponentType.HOOKS,
         default_suggestion="Scope the permission grant to specific commands or paths.",
     )
 
     def create(self, context: RuleContext) -> None:
-        if context.scan_state.get("overpermissive_grants_checked"):
-            return
-        context.scan_state["overpermissive_grants_checked"] = True
-
-        skills = context.all_skills if context.all_skills else [context.skill]
-        skill_paths = [s.dir_path for s in skills]
-
-        settings_files = _find_settings_files(skill_paths)
-        if not settings_files:
+        hooks_data = context.hooks
+        if hooks_data is None:
             return
 
-        for settings_path in settings_files:
+        settings_path = Path(hooks_data.file_path)
+        candidates = [settings_path]
+        local = settings_path.with_name("settings.local.json")
+        if local.is_file():
+            candidates.append(local)
+
+        for candidate in candidates:
+            key = f"overpermissive_grants_checked:{candidate.resolve()}"
+            if context.scan_state.get(key):
+                continue
+            context.scan_state[key] = True
+
             try:
-                data = json.loads(settings_path.read_text())
-            except (json.JSONDecodeError, OSError):
+                data = json.loads(candidate.read_text())
+            except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+                continue
+            if not isinstance(data, dict):
                 continue
 
             permissions = data.get("permissions", {})
@@ -113,16 +172,15 @@ class OverpermissiveGrants:
                     continue
                 result = _classify_entry(entry)
                 if result is not None:
-                    reason, severity = result
+                    reason, _severity = result
                     context.report(
                         ReportDescriptor(
                             message_id="overpermissive",
                             data={
                                 "entry": entry,
-                                "file": settings_path.name,
+                                "file": candidate.name,
                                 "reason": reason,
                             },
-                            location=Location(file=str(settings_path)),
-                            severity_override=severity,
+                            location=Location(file=str(candidate)),
                         )
                     )

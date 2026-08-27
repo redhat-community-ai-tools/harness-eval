@@ -14,10 +14,10 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
+# Loopback hosts (localhost, 127.0.0.1, 0.0.0.0) are intentionally omitted:
+# mcp/endpoint-integrity owns transport security for those. This rule only flags
+# private-network ranges, which signal a test config left in production.
 _SUSPICIOUS_PATTERNS = [
-    re.compile(r"(?:https?://)?localhost(?::\d+)?(?:/|$)", re.IGNORECASE),
-    re.compile(r"(?:https?://)?127\.0\.0\.1(?::\d+)?(?:/|$)"),
-    re.compile(r"(?:https?://)?0\.0\.0\.0(?::\d+)?(?:/|$)"),
     re.compile(r"(?:https?://)?10\.\d{1,3}\.\d{1,3}\.\d{1,3}(?::\d+)?(?:/|$)"),
     re.compile(r"(?:https?://)?172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}(?::\d+)?(?:/|$)"),
     re.compile(r"(?:https?://)?192\.168\.\d{1,3}\.\d{1,3}(?::\d+)?(?:/|$)"),
@@ -29,10 +29,10 @@ class McpSuspiciousEndpoint:
         id="mcp/suspicious-endpoint",
         default_severity=Severity.INFO,
         fixable=False,
-        description="Flag MCP servers pointing to localhost or private IP ranges",
+        description="Flag MCP servers pointing to private IP ranges",
         category=RuleCategory.SECURITY,
         messages={
-            "suspicious_url": "Server '{{name}}' points to local/private address '{{url}}'. This may be a test config left in production.",
+            "suspicious_url": "Server '{{name}}' points to private-network address '{{url}}'. This may be a test config left in production.",
         },
         target_type=ComponentType.MCP_CONFIG,
         default_suggestion="Replace the local address with the production endpoint.",

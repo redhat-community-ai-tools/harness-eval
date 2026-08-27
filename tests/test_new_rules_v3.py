@@ -10,55 +10,17 @@ from harness_eval.inspection.engine import lint, lint_hooks, lint_mcp_config
 # ── MCP rules ──────────────────────────────────────────────────────────
 
 
-class TestMcpDuplicateServer:
-    def test_no_duplicates_clean(self, tmp_path: Path) -> None:
-        mcp = tmp_path / ".mcp.json"
-        mcp.write_text(
-            json.dumps(
-                {
-                    "mcpServers": {
-                        "a": {"url": "https://a.example.com"},
-                        "b": {"url": "https://b.example.com"},
-                    }
-                }
-            )
-        )
-        result = lint_mcp_config(str(mcp), {"mcp/duplicate-server": "warning"})
-        diags = [d for d in result.diagnostics if d.rule_id == "mcp/duplicate-server"]
-        assert len(diags) == 0
+class TestDeprecatedRules:
+    def test_removed_rule_warns_not_errors(self, tmp_path: Path, caplog) -> None:
+        # A config referencing the removed mcp/duplicate-server must not raise,
+        # and should log a deprecation warning pointing at its replacement.
+        from harness_eval.inspection.engine import _warn_unknown_config_rules, _warned_config_rules
 
-    def test_duplicate_url_flagged(self, tmp_path: Path) -> None:
-        mcp = tmp_path / ".mcp.json"
-        mcp.write_text(
-            json.dumps(
-                {
-                    "mcpServers": {
-                        "server-a": {"url": "https://shared.example.com/mcp"},
-                        "server-b": {"url": "https://shared.example.com/mcp"},
-                    }
-                }
-            )
-        )
-        result = lint_mcp_config(str(mcp), {"mcp/duplicate-server": "warning"})
-        diags = [d for d in result.diagnostics if d.rule_id == "mcp/duplicate-server"]
-        assert len(diags) == 1
-        assert "https://shared.example.com/mcp" in diags[0].message
-
-    def test_command_servers_no_url_clean(self, tmp_path: Path) -> None:
-        mcp = tmp_path / ".mcp.json"
-        mcp.write_text(
-            json.dumps(
-                {
-                    "mcpServers": {
-                        "a": {"command": "node", "args": ["a.js"]},
-                        "b": {"command": "node", "args": ["b.js"]},
-                    }
-                }
-            )
-        )
-        result = lint_mcp_config(str(mcp), {"mcp/duplicate-server": "warning"})
-        diags = [d for d in result.diagnostics if d.rule_id == "mcp/duplicate-server"]
-        assert len(diags) == 0
+        _warned_config_rules.discard("mcp/duplicate-server")
+        with caplog.at_level("WARNING"):
+            _warn_unknown_config_rules({"mcp/duplicate-server": "warning"})
+        assert "mcp/duplicate-server" in caplog.text
+        assert "mcp/json-duplicate-keys" in caplog.text
 
 
 class TestMcpSuspiciousEndpoint:
@@ -69,20 +31,20 @@ class TestMcpSuspiciousEndpoint:
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/suspicious-endpoint"]
         assert len(diags) == 0
 
-    def test_localhost_flagged(self, tmp_path: Path) -> None:
+    def test_localhost_not_flagged(self, tmp_path: Path) -> None:
+        # Loopback hosts are owned by mcp/endpoint-integrity, not this rule.
         mcp = tmp_path / ".mcp.json"
         mcp.write_text(json.dumps({"mcpServers": {"local": {"url": "http://localhost:3000/mcp"}}}))
         result = lint_mcp_config(str(mcp), {"mcp/suspicious-endpoint": "warning"})
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/suspicious-endpoint"]
-        assert len(diags) == 1
-        assert "localhost" in diags[0].message
+        assert len(diags) == 0
 
-    def test_127_flagged(self, tmp_path: Path) -> None:
+    def test_127_not_flagged(self, tmp_path: Path) -> None:
         mcp = tmp_path / ".mcp.json"
         mcp.write_text(json.dumps({"mcpServers": {"loopback": {"url": "http://127.0.0.1:8080"}}}))
         result = lint_mcp_config(str(mcp), {"mcp/suspicious-endpoint": "warning"})
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/suspicious-endpoint"]
-        assert len(diags) == 1
+        assert len(diags) == 0
 
     def test_private_10_flagged(self, tmp_path: Path) -> None:
         mcp = tmp_path / ".mcp.json"

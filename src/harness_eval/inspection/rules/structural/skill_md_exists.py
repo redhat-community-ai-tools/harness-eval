@@ -13,6 +13,7 @@ from harness_eval.inspection.types import (
 class SkillMdExists:
     meta: RuleMeta = RuleMeta(
         id="structural/skill-md-exists",
+        scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,
         description="SKILL.md file must exist in the skill directory",

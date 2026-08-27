@@ -16,7 +16,11 @@ from harness_eval.inspection.parsers import (
     parse_hooks,
     parse_skill,
 )
-from harness_eval.inspection.registry import get_all_rules, suggest_rule_id
+from harness_eval.inspection.registry import (
+    DEPRECATED_RULES,
+    get_all_rules,
+    suggest_rule_id,
+)
 from harness_eval.inspection.suppression import is_suppressed, parse_suppressions
 from harness_eval.inspection.types import (
     Finding,
@@ -602,6 +606,13 @@ def _warn_unknown_config_rules(config_rules: dict[str, str | list[Any]]) -> None
         if rule_id in all_rule_ids or rule_id in _warned_config_rules:
             continue
         _warned_config_rules.add(rule_id)
+        if rule_id in DEPRECATED_RULES:
+            logger.warning(
+                "Config references removed rule '%s'; it is now covered by '%s'.",
+                rule_id,
+                DEPRECATED_RULES[rule_id],
+            )
+            continue
         suggestions = suggest_rule_id(rule_id)
         if suggestions:
             logger.warning(
