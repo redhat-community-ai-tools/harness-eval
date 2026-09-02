@@ -17,11 +17,13 @@ Run:
 
 ```bash
 harness-eval harness-lint .                         # deterministic lint (108 rules)
+harness-eval harness-lint . --rules-from-target     # also load YAML from <path>/.harness-eval/rules
 harness-eval harness-lint . --watch                 # re-run automatically on file changes
 harness-eval harness-lint . --fail-on-error         # exit code 1 on errors (CI gate)
 harness-eval harness-lint . --fail-on-warning       # exit code 1 on any finding (strict)
 harness-eval harness-lint . --format sarif          # SARIF output for GitHub code scanning
 harness-eval harness-lint . --format json           # JSON output for scripts
+harness-eval harness-gate .                         # gating-tier rules only; exits 1 on any finding, no LLM
 harness-eval harness-review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
 harness-eval harness-security .                     # deterministic security scan
 harness-eval harness-security . --review            # security scan + LLM semantic review (requires [llm] extra)
@@ -117,7 +119,7 @@ GitHub Action:
           recursive: "true"
 ```
 
-Directories like `.git/`, `__pycache__/`, `node_modules/`, `.venv/`, `vendor/`, and `.tox/` are automatically excluded from the recursive search.
+Directories like `.git/`, `__pycache__/`, `node_modules/`, `.venv/`, `vendor/`, `.tox/`, `worktrees/`, and `tests/fixtures/` (relative to the scan root) are automatically excluded from the recursive search.
 
 Note: `--recursive` follows symlinks within the project directory but skips symlinks that point outside the project boundary.
 
@@ -173,8 +175,9 @@ Install the plugin from within Claude Code:
 
 Requires `uv` (a single standalone binary, see [astral.sh/uv](https://docs.astral.sh/uv/)). The skills use `uvx` to fetch the CLI on demand; if `uv` isn't available, `pip install harness-eval` instead.
 
-The 5 commands appear in the `/` menu:
+The 6 commands appear in the `/` menu:
 - `/harness-eval:harness-lint`
+- `/harness-eval:harness-gate`
 - `/harness-eval:harness-review`
 - `/harness-eval:harness-security`
 - `/harness-eval:skill-review`
@@ -182,12 +185,13 @@ The 5 commands appear in the `/` menu:
 
 No API key needed for harness-lint/harness-security/skill-verify. Claude evaluates in-session for harness-review and skill-review.
 
-To update: re-run the install command. `uvx` always picks up the latest version from PyPI unless you pin it (e.g., `uvx --from harness-eval==7.8.0`).
+To update: re-run the install command. `uvx` always picks up the latest version from PyPI unless you pin it (e.g., `uvx --from harness-eval==7.13.0`).
 
 ## Cursor commands
 
-Copy `.cursor/commands/` from [this repo](https://github.com/redhat-community-ai-tools/harness-eval) into your project. The 5 commands appear in Cursor's command palette:
+Copy `.cursor/commands/` from [this repo](https://github.com/redhat-community-ai-tools/harness-eval) into your project. The 6 commands appear in Cursor's command palette:
 - `/harness-lint`
+- `/harness-gate`
 - `/harness-review`
 - `/harness-security`
 - `/skill-review`
@@ -206,8 +210,9 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/redhat-community-ai-tools/harness-eval
-    rev: v7.9.2  # pin to a release tag
+    rev: v7.13.0  # pin to a release tag
     hooks:
+      - id: harness-gate
       - id: harness-lint
       - id: harness-security  # optional: security scan
 ```

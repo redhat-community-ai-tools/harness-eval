@@ -61,7 +61,8 @@ See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tie
 
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
-| `harness-lint` | 108 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
+| `harness-lint` | 108 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. YAML from the scan target loads only with `--rules-from-target`. | No |
+| `harness-gate` | Validated gating-tier rules only. Exits 1 on any finding. Never loads LLM extras or target YAML. | No |
 | `harness-security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
 | `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
 | `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
@@ -87,7 +88,7 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 
 | Assistant | What it discovers |
 |-----------|------------------|
-| Claude Code | `CLAUDE.md`, `skills/`, `commands/`, `.claude/agents/`, `.claude/settings.json`, `.mcp.json` |
+| Claude Code | `CLAUDE.md`, `skills/`, `commands/`, `.claude/agents/`, `agents/*.md`, `.claude/settings.json`, `.mcp.json` |
 | Cursor | `.cursor/rules/*.mdc`, `.cursorrules`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
 | Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` (linted as instruction files) |
 | Cline | `.clinerules` (file or directory of `*.md`) (linted as instruction files) |

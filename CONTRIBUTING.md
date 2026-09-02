@@ -26,10 +26,11 @@ Pre-push hooks run the full test suite and two dogfood gates:
 
 ```bash
 uv run harness-eval harness-security . --fail-on-warning   # any security finding blocks
-uv run harness-eval harness-lint . --fail-on-error          # only structural errors block
+uv run harness-eval harness-gate .                          # gating-tier integrity rules only
+uv run harness-eval harness-lint . --fail-on-error          # lint: errors block, advisory findings do not
 ```
 
-The security gate is strict: even a warning about credential access patterns blocks the push. The lint gate is lenient: quality/style warnings are advisory, only real errors (broken references, missing descriptions) block.
+The security gate is strict: even a warning about credential access patterns blocks the push. Use `harness-gate` for the CI integrity gate. `harness-lint --fail-on-error` is lenient on advisory findings.
 
 ## Versioned data files
 
@@ -124,9 +125,13 @@ Update the rule count in all files that reference it:
 - `src/harness_eval/cli.py` (the `harness_eval_lint` docstring)
 - `skills/lint/SKILL.md` (the description field)
 - `skills/review/report-format.md` (the lint description)
-- `commands/lint.md` (the description field)
-- `.cursor/commands/lint.md` (the description)
+- `commands/harness-lint.md` (the description field)
+- `.cursor/commands/harness-lint.md` (the description)
 - `.claude-plugin/marketplace.json` (the plugin description)
+
+## Custom YAML rules
+
+Drop `.yaml` files in `.harness-eval/rules/` of a project. `harness-lint` loads them only with `--rules-from-target`. `harness-gate` and `harness-security` never load target YAML (regexes from an audited tree run in-process). Loaded rules are unregistered when the scan returns. Nested-quantifier and overlong regexes are skipped. For AST or cross-component checks, write a Python rule instead.
 
 ### 5. Add tests
 

