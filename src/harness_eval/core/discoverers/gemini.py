@@ -56,8 +56,9 @@ class GeminiDiscoverer(ToolDiscoverer):
                 if f.is_file() and (f.suffix == ".toml" or f.suffix == ".md"):
                     paths.append(f)
         if recursive:
-            for f in _recursive_glob(root, ".gemini/commands/*.md"):
-                paths.append(f)
+            for pattern in (".gemini/commands/*.md", ".gemini/commands/*.toml"):
+                for f in _recursive_glob(root, pattern):
+                    paths.append(f)
 
         settings = root / ".gemini" / "settings.json"
         if settings.is_file():
@@ -98,13 +99,14 @@ class GeminiDiscoverer(ToolDiscoverer):
                         parse_file(f, ComponentType.COMMAND, name=f.stem, source_tool="gemini")
                     )
         if recursive:
-            for f in _recursive_glob(root, ".gemini/commands/*.md"):
-                resolved = str(f.resolve())
-                if resolved not in seen_paths:
-                    seen_paths.add(resolved)
-                    results.append(
-                        parse_file(f, ComponentType.COMMAND, name=f.stem, source_tool="gemini")
-                    )
+            for pattern in (".gemini/commands/*.md", ".gemini/commands/*.toml"):
+                for f in _recursive_glob(root, pattern):
+                    resolved = str(f.resolve())
+                    if resolved not in seen_paths:
+                        seen_paths.add(resolved)
+                        results.append(
+                            parse_file(f, ComponentType.COMMAND, name=f.stem, source_tool="gemini")
+                        )
         return results
 
     def _discover_mcp(

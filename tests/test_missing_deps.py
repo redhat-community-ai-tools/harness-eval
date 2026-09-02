@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 from click.testing import CliRunner
 
 from harness_eval.cli import cli
@@ -33,11 +32,10 @@ class TestMissingLLMDeps:
         assert "LLM dependencies not installed" in result.output
         assert "Traceback" not in result.output
 
-    @pytest.mark.xfail(reason="prompts.py / prompts/ naming conflict blocks import")
     def test_security_review_gives_clean_error(self) -> None:
         runner = CliRunner()
         with patch("harness_eval.utils.llm.create_client", side_effect=_make_failing_client):
-            result = runner.invoke(cli, ["security", str(FIXTURES), "--review"])
+            result = runner.invoke(cli, ["harness-security", str(FIXTURES), "--review"])
         assert result.exit_code != 0
         assert "LLM dependencies not installed" in result.output
         assert "Traceback" not in result.output

@@ -21,7 +21,6 @@ class FormatValid:
         messages={
             "no_frontmatter": "No YAML frontmatter found — skill files should start with '---'",
             "missing_name": "Field 'name' is missing from frontmatter",
-            "name_mismatch": "Frontmatter 'name' ({{fm_name}}) does not match directory name ({{dir_name}})",
         },
         default_suggestion="Fix the YAML frontmatter syntax errors.",
     )
@@ -46,11 +45,3 @@ class FormatValid:
         name = skill.frontmatter.get("name")
         if name is None:
             context.report(ReportDescriptor(message_id="missing_name", location=loc))
-        elif isinstance(name, str) and name != skill.dir_name:
-            context.report(
-                ReportDescriptor(
-                    message_id="name_mismatch",
-                    data={"fm_name": name, "dir_name": skill.dir_name},
-                    location=loc,
-                )
-            )

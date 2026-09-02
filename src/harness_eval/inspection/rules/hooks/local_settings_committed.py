@@ -41,7 +41,7 @@ def _allow_count(path: Path) -> int | None:
 class HooksLocalSettingsCommitted:
     meta = RuleMeta(
         id="hooks/local-settings-committed",
-        tier="provisional",
+        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.WARNING,
         fixable=False,

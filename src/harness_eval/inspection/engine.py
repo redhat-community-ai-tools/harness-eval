@@ -641,6 +641,10 @@ def inspect_setup(
     if config_rules:
         _warn_unknown_config_rules(config_rules)
 
+    from harness_eval.inspection.yaml_rules import load_yaml_rules
+
+    load_yaml_rules([Path(setup.path) / ".harness-eval" / "rules"])
+
     scan_state: dict[str, Any] = {"project_root": setup.path}
     results: list[InspectionResult] = []
 

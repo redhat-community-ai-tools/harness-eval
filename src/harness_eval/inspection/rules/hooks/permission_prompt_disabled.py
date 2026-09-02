@@ -30,7 +30,7 @@ _SEVERE_MODES = {"bypassPermissions", "dontAsk"}
 class HooksPermissionPromptDisabled:
     meta = RuleMeta(
         id="hooks/permission-prompt-disabled",
-        tier="provisional",
+        tier="gating",
         default_severity=Severity.ERROR,
         fixable=False,
         description=(

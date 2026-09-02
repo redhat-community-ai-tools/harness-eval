@@ -17,6 +17,7 @@ from harness_eval.inspection.types import (
 class McpValidConfig:
     meta = RuleMeta(
         id="mcp/valid-config",
+        tier="gating",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Validate MCP configuration file structure",
@@ -24,7 +25,7 @@ class McpValidConfig:
         messages={
             "invalid_json": "MCP config is not valid JSON: {{error}}",
             "not_object": "MCP config root must be a JSON object",
-            "missing_servers": "MCP config has no 'mcpServers' or 'mcp' key",
+            "missing_servers": "MCP config has no 'mcpServers', 'servers', or 'mcp' key",
             "servers_not_object": "MCP servers must be a JSON object, got {{actual_type}}",
             "server_no_transport": "Server '{{name}}' has no 'command' (stdio) or 'url' (HTTP/SSE)",
             "args_not_array": "Server '{{name}}': 'args' must be an array, got {{actual_type}}",

@@ -88,6 +88,15 @@ class TestClineSingleFileForm:
         assert all(c.source_tool == "cline" for c in claude_md)
 
 
+class TestInstructionFileLint:
+    def test_broken_import_flagged_in_clinerules(self, tmp_path: Path) -> None:
+        (tmp_path / ".clinerules").write_text("@./missing-guide.md\n", encoding="utf-8")
+        setup = discover_setup(name="cline", path=str(tmp_path))
+        results = inspect_setup(setup, {"claude-md/include-exists": "error"})
+        ids = [d.rule_id for r in results for d in r.diagnostics]
+        assert "claude-md/include-exists" in ids
+
+
 class TestDeduplication:
     def test_no_duplicate_components(self) -> None:
         for fixture in ("sample-windsurf-setup", "sample-cline-setup"):

@@ -293,6 +293,8 @@ def _inspect_single_file(target, config_rules):
         return [lint_hooks(str(target), config_rules)]
     elif target.suffix == ".mdc" or name == ".cursorrules":
         return [lint_claude_md(str(target), config_rules)]
+    elif target.suffix == ".toml":
+        return [lint_command(str(target), config_rules)]
     elif target.suffix == ".md":
         return [lint_agent(str(target), config_rules)]
     click.echo(
@@ -302,3 +304,6 @@ def _inspect_single_file(target, config_rules):
         err=True,
     )
     return []
+
+
+cli.add_command(eval_setup_lint, "lint")

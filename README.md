@@ -89,10 +89,10 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 |-----------|------------------|
 | Claude Code | `CLAUDE.md`, `skills/`, `commands/`, `.claude/agents/`, `.claude/settings.json`, `.mcp.json` |
 | Cursor | `.cursor/rules/*.mdc`, `.cursorrules`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
-| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` (discovery only) |
-| Cline | `.clinerules` (file or directory of `*.md`) (discovery only) |
-| Copilot | `.github/copilot-instructions.md`, `.github/skills/`, `.github/prompts/`, `.github/agents/` |
-| Gemini CLI | `GEMINI.md`, `.gemini/commands/` (`.md` linted; `.toml` discovered but not yet linted), `.gemini/settings.json` (MCP) |
+| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` (linted as instruction files) |
+| Cline | `.clinerules` (file or directory of `*.md`) (linted as instruction files) |
+| Copilot | `.github/copilot-instructions.md`, `.github/skills/`, `.github/prompts/`, `.github/agents/`, `.vscode/mcp.json` |
+| Gemini CLI | `GEMINI.md`, `.gemini/commands/` (`.md` and `.toml` linted), `.gemini/settings.json` (MCP) |
 | OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `opencode.json` (MCP) |
 | Codex CLI | `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, `codex.json` |
 | Third-party modules | `.lola/modules/` (skills, commands, agents installed via package managers) |
@@ -101,16 +101,16 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 
 107 deterministic rules across 12 categories: structural, frontmatter, content, quality, security, cross-component, commands, CLAUDE.md, MCP, hooks, agents, and submission. Six presets: `recommended` (default), `strict`, `security`, `pre-workflow`, `skill-submission`, and `gate`.
 
-**Rule tiers.** Each rule carries an evidence tier. **Gating** rules are structural checks validated at >=97% precision on the corpus and are safe to block a build on; `harness-gate` runs exactly these. **Provisional** rules have no observed false positives but too few findings to promote yet. **Advisory** rules (including every heuristic, prose-judgment rule) are reported but never gate. Rules are also tagged by analysis scope (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`) — the last two are findings a per-file linter structurally cannot see. See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
+**Rule tiers.** Each rule carries an evidence tier. **Gating** rules are structural checks that are safe to block a build on; `harness-gate` runs exactly these (corpus-validated rules plus decidable FILE/FILE_FS integrity checks). **Provisional** rules have no observed false positives but too few findings to promote yet. **Advisory** rules (including every heuristic, prose-judgment rule) are reported but never gate. Rules are also tagged by analysis scope (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`) — the last two are findings a per-file linter structurally cannot see. See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
 
 Rules by tier:
 
 <!-- BEGIN GENERATED: tier-counts -->
 | Tier | Rules |
 |------|-------|
-| gating | 6 |
-| provisional | 4 |
-| advisory | 97 |
+| gating | 19 |
+| provisional | 0 |
+| advisory | 88 |
 <!-- END GENERATED: tier-counts -->
 
 Rules by scope:
@@ -118,8 +118,8 @@ Rules by scope:
 <!-- BEGIN GENERATED: scope-counts -->
 | Scope | Rules |
 |-------|-------|
-| FILE | 83 |
-| FILE_FS | 8 |
+| FILE | 81 |
+| FILE_FS | 10 |
 | PAIRWISE | 9 |
 | SETUP | 7 |
 <!-- END GENERATED: scope-counts -->

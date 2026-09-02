@@ -65,7 +65,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `agent/unbounded-delegation` | advisory | FILE |
 | `claude-md/exists` | advisory | FILE |
 | `claude-md/generic-advice` | advisory | FILE |
-| `claude-md/include-exists` | advisory | FILE_FS |
+| `claude-md/include-exists` | gating | FILE_FS |
 | `claude-md/skill-duplication` | advisory | PAIRWISE |
 | `command/allowed-tools-coverage` | advisory | FILE |
 | `command/data-exfiltration` | advisory | FILE |
@@ -76,7 +76,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `command/obfuscation` | advisory | FILE |
 | `command/references-nonexistent-skill` | advisory | PAIRWISE |
 | `command/reverse-shell` | advisory | FILE |
-| `command/script-exists` | advisory | FILE |
+| `command/script-exists` | gating | FILE_FS |
 | `command/shadows-builtin` | advisory | FILE |
 | `command/skill-overlap` | advisory | PAIRWISE |
 | `content/allowed-tools-auto-approve` | advisory | FILE |
@@ -100,31 +100,31 @@ and verified against the registry in CI. Do not edit it by hand.
 | `frontmatter/format-valid` | gating | FILE |
 | `hooks/api-key-helper` | advisory | FILE |
 | `hooks/base-url-override` | advisory | FILE |
-| `hooks/command-script-exists` | provisional | FILE_FS |
+| `hooks/command-script-exists` | gating | FILE_FS |
 | `hooks/dangerous-command` | advisory | FILE |
 | `hooks/env-credential-override` | advisory | FILE |
 | `hooks/env-leakage` | advisory | FILE |
-| `hooks/json-duplicate-keys` | advisory | FILE |
-| `hooks/local-settings-committed` | provisional | FILE_FS |
+| `hooks/json-duplicate-keys` | gating | FILE |
+| `hooks/local-settings-committed` | gating | FILE_FS |
 | `hooks/matcher-matches-no-tool` | advisory | FILE |
 | `hooks/network-access` | advisory | FILE |
 | `hooks/no-audit-trail` | advisory | FILE |
 | `hooks/no-commit-guard` | advisory | FILE |
-| `hooks/permission-contradiction` | advisory | FILE |
-| `hooks/permission-prompt-disabled` | provisional | FILE |
+| `hooks/permission-contradiction` | gating | FILE |
+| `hooks/permission-prompt-disabled` | gating | FILE |
 | `hooks/pre-trust-permissions` | advisory | FILE |
 | `hooks/script-boundary` | advisory | FILE |
 | `hooks/silent-failure-masking` | advisory | FILE |
 | `hooks/valid-structure` | advisory | FILE |
 | `mcp/auto-approve-risk` | advisory | FILE |
 | `mcp/cross-assistant-divergence` | advisory | PAIRWISE |
-| `mcp/endpoint-integrity` | provisional | FILE |
-| `mcp/json-duplicate-keys` | advisory | FILE |
+| `mcp/endpoint-integrity` | gating | FILE_FS |
+| `mcp/json-duplicate-keys` | gating | FILE |
 | `mcp/no-plaintext-secrets` | advisory | FILE |
 | `mcp/no-wildcard-tools` | advisory | FILE |
 | `mcp/suspicious-endpoint` | advisory | FILE |
 | `mcp/unpinned-package` | gating | FILE |
-| `mcp/valid-config` | advisory | FILE |
+| `mcp/valid-config` | gating | FILE |
 | `quality/example-gap` | advisory | FILE |
 | `quality/imprecise-instruction` | advisory | FILE |
 | `quality/negative-only` | advisory | FILE |
@@ -137,7 +137,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `security/ast-behavioral` | advisory | FILE |
 | `security/bash-taint-flow` | advisory | FILE |
 | `security/coercive-override` | advisory | FILE |
-| `security/credential-file-present` | advisory | FILE_FS |
+| `security/credential-file-present` | gating | FILE_FS |
 | `security/cross-component-flow` | advisory | SETUP |
 | `security/cve-lookup` | advisory | FILE |
 | `security/dangerous-permission-grant` | advisory | FILE |
@@ -154,8 +154,8 @@ and verified against the registry in CI. Do not edit it by hand.
 | `security/taint-flow` | advisory | FILE |
 | `security/unbounded-delegation` | advisory | FILE |
 | `security/yara-signatures` | advisory | FILE |
-| `structural/skill-md-exists` | advisory | FILE_FS |
-| `structural/symlink-escape` | advisory | FILE_FS |
+| `structural/skill-md-exists` | gating | FILE_FS |
+| `structural/symlink-escape` | gating | FILE_FS |
 | `submission/file-completeness` | advisory | FILE_FS |
 <!-- END GENERATED: rule-tiers -->
 

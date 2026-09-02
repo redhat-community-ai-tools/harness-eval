@@ -17,6 +17,8 @@ from harness_eval.utils.paths import safe_join
 class CommandScriptExists:
     meta = RuleMeta(
         id="command/script-exists",
+        tier="gating",
+        scope="FILE_FS",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Script files referenced in commands should exist",

@@ -594,3 +594,6 @@ def eval_setup_security(
         raise SystemExit(1)
     if fail_on_warning and (effective_errors + effective_warnings) > 0:
         raise SystemExit(1)
+
+
+cli.add_command(eval_setup_security, "security")

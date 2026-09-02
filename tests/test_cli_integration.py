@@ -74,6 +74,16 @@ class TestSecurityCommand:
         assert "security_scan" in data
         assert "risk_assessment" in data
 
+    def test_lint_alias(self) -> None:
+        result = CliRunner().invoke(cli, ["lint", CLEAN, "--format", "json"])
+        assert result.exit_code == 0
+        json.loads(result.output)
+
+    def test_security_alias(self) -> None:
+        result = CliRunner().invoke(cli, ["security", CLEAN, "--format", "json"])
+        assert result.exit_code == 0
+        json.loads(result.output)
+
 
 class TestScanCommand:
     def test_scan_clean_fixture(self) -> None:

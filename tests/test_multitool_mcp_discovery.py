@@ -126,3 +126,27 @@ class TestOpenCodeMcp:
         self._write(tmp_path, {"theme": "opencode", "model": "anthropic/claude"})
         setup = discover_setup("opencode", str(tmp_path))
         assert setup.by_type(ComponentType.MCP_CONFIG) == []
+
+
+class TestVscodeMcp:
+    def test_vscode_mcp_json_discovered(self, tmp_path: Path) -> None:
+        vs = tmp_path / ".vscode"
+        vs.mkdir()
+        (vs / "mcp.json").write_text(
+            json.dumps({"servers": {"fs": {"command": "npx", "args": ["-y", "server-fs"]}}}),
+            encoding="utf-8",
+        )
+        setup = discover_setup("copilot", str(tmp_path))
+        mcp = setup.by_type(ComponentType.MCP_CONFIG)
+        assert len(mcp) == 1
+        assert mcp[0].source_tool == "copilot"
+        assert mcp[0].name == ".vscode/mcp.json"
+        msgs = [m for rid, m in _diag_ids(setup, {"mcp/valid-config": "warning"})]
+        assert not any("no 'mcpServers'" in m for m in msgs)
+
+    def test_vscode_mcp_without_servers_not_discovered(self, tmp_path: Path) -> None:
+        vs = tmp_path / ".vscode"
+        vs.mkdir()
+        (vs / "mcp.json").write_text(json.dumps({"inputs": []}), encoding="utf-8")
+        setup = discover_setup("copilot", str(tmp_path))
+        assert setup.by_type(ComponentType.MCP_CONFIG) == []

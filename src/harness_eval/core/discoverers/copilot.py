@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from harness_eval.core.discoverers.base import ToolDiscoverer, _recursive_glob, parse_file
+from harness_eval.core.discoverers.base import (
+    ToolDiscoverer,
+    _json_top_level_keys,
+    _recursive_glob,
+    parse_file,
+)
 from harness_eval.core.types import ComponentType, ParsedComponent
 
 
@@ -25,6 +30,7 @@ class CopilotDiscoverer(ToolDiscoverer):
             or (root / ".github" / "agents").is_dir()
             or (root / ".github" / "skills").is_dir()
             or (root / ".github" / "copilot-instructions.md").is_file()
+            or (root / ".vscode" / "mcp.json").is_file()
         )
 
     def discover(
@@ -35,6 +41,7 @@ class CopilotDiscoverer(ToolDiscoverer):
         results.extend(self._discover_skills(root, recursive=recursive))
         results.extend(self._discover_commands(root, recursive=recursive))
         results.extend(self._discover_agents(root, recursive=recursive))
+        results.extend(self._discover_mcp(root))
         return results
 
     def collect_paths(
@@ -74,6 +81,10 @@ class CopilotDiscoverer(ToolDiscoverer):
         if recursive:
             for f in _recursive_glob(root, ".github/agents/*.md"):
                 paths.append(f)
+
+        vscode_mcp = root / ".vscode" / "mcp.json"
+        if vscode_mcp.is_file():
+            paths.append(vscode_mcp)
 
         return paths
 
@@ -157,3 +168,19 @@ class CopilotDiscoverer(ToolDiscoverer):
                     seen_paths.add(resolved)
                     results.append(parse_file(f, ComponentType.AGENT, source_tool="copilot"))
         return results
+
+    def _discover_mcp(self, root: Path) -> list[ParsedComponent]:
+        path = root / ".vscode" / "mcp.json"
+        if not path.is_file():
+            return []
+        keys = _json_top_level_keys(path)
+        if "mcpServers" not in keys and "servers" not in keys:
+            return []
+        return [
+            parse_file(
+                path,
+                ComponentType.MCP_CONFIG,
+                name=".vscode/mcp.json",
+                source_tool="copilot",
+            )
+        ]

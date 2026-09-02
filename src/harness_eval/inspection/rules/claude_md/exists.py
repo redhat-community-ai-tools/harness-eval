@@ -16,14 +16,13 @@ class ClaudeMdExists:
         id="claude-md/exists",
         default_severity=Severity.WARNING,
         fixable=False,
-        description="Project should have a CLAUDE.md with project-specific instructions",
+        description="Project should have an instruction file with project-specific guidance",
         category=RuleCategory.STRUCTURAL,
         messages={
             "not_found": "No instruction file found — consider creating one with project-specific instructions (build commands, test runners, code style)",
         },
         target_type=ComponentType.CLAUDE_MD,
-        tools=("claude",),
-        default_suggestion="Create a CLAUDE.md with project-specific build, test, and style instructions.",
+        default_suggestion="Create an instruction file with project-specific build, test, and style instructions.",
     )
 
     def create(self, context: RuleContext) -> None:

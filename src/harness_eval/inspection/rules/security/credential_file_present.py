@@ -41,6 +41,7 @@ _ALLOW = (".env.example", ".env.sample", ".env.template", "*.pub", ".env.md")
 class SecurityCredentialFilePresent:
     meta = RuleMeta(
         id="security/credential-file-present",
+        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

@@ -56,6 +56,21 @@ class TestGeminiDiscovery:
         commands = setup.by_type(ComponentType.COMMAND)
         assert any(c.source_tool == "gemini" for c in commands)
 
+    def test_toml_commands_are_linted(self, gemini_setup_path):
+        from harness_eval.inspection.engine import inspect_setup
+        from harness_eval.inspection.parsers import parse_command
+
+        deploy = Path(gemini_setup_path) / ".gemini" / "commands" / "deploy.toml"
+        parsed = parse_command(str(deploy))
+        assert parsed.frontmatter.get("description") == "Deploy the project"
+        assert "production" in parsed.body
+        assert parsed.parse_errors == []
+
+        setup = discover_setup("test", gemini_setup_path)
+        results = inspect_setup(setup)
+        toml_results = [r for r in results if r.target_path.endswith("deploy.toml")]
+        assert toml_results, "Gemini .toml command was discovered but not inspected"
+
 
 class TestOpenCodeDiscovery:
     def test_discovers_opencode_instructions(self, opencode_setup_path):

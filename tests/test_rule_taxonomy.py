@@ -10,12 +10,25 @@ VALID_TIERS = {"gating", "provisional", "advisory"}
 VALID_SCOPES = {"FILE", "FILE_FS", "PAIRWISE", "SETUP"}
 
 GATING_RULES = {
-    "mcp/unpinned-package",
-    "cross/overpermissive-grants",
+    "agent/description-required",
+    "claude-md/include-exists",
+    "command/script-exists",
     "content/hardcoded-machine-path",
     "cross/multi-assistant-drift",
-    "agent/description-required",
+    "cross/overpermissive-grants",
     "frontmatter/format-valid",
+    "hooks/command-script-exists",
+    "hooks/json-duplicate-keys",
+    "hooks/local-settings-committed",
+    "hooks/permission-contradiction",
+    "hooks/permission-prompt-disabled",
+    "mcp/endpoint-integrity",
+    "mcp/json-duplicate-keys",
+    "mcp/unpinned-package",
+    "mcp/valid-config",
+    "security/credential-file-present",
+    "structural/skill-md-exists",
+    "structural/symlink-escape",
 }
 
 

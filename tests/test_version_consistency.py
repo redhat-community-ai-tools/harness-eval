@@ -34,3 +34,22 @@ def test_plugin_json_version_matches_pyproject() -> None:
         f"plugin.json version ({actual}) does not match "
         f"pyproject.toml ({expected}). Run: uv run scripts/release.py"
     )
+
+
+def test_package_dunder_version_matches_pyproject() -> None:
+    from harness_eval import __version__
+
+    expected = _read_pyproject_version()
+    assert __version__ == expected, (
+        f"harness_eval.__version__ ({__version__}) does not match pyproject.toml ({expected})"
+    )
+
+
+def test_tekton_version_matches_pyproject() -> None:
+    expected = _read_pyproject_version()
+    text = (ROOT / "tekton" / "task-harness-eval.yaml").read_text()
+    match = re.search(r'app\.kubernetes\.io/version:\s*"(.+?)"', text)
+    assert match, "Could not find app.kubernetes.io/version in tekton/task-harness-eval.yaml"
+    assert match.group(1) == expected, (
+        f"Tekton version label ({match.group(1)}) does not match pyproject.toml ({expected})"
+    )

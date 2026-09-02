@@ -24,6 +24,7 @@ from harness_eval.inspection.types import (
 class StructuralSymlinkEscape:
     meta = RuleMeta(
         id="structural/symlink-escape",
+        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

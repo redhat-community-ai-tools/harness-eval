@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Gemini CLI `.toml` commands are parsed and linted with the same command rules as `.md`.
+- Discover `.vscode/mcp.json` (VS Code / Copilot MCP) and treat the `servers` key as an MCP server map.
+
+### Changed
+- `harness-gate` now includes decidable FILE/FILE_FS integrity rules: missing SKILL.md / hook scripts / command scripts / `@imports`, duplicate JSON keys, committed secret-named files, symlink escape, MCP endpoint integrity and valid-config, permission contradictions, disabled permission prompts, and committed `settings.local.json`. Heuristic and linguistic rules stay advisory.
+- `frontmatter/format-valid` no longer requires `name` to match the directory name (nested forge overlays and path-based skill ids were false positives).
+- `claude-md/exists` is not Claude-Code-only; Windsurf and Cline instruction files are linted, not discovery-only.
+- `lint` and `security` are CLI aliases for `harness-lint` and `harness-security`.
+
+### Fixed
+- `harness-security --review` crashed with `ModuleNotFoundError` because `rubric/prompts.py` shadowed the `rubric/prompts/` package.
+- `harness_eval.__version__` and the Tekton `app.kubernetes.io/version` label were behind pyproject (`7.11.0` / `7.10.0` vs `7.12.0`).
+- Pre-push hooks and CONTRIBUTING still invoked the removed `harness-eval lint` / `harness-eval security` command names.
+- Custom YAML rules loaded from `cwd/.harness-eval/rules` only, so `harness-lint /other/project` never saw that project's rules.
+
 ## [7.12.0] - 2026-08-27
 
 ### Added

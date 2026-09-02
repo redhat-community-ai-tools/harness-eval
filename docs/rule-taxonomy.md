@@ -14,7 +14,9 @@ A rule's evidence is either **structural** or **heuristic**.
   pins no version", "this referenced file does not exist on disk", "these two
   `allow` grants contradict a `deny`" are facts, not opinions. A structural rule
   can be promoted to a validated tier once the corpus study shows it is right in
-  practice.
+  practice, or placed at gating when the condition is a filesystem or parse fact
+  (missing file, duplicate JSON key, committed secret-named file, broken
+  `@import`) rather than a precision estimate.
 - **Heuristic rules** are judgments about prose: whether a description is vague,
   whether guidance is redundant, whether an instruction hedges. There is no
   ground truth in the file, only a signal, so heuristic rules are **always
@@ -22,9 +24,10 @@ A rule's evidence is either **structural** or **heuristic**.
 
 Structural rules carry one of three tiers:
 
-- **gating** — validated at **>=97% precision on >=50 re-derived findings** plus a
-  consequence review (see promotion criteria below). These are safe to block a
-  build on. `harness-gate` runs exactly this set.
+- **gating** — safe to block a build on. `harness-gate` runs exactly this set.
+  Two ways in: corpus-validated at **>=97% precision on >=50 re-derived
+  findings** plus a consequence review, or a decidable FILE/FILE_FS integrity
+  check whose finding is a fact about the tree.
 - **provisional** — zero false positives observed on the corpus, but on fewer
   than 50 findings, so precision is not yet established at the gating bar. Run
   them with `harness-gate --include-provisional` when you want an early signal.
@@ -56,8 +59,8 @@ exists.
 
 ## Promotion criteria
 
-A structural rule is promoted to **gating** only when the validation pipeline in
-the `harness-eval-experiments` repository shows both:
+A structural rule that needs corpus evidence is promoted to **gating** when the
+validation pipeline in the `harness-eval-experiments` repository shows both:
 
 1. **>=97% precision on >=50 re-derived findings** — each candidate finding is
    independently re-derived at the repository's pinned commit by a check written
@@ -68,5 +71,7 @@ the `harness-eval-experiments` repository shows both:
    trivia.
 
 Rules that clear the precision bar but on too few findings sit at **provisional**
-until enough evidence accumulates. Rules whose evidence is linguistic never leave
-**advisory**.
+until enough evidence accumulates. Decidable integrity checks (missing file,
+duplicate JSON key, committed secret, broken import) may also sit at **gating**
+without waiting on that sample size. Rules whose evidence is linguistic never
+leave **advisory**.

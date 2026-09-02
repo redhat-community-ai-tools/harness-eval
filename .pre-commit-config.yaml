@@ -28,13 +28,13 @@ repos:
         stages: [pre-push]
       - id: security-gate
         name: security gate
-        entry: uv run harness-eval security . --fail-on-warning
+        entry: uv run harness-eval harness-security . --fail-on-warning
         language: system
         pass_filenames: false
         stages: [pre-push]
       - id: lint-gate
         name: lint gate
-        entry: uv run harness-eval lint . --fail-on-error
+        entry: uv run harness-eval harness-lint . --fail-on-error
         language: system
         pass_filenames: false
         stages: [pre-push]

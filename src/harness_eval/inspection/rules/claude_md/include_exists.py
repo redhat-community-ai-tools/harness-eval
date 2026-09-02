@@ -66,6 +66,7 @@ def imports_in(text: str) -> list[str]:
 class ClaudeMdIncludeExists:
     meta = RuleMeta(
         id="claude-md/include-exists",
+        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

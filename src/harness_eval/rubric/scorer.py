@@ -6,7 +6,7 @@ import json
 import re
 
 from harness_eval.rubric.dimensions import CATEGORIES_BY_TYPE
-from harness_eval.rubric.prompts import SYSTEM_PROMPT, build_batch_prompt, build_issue_prompt
+from harness_eval.rubric.prompt_builder import SYSTEM_PROMPT, build_batch_prompt, build_issue_prompt
 from harness_eval.rubric.types import IssueCategory, RubricIssue, RubricResult
 from harness_eval.utils.llm import LLMClient
 from harness_eval.utils.redact import redact_secrets

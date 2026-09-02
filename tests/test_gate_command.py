@@ -42,5 +42,5 @@ def test_gate_json_format(tmp_path: Path) -> None:
     assert findings and all({"rule", "file", "message"} <= f.keys() for f in findings)
 
 
-def test_include_provisional_strictly_adds_rules() -> None:
-    assert set(gate_rules()) < set(gate_rules(include_provisional=True))
+def test_include_provisional_is_superset() -> None:
+    assert set(gate_rules()) <= set(gate_rules(include_provisional=True))

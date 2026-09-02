@@ -25,8 +25,8 @@ Pre-commit also runs **gitleaks** (secret scanning) and **bandit** (Python secur
 Pre-push hooks run the full test suite and two dogfood gates:
 
 ```bash
-uv run harness-eval security . --fail-on-warning   # any security finding blocks
-uv run harness-eval lint . --fail-on-error          # only structural errors block
+uv run harness-eval harness-security . --fail-on-warning   # any security finding blocks
+uv run harness-eval harness-lint . --fail-on-error          # only structural errors block
 ```
 
 The security gate is strict: even a warning about credential access patterns blocks the push. The lint gate is lenient: quality/style warnings are advisory, only real errors (broken references, missing descriptions) block.

@@ -359,12 +359,20 @@ class TestFrontmatterRules:
         rule_ids = {d.rule_id for d in result.diagnostics}
         assert "frontmatter/description-required" in rule_ids
 
-    def test_name_mismatch(self, tmp_path: Path) -> None:
+    def test_name_need_not_match_directory(self, tmp_path: Path) -> None:
         skill_dir = tmp_path / "my-skill"
         skill_dir.mkdir()
         (skill_dir / "SKILL.md").write_text(
             "---\nname: wrong-name\ndescription: Test skill\n---\n\nBody."
         )
+        result = lint(str(skill_dir))
+        rule_ids = {d.rule_id for d in result.diagnostics}
+        assert "frontmatter/format-valid" not in rule_ids
+
+    def test_missing_name(self, tmp_path: Path) -> None:
+        skill_dir = tmp_path / "my-skill"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text("---\ndescription: Test skill\n---\n\nBody.")
         result = lint(str(skill_dir))
         rule_ids = {d.rule_id for d in result.diagnostics}
         assert "frontmatter/format-valid" in rule_ids

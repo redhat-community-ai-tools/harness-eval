@@ -72,7 +72,7 @@ def _iter_commands(hooks: list[dict]) -> list[str]:
 class HooksCommandScriptExists:
     meta = RuleMeta(
         id="hooks/command-script-exists",
-        tier="provisional",
+        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

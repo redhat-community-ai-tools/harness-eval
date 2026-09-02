@@ -29,7 +29,8 @@ _LOOPBACK = {"localhost", "127.0.0.1", "::1", "0.0.0.0", "host.docker.internal"}
 class McpEndpointIntegrity:
     meta = RuleMeta(
         id="mcp/endpoint-integrity",
-        tier="provisional",
+        tier="gating",
+        scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Flag MCP servers whose local command path is missing, whose URL is plain HTTP to a remote host, or whose URL embeds credentials",

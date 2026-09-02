@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json as json_mod
 import re
+import tomllib
 from pathlib import Path
 
 from harness_eval.inspection.types import (
@@ -77,8 +78,7 @@ def _resolve_skill_path(skill_path: str) -> tuple[Path, Path | None, list[str]]:
     return path, None, [f"Path does not exist: {path}"]
 
 
-_SUPPORTED_COMMAND_EXTS = {".md"}
-_SKIPPABLE_COMMAND_EXTS = {".toml"}
+_SUPPORTED_COMMAND_EXTS = {".md", ".toml"}
 
 
 def _resolve_command_path(command_path: str) -> tuple[Path, Path | None, list[str]]:
@@ -86,8 +86,6 @@ def _resolve_command_path(command_path: str) -> tuple[Path, Path | None, list[st
     path = Path(command_path)
     if path.is_file() and path.suffix in _SUPPORTED_COMMAND_EXTS:
         return path.parent, path, []
-    if path.is_file() and path.suffix in _SKIPPABLE_COMMAND_EXTS:
-        return path.parent, None, []
     if path.is_dir():
         cmd_md = path / "command.md"
         if cmd_md.exists():
@@ -169,6 +167,9 @@ def parse_command(command_path: str) -> ParsedCommand:
             parse_errors=errors,
         )
 
+    if cmd_md.suffix == ".toml":
+        return _parse_toml_command(cmd_md, cmd_dir, resolved_name, errors)
+
     raw_content, fm, parse_errors = _read_and_parse(cmd_md)
     script_refs = _extract_script_refs_outside_code_blocks(fm.body)
 
@@ -181,6 +182,46 @@ def parse_command(command_path: str) -> ParsedCommand:
         body=fm.body,
         body_start_line=fm.body_start_line,
         script_references=script_refs,
+        files=list_files(cmd_dir),
+        parse_errors=parse_errors,
+        tokens=count_tokens(raw_content),
+    )
+
+
+def _parse_toml_command(
+    path: Path, cmd_dir: Path, resolved_name: str, errors: list[str]
+) -> ParsedCommand:
+    """Parse a Gemini/Codex-style TOML command (description + prompt/template)."""
+    raw_content = path.read_text(encoding="utf-8", errors="replace")
+    parse_errors = list(errors)
+    fields: dict = {}
+    try:
+        data = tomllib.loads(raw_content)
+    except tomllib.TOMLDecodeError as e:
+        parse_errors.append(str(e))
+        data = {}
+    if isinstance(data, dict):
+        fields = dict(data)
+        nested = data.get("command")
+        if isinstance(nested, dict):
+            fields.update(nested)
+    desc = fields.get("description")
+    frontmatter = {"description": desc} if isinstance(desc, str) else {}
+    body = ""
+    for key in ("prompt", "template"):
+        val = fields.get(key)
+        if isinstance(val, str) and val.strip():
+            body = val
+            break
+    return ParsedCommand(
+        dir_path=str(cmd_dir),
+        dir_name=resolved_name,
+        command_md_path=str(path),
+        raw_content=raw_content,
+        frontmatter=frontmatter,
+        body=body,
+        body_start_line=0,
+        script_references=_extract_script_refs_outside_code_blocks(body),
         files=list_files(cmd_dir),
         parse_errors=parse_errors,
         tokens=count_tokens(raw_content),

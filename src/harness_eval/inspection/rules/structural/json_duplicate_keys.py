@@ -33,6 +33,7 @@ def _check(context: RuleContext, raw: str | None, path: str) -> None:
 class StructuralJsonDuplicateKeysMcp:
     meta = RuleMeta(
         id="mcp/json-duplicate-keys",
+        tier="gating",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Flag duplicate object keys in an MCP configuration; the parser silently keeps only the last",
@@ -51,6 +52,7 @@ class StructuralJsonDuplicateKeysMcp:
 class StructuralJsonDuplicateKeysSettings:
     meta = RuleMeta(
         id="hooks/json-duplicate-keys",
+        tier="gating",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Flag duplicate object keys in settings.json; the parser silently keeps only the last",
