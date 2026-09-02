@@ -1,7 +1,7 @@
 {
   "name": "harness-eval",
   "displayName": "Setup Eval",
-  "version": "7.12.0",
+  "version": "7.13.0",
   "description": "Evaluate AI agent setups for best practices, redundancy, security, and cross-component issues.",
   "author": {
     "name": "Benjamin Kapner"

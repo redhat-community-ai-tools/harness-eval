@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.13.0] - 2026-09-02
+
 ### Added
 - Gemini CLI `.toml` commands are parsed and linted with the same command rules as `.md`.
 - Discover `.vscode/mcp.json` (VS Code / Copilot MCP) and treat the `servers` key as an MCP server map.
