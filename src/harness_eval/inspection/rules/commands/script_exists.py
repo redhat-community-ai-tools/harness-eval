@@ -24,7 +24,7 @@ class CommandScriptExists:
         description="Script files referenced in commands should exist",
         category=RuleCategory.CONTENT,
         messages={
-            "missing_script": "Command references '{{script}}' but this file does not exist in the command directory",
+            "missing_script": "Command references '{{script}}' but this file does not exist",
         },
         target_type=ComponentType.COMMAND,
         default_suggestion="Create the missing script file or fix the reference path.",
@@ -36,6 +36,8 @@ class CommandScriptExists:
             return
 
         cmd_dir = Path(cmd.dir_path)
+        project_root = context.scan_state.get("project_root")
+        project_root_path = Path(project_root) if project_root else None
         checked: set[str] = set()
 
         for script in cmd.script_references:
@@ -44,11 +46,16 @@ class CommandScriptExists:
             checked.add(script)
 
             script_path = safe_join(cmd_dir, script)
-            if script_path is None or not script_path.exists():
-                context.report(
-                    ReportDescriptor(
-                        message_id="missing_script",
-                        data={"script": script},
-                        location=Location(file=cmd.command_md_path),
-                    )
+            if script_path is not None and script_path.exists():
+                continue
+            if project_root_path is not None:
+                root_path = safe_join(project_root_path, script)
+                if root_path is not None and root_path.exists():
+                    continue
+            context.report(
+                ReportDescriptor(
+                    message_id="missing_script",
+                    data={"script": script},
+                    location=Location(file=cmd.command_md_path),
                 )
+            )

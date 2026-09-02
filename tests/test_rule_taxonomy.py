@@ -14,7 +14,6 @@ GATING_RULES = {
     "claude-md/include-exists",
     "command/description-required",
     "command/script-exists",
-    "content/broken-references",
     "content/hardcoded-machine-path",
     "cross/multi-assistant-drift",
     "cross/overpermissive-grants",

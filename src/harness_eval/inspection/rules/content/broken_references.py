@@ -16,7 +16,7 @@ from harness_eval.utils.paths import safe_join
 
 _MD_LINK_PATTERN = re.compile(r"\[.*?\]\(([^)]+)\)")
 _BACKTICK_PATH_PATTERN = re.compile(r"`([^`]*/[^`]+\.\w{1,5})`")
-_DIR_REF_PATTERN = re.compile(r"(?<![a-zA-Z])(?:scripts|references|assets)/[\w./-]+")
+_DIR_REF_PATTERN = re.compile(r"(?<![\w./])(?:scripts|references|assets)/[\w./-]+")
 
 _VERSION_RE = re.compile(r"^\d+(\.\d+)+$")
 _GIT_REF_RE = re.compile(r"(\.\.\.?|@\{|HEAD|upstream|origin|main|master)")
@@ -67,7 +67,9 @@ _KNOWN_EXTENSIONS = frozenset(
 
 _TRAILING_PUNCT_RE = re.compile(r"[.,;:!?)]+$")
 _NON_ASCII_SEGMENT_RE = re.compile(r"[^\x00-\x7f]")
-_EXAMPLE_LINE_RE = re.compile(r"(?i)(?:e\.g\.|for example|pattern in|such as)\b")
+_EXAMPLE_LINE_RE = re.compile(r"(?i)(?:e\.g\.|for example|pattern in|such as|anti-pattern)\b")
+_DATE_PLACEHOLDER_RE = re.compile(r"YYYY|MM-DD|<[^>]+>")
+_PLACEHOLDER_NAMES = frozenset({"url", "path", "file", "filename", "name"})
 
 
 def _strip_trailing_punctuation(ref: str) -> str:
@@ -90,6 +92,12 @@ def _is_not_a_file_ref(ref: str) -> bool:
     if " " in ref and not ref.startswith(("scripts/", "references/", "assets/")):
         return True
     if ref.startswith("~"):
+        return True
+    if ref.endswith("/") or ref.endswith("-"):
+        return True
+    if ref.lower() in _PLACEHOLDER_NAMES:
+        return True
+    if _DATE_PLACEHOLDER_RE.search(ref):
         return True
     if _PLACEHOLDER_RE.match(ref):
         return True
@@ -127,6 +135,27 @@ def _paths_base_dirs(frontmatter: dict[str, Any]) -> list[str]:
     return dirs
 
 
+def _exists_under_path_bases(project_root: Path, bases: list[str], ref: str) -> bool:
+    """True if *ref* exists anywhere under a skill's `paths` bases.
+
+    Domain-knowledge skills name files relative to a package (`config/config.py`
+    under `paths: global_utils/**`), not relative to the skill directory.
+    """
+    if not bases or ".." in Path(ref).parts or ref.startswith("/"):
+        return False
+    for d in bases:
+        base = project_root / d
+        if not base.is_dir():
+            continue
+        try:
+            for match in base.rglob(ref):
+                if match.is_file() or match.is_dir():
+                    return True
+        except OSError:
+            continue
+    return False
+
+
 def _absolute_outside_project(ref: str, project_root: Path | None) -> bool:
     path = Path(ref)
     if not path.is_absolute():
@@ -143,7 +172,6 @@ def _absolute_outside_project(ref: str, project_root: Path | None) -> bool:
 class BrokenReferences:
     meta: RuleMeta = RuleMeta(
         id="content/broken-references",
-        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,
@@ -220,6 +248,8 @@ class BrokenReferences:
                         (p := safe_join(project_root_path / d, ref)) is not None and p.exists()
                         for d in paths_dirs
                     ):
+                        continue
+                    if _exists_under_path_bases(project_root_path, paths_dirs, ref):
                         continue
 
                 context.report(

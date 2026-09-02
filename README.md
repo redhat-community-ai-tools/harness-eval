@@ -108,9 +108,9 @@ Rules by tier:
 <!-- BEGIN GENERATED: tier-counts -->
 | Tier | Rules |
 |------|-------|
-| gating | 23 |
+| gating | 22 |
 | provisional | 0 |
-| advisory | 85 |
+| advisory | 86 |
 <!-- END GENERATED: tier-counts -->
 
 Rules by scope:

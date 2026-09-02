@@ -1,12 +1,5 @@
 [
   {
-    "message": "Command is missing 'description' in frontmatter \u2014 it won't show properly in the UI menu",
-    "rule_id": "command/description-required",
-    "severity": "error",
-    "target_name": "lint",
-    "target_type": "command"
-  },
-  {
     "message": "No boundary policy found in system instructions. Consider defining which directories or resources are off-limits.",
     "rule_id": "content/missing-boundary-policy",
     "severity": "info",

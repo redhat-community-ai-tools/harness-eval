@@ -30,6 +30,10 @@ class CommandDescriptionRequired:
         cmd = context.command
         if cmd is None or cmd.parse_errors:
             return
+        path = cmd.command_md_path.replace("\\", "/")
+        cursor_prose = context.source_tool == "cursor" or "/.cursor/commands/" in path
+        if cursor_prose and not cmd.raw_content.lstrip().startswith("---"):
+            return
 
         desc = cmd.frontmatter.get("description", "")
         loc = Location(file=cmd.command_md_path, start_line=1)

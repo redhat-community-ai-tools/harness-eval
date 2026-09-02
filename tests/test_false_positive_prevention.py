@@ -247,6 +247,87 @@ class TestBrokenReferencesTemplates:
         ]
         assert len(diags) == 0
 
+    def test_date_placeholder_not_flagged(self, tmp_path: Path) -> None:
+        skill_dir = _make_skill(
+            tmp_path,
+            "scorecard",
+            body="No `assessments/assessment-YYYY-MM-DD.md` yet.",
+        )
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) == 0
+
+    def test_directory_only_ref_not_flagged(self, tmp_path: Path) -> None:
+        skill_dir = _make_skill(
+            tmp_path,
+            "creator",
+            body="Move detailed content to references/.",
+        )
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) == 0
+
+    def test_nested_scripts_path_not_stripped(self, tmp_path: Path) -> None:
+        skill_dir = _make_skill(
+            tmp_path,
+            "weekly",
+            body="Script: `public/weekly-activity/scripts/generate_weekly_activity.py`",
+        )
+        nested = skill_dir / "public" / "weekly-activity" / "scripts"
+        nested.mkdir(parents=True)
+        (nested / "generate_weekly_activity.py").write_text("# ok\n")
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) == 0
+
+    def test_anti_pattern_example_not_flagged(self, tmp_path: Path) -> None:
+        skill_dir = _make_skill(
+            tmp_path,
+            "author",
+            body="**Anti-pattern:** you created `wrapper-name/SKILL.md` instead of a sub-agent.",
+        )
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) == 0
+
+    def test_paths_frontmatter_finds_nested_package_file(self, tmp_path: Path) -> None:
+        from harness_eval.inspection.engine import lint
+        from harness_eval.inspection.parsers import parse_skill
+
+        project = tmp_path / "project"
+        pkg = project / "global_utils" / "src" / "global_utils"
+        pkg.mkdir(parents=True)
+        (pkg / "config").mkdir()
+        (pkg / "config" / "config.py").write_text("# cfg\n")
+        skill_dir = project / ".cursor" / "skills" / "global-utils"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: global-utils\ndescription: Domain knowledge for global_utils\n"
+            "paths: global_utils/**\n---\n\n"
+            "SharedConfig lives in `config/config.py`.\n"
+        )
+        result = lint(
+            str(skill_dir),
+            self.RULE_CONFIG,
+            scan_state={"project_root": str(project)},
+            all_skills=[parse_skill(str(skill_dir))],
+            all_commands=[],
+        )
+        diags = [d for d in result.diagnostics if d.rule_id == self.RULE_ID]
+        assert len(diags) == 0
+
 
 class TestSentenceBoundaryPatterns:
     """Ensure greedy patterns don't match across sentence boundaries."""

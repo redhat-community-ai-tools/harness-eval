@@ -81,7 +81,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `command/shadows-builtin` | advisory | FILE |
 | `command/skill-overlap` | advisory | PAIRWISE |
 | `content/allowed-tools-auto-approve` | advisory | FILE |
-| `content/broken-references` | gating | FILE_FS |
+| `content/broken-references` | advisory | FILE_FS |
 | `content/circular-references` | advisory | SETUP |
 | `content/description-length` | advisory | FILE |
 | `content/duplicate-detection` | advisory | PAIRWISE |
