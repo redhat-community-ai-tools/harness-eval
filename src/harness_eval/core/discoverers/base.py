@@ -26,6 +26,27 @@ _EXCLUDE_DIRS = {
 }
 
 
+def _is_excluded_path(path: Path, root: Path | None = None) -> bool:
+    """True if *path* is under a directory we do not scan.
+
+    ``tests/fixtures`` is skipped relative to *root* so a self-scan does not
+    treat corpus MCP configs as production, while scanning a fixture directory
+    itself still works.
+    """
+    if any(excluded in path.parts for excluded in _EXCLUDE_DIRS):
+        return True
+    if root is None:
+        return False
+    try:
+        rel_parts = path.resolve().relative_to(root.resolve()).parts
+    except ValueError:
+        return False
+    for i, part in enumerate(rel_parts[:-1]):
+        if part == "tests" and rel_parts[i + 1] == "fixtures":
+            return True
+    return False
+
+
 def _recursive_glob(root: Path, pattern: str) -> list[Path]:
     """Glob recursively, excluding common non-project directories.
 
@@ -34,7 +55,7 @@ def _recursive_glob(root: Path, pattern: str) -> list[Path]:
     """
     results = []
     for f in sorted(root.rglob(pattern)):
-        if any(excluded in f.parts for excluded in _EXCLUDE_DIRS):
+        if _is_excluded_path(f, root):
             continue
         if not f.is_file():
             continue

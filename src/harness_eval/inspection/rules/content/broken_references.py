@@ -67,7 +67,8 @@ _KNOWN_EXTENSIONS = frozenset(
 
 _TRAILING_PUNCT_RE = re.compile(r"[.,;:!?)]+$")
 _NON_ASCII_SEGMENT_RE = re.compile(r"[^\x00-\x7f]")
-_EXAMPLE_LINE_RE = re.compile(r"(?i)(?:e\.g\.|for example|pattern in|such as|anti-pattern)\b")
+_ANTI_PATTERN_LINE_RE = re.compile(r"(?i)\banti-pattern\b")
+_EXAMPLE_MARKER_RE = re.compile(r"(?i)(?:e\.g\.|for example|pattern in|such as)\b")
 _DATE_PLACEHOLDER_RE = re.compile(r"YYYY|MM-DD|<[^>]+>")
 _PLACEHOLDER_NAMES = frozenset({"url", "path", "file", "filename", "name"})
 
@@ -199,14 +200,18 @@ class BrokenReferences:
         for i, line in enumerate(lines):
             if i in fenced:
                 continue
-            if _EXAMPLE_LINE_RE.search(line):
+            if _ANTI_PATTERN_LINE_RE.search(line):
                 continue
+
+            example_marker = _EXAMPLE_MARKER_RE.search(line)
 
             refs_on_line: list[str] = []
             for match in _MD_LINK_PATTERN.finditer(line):
                 refs_on_line.append(match.group(1).strip())
             line_without_md_links = _MD_LINK_PATTERN.sub("", line)
-            for match in _BACKTICK_PATH_PATTERN.finditer(line_without_md_links):
+            for match in _BACKTICK_PATH_PATTERN.finditer(line):
+                if example_marker is not None and match.start() >= example_marker.start():
+                    continue
                 refs_on_line.append(match.group(1).strip())
             for match in _DIR_REF_PATTERN.finditer(line_without_md_links):
                 refs_on_line.append(match.group(0).strip())

@@ -16,21 +16,23 @@ All notable changes to this project will be documented in this file.
 - `harness-gate` now includes decidable FILE/FILE_FS integrity rules: missing SKILL.md / hook scripts / command scripts / `@imports`, duplicate JSON keys, committed secret-named files, symlink escape, MCP endpoint integrity and valid-config, permission contradictions, disabled permission prompts, and committed `settings.local.json`. Heuristic and linguistic rules stay advisory.
 - `harness-gate` also includes `command/description-required`, `hooks/valid-structure`, and `frontmatter/description-required` after the heuristic halves of those mixed rules were split off. `content/broken-references` stays advisory: extracting path-shaped strings from prose is not a filesystem fact.
 - `command/script-exists` extracts `.sh`, `.js`, `.bash`, and `./scripts/` paths, not only `.py`.
-- `hooks/valid-structure` only flags hook entries with no command; `rm -rf`, `curl | bash`, and `git push --force` moved to `hooks/dangerous-command`.
+- `hooks/valid-structure` only flags hook entries with no command; `rm -rf`, `curl | bash`, and `git push --force` moved to `hooks/dangerous-command`. `hooks/dangerous-command` matches any `rm -rf` (including `rm -rf ./build`), not only `rm -rf /`.
 - `frontmatter/format-valid` no longer requires `name` to match the directory name (nested forge overlays and path-based skill ids were false positives).
 - `claude-md/exists` is not Claude-Code-only; Windsurf and Cline instruction files are linted, not discovery-only.
 - `lint` and `security` are CLI aliases for `harness-lint` and `harness-security`.
+- Custom YAML under `<scan-path>/.harness-eval/rules` loads only with `harness-lint --rules-from-target`. `harness-gate` and `harness-security` never load them. Loaded YAML rules are unregistered when the scan returns.
+- Discovery skips agent files under `tests/fixtures/` relative to the scan root, so self-gating this repo does not lint corpus MCP fixtures.
+- `command/script-exists` resolves from the project root only when the reference contains a `/`. A same-named file at the repo root no longer masks a missing relative script.
 
 ### Fixed
-- `content/broken-references` no longer flags absolute paths outside the project (`/sandbox/...`) or example backtick paths (`for example`, `e.g.`, `pattern in`).
+- `content/broken-references` no longer flags absolute paths outside the project (`/sandbox/...`). Backtick paths after `for example` / `e.g.` / `such as` are ignored; a real path before those markers is still checked. Whole-line skips remain only for `anti-pattern`.
 - `content/broken-references` skips directory-only refs, date placeholders (`YYYY-MM-DD`), truncated `scripts/post-` tokens, and `scripts/` substrings inside a longer path. Skills with `paths:` frontmatter resolve package-relative files under that tree.
 - `command/description-required` ignores command files with no YAML frontmatter (Cursor prose commands).
-- `command/script-exists` also resolves paths from the project root, not only the command directory.
+- `command/script-exists` also resolves slash-containing paths from the project root, not only the command directory.
 - `mcp/auto-approve-risk` only read `mcpServers`, so VS Code `.vscode/mcp.json` `servers` auto-approve lists were skipped.
 - `harness-security --review` crashed with `ModuleNotFoundError` because `rubric/prompts.py` shadowed the `rubric/prompts/` package.
 - `harness_eval.__version__` and the Tekton `app.kubernetes.io/version` label were behind pyproject (`7.11.0` / `7.10.0` vs `7.12.0`).
 - Pre-push hooks and CONTRIBUTING still invoked the removed `harness-eval lint` / `harness-eval security` command names.
-- Custom YAML rules loaded from `cwd/.harness-eval/rules` only, so `harness-lint /other/project` never saw that project's rules.
 
 ## [7.12.0] - 2026-08-27
 

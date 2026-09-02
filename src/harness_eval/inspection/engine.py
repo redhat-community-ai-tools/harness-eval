@@ -634,16 +634,40 @@ def _warn_unknown_config_rules(config_rules: dict[str, str | list[Any]]) -> None
 def inspect_setup(
     setup: Any,
     config_rules: dict[str, str | list[Any]] | None = None,
+    *,
+    load_target_yaml: bool = False,
+) -> list[InspectionResult]:
+    """Run inspection on all components in a setup.
+
+    YAML under ``<setup>/.harness-eval/rules`` is loaded only when
+    *load_target_yaml* is true. Those rules are unregistered when this call
+    returns so they cannot leak into a later scan in the same process.
+    """
+    loaded_yaml_ids: list[str] = []
+    if load_target_yaml:
+        from harness_eval.inspection.yaml_rules import load_yaml_rules_from_dir
+
+        before_ids = {r.meta.id for r in get_all_rules()}
+        load_yaml_rules_from_dir(Path(setup.path) / ".harness-eval" / "rules")
+        loaded_yaml_ids = list({r.meta.id for r in get_all_rules()} - before_ids)
+    try:
+        return _inspect_setup(setup, config_rules)
+    finally:
+        from harness_eval.inspection.registry import unregister_rule
+
+        for rid in loaded_yaml_ids:
+            unregister_rule(rid)
+
+
+def _inspect_setup(
+    setup: Any,
+    config_rules: dict[str, str | list[Any]] | None = None,
 ) -> list[InspectionResult]:
     """Run inspection on all components in a setup."""
     from harness_eval.core.types import ComponentType as CT
 
     if config_rules:
         _warn_unknown_config_rules(config_rules)
-
-    from harness_eval.inspection.yaml_rules import load_yaml_rules
-
-    load_yaml_rules([Path(setup.path) / ".harness-eval" / "rules"])
 
     scan_state: dict[str, Any] = {"project_root": setup.path}
     results: list[InspectionResult] = []

@@ -116,3 +116,37 @@ class TestYamlRuleLoading:
         rules_dir.mkdir()
         count = load_yaml_rules_from_dir(rules_dir)
         assert count == 0
+
+    def test_skips_nested_quantifier_regex(self, tmp_path: Path) -> None:
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "redos.yaml").write_text(
+            "id: custom/redos\n"
+            "severity: warning\n"
+            "description: Nested quantifier\n"
+            "target: skill\n"
+            "category: content\n"
+            "patterns:\n"
+            "  - label: redos\n"
+            "    regex: '(a+)+'\n"
+        )
+        count = load_yaml_rules_from_dir(rules_dir)
+        assert count == 0
+        assert get_rule("custom/redos") is None
+
+    def test_skips_overlong_regex(self, tmp_path: Path) -> None:
+        rules_dir = tmp_path / "rules"
+        rules_dir.mkdir()
+        (rules_dir / "long.yaml").write_text(
+            "id: custom/too-long\n"
+            "severity: warning\n"
+            "description: Overlong regex\n"
+            "target: skill\n"
+            "category: content\n"
+            "patterns:\n"
+            "  - label: long\n"
+            f"    regex: '{'a' * 300}'\n"
+        )
+        count = load_yaml_rules_from_dir(rules_dir)
+        assert count == 0
+        assert get_rule("custom/too-long") is None

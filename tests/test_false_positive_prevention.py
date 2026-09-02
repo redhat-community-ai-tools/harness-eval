@@ -234,6 +234,19 @@ class TestBrokenReferencesTemplates:
         ]
         assert len(diags) == 0
 
+    def test_real_path_before_eg_still_flagged(self, tmp_path: Path) -> None:
+        skill_dir = _make_skill(
+            tmp_path,
+            "eg-skill",
+            body="Run scripts/setup.sh, e.g. before commits.",
+        )
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) >= 1
+
     def test_pattern_in_example_not_flagged(self, tmp_path: Path) -> None:
         skill_dir = _make_skill(
             tmp_path,

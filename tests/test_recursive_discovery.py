@@ -74,6 +74,23 @@ class TestExcludedDirectories:
         assert "good-skill" in skill_names
         assert "bad-skill" not in skill_names
 
+    def test_mcp_under_tests_fixtures_is_skipped(self, tmp_path: Path) -> None:
+        import json
+
+        (tmp_path / "CLAUDE.md").write_text("# Root\n")
+        real_mcp = tmp_path / ".mcp.json"
+        real_mcp.write_text(json.dumps({"mcpServers": {}}))
+        fixture_mcp = tmp_path / "tests" / "fixtures" / "corpus" / "sample" / ".mcp.json"
+        fixture_mcp.parent.mkdir(parents=True)
+        fixture_mcp.write_text(
+            json.dumps({"mcpServers": {"npx-pkg": {"command": "npx", "args": ["foo"]}}})
+        )
+
+        setup = discover_setup("test", str(tmp_path))
+        mcp_paths = [Path(c.path).resolve() for c in setup.by_type(ComponentType.MCP_CONFIG)]
+        assert real_mcp.resolve() in mcp_paths
+        assert fixture_mcp.resolve() not in mcp_paths
+
 
 class TestDeduplication:
     def test_deduplication(self, nested_skills_tree: Path) -> None:

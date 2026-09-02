@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from harness_eval.core.discoverers.base import ToolDiscoverer, _recursive_glob, parse_file
+from harness_eval.core.discoverers.base import (
+    ToolDiscoverer,
+    _is_excluded_path,
+    _recursive_glob,
+    parse_file,
+)
 from harness_eval.core.types import (
     ComponentScope,
     ComponentType,
@@ -111,7 +116,7 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
         # MCP configs
         for pattern in [".mcp.json", "**/.mcp.json"]:
             for f in sorted(root.glob(pattern)):
-                if f.is_file():
+                if f.is_file() and not _is_excluded_path(f, root):
                     paths.append(f)
 
         # Rules
@@ -302,7 +307,7 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
         results = []
         for pattern in [".mcp.json", "**/.mcp.json"]:
             for f in sorted(root.glob(pattern)):
-                if f.is_file():
+                if f.is_file() and not _is_excluded_path(f, root):
                     results.append(parse_file(f, ComponentType.MCP_CONFIG))
         seen_paths: set[str] = set()
         deduped = []

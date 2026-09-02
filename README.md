@@ -156,7 +156,11 @@ patterns:
 message: "Found '{{label}}' on line {{line}}"
 ```
 
-YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under every preset. Remove the rule file to disable it. For complex logic (AST analysis, cross-component checks), use Python rules instead.
+YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under every preset. Remove the rule file to disable it.
+
+`harness-lint` loads YAML from the scanned tree only with `--rules-from-target`. `harness-gate` and `harness-security` never load them: regexes from an audited tree run in-process. Loaded YAML rules are unregistered when the scan returns. Regexes longer than 256 characters or with nested unbounded quantifiers are skipped.
+
+For complex logic (AST analysis, cross-component checks), use Python rules instead.
 
 ## Contributing
 

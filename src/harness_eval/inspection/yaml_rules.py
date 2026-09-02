@@ -40,6 +40,11 @@ from harness_eval.inspection.types import (
 
 logger = logging.getLogger(__name__)
 
+# Target-supplied YAML regexes run in-process. Cap length and reject nested
+# unbounded quantifiers so a scanned tree cannot hang the scanner (ReDoS).
+_MAX_YAML_REGEX_LEN = 256
+_NESTED_QUANTIFIER_RE = re.compile(r"\([^()]*[+*][^()]*\)[+*]")
+
 _SEVERITY_MAP = {
     "error": Severity.ERROR,
     "warning": Severity.WARNING,
@@ -108,6 +113,27 @@ class YamlRule:
                     break
 
 
+def _compile_yaml_regex(regex_str: str, rule_id: str) -> re.Pattern[str] | None:
+    if len(regex_str) > _MAX_YAML_REGEX_LEN:
+        logger.warning(
+            "YAML rule '%s' regex exceeds %d characters, skipping",
+            rule_id,
+            _MAX_YAML_REGEX_LEN,
+        )
+        return None
+    if _NESTED_QUANTIFIER_RE.search(regex_str):
+        logger.warning(
+            "YAML rule '%s' regex looks prone to catastrophic backtracking, skipping",
+            rule_id,
+        )
+        return None
+    try:
+        return re.compile(regex_str, re.I)
+    except re.error as e:
+        logger.warning("Invalid regex in YAML rule '%s': %s", rule_id, e)
+        return None
+
+
 def _parse_yaml_rule(data: dict[str, Any], source_file: str) -> YamlRule | None:
     rule_id = data.get("id")
     if not rule_id or not isinstance(rule_id, str):
@@ -136,11 +162,10 @@ def _parse_yaml_rule(data: dict[str, Any], source_file: str) -> YamlRule | None:
             regex_str = re.escape(p)
         else:
             continue
-        try:
-            compiled.append(_CompiledPattern(label=label, regex=re.compile(regex_str, re.I)))
-        except re.error as e:
-            logger.warning("Invalid regex in YAML rule '%s': %s", rule_id, e)
+        compiled_re = _compile_yaml_regex(regex_str, rule_id)
+        if compiled_re is None:
             continue
+        compiled.append(_CompiledPattern(label=label, regex=compiled_re))
 
     if not compiled:
         return None

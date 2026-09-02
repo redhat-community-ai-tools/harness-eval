@@ -83,6 +83,14 @@ from harness_eval.output.metadata import EvalMetadata
     multiple=True,
     help="Glob patterns for files/dirs to exclude from scanning (repeatable).",
 )
+@click.option(
+    "--rules-from-target",
+    is_flag=True,
+    help=(
+        "Load YAML rules from <path>/.harness-eval/rules. Off by default: "
+        "regexes from the scanned tree run in-process and must be opted into."
+    ),
+)
 def eval_setup_lint(
     path: str,
     preset: str,
@@ -98,6 +106,7 @@ def eval_setup_lint(
     report_card_path: str | None,
     baseline_path: str | None,
     exclude: tuple[str, ...],
+    rules_from_target: bool,
 ) -> None:
     """Lint: deterministic rules + system analysis. No LLM, fast."""
     if enforce and (fail_on_error or fail_on_warning):
@@ -114,7 +123,14 @@ def eval_setup_lint(
             click.echo("Warning: --fail-on-error is ignored in watch mode.", err=True)
         if fail_on_warning:
             click.echo("Warning: --fail-on-warning is ignored in watch mode.", err=True)
-        run_watch(path=path, preset=preset, fmt=fmt, user_config=user_config, recursive=recursive)
+        run_watch(
+            path=path,
+            preset=preset,
+            fmt=fmt,
+            user_config=user_config,
+            recursive=recursive,
+            load_target_yaml=rules_from_target,
+        )
         return
 
     t0 = time.monotonic()
@@ -135,7 +151,7 @@ def eval_setup_lint(
             recursive=recursive,
             exclude=exclude,
         )
-        results = inspect_setup(setup, config_rules)
+        results = inspect_setup(setup, config_rules, load_target_yaml=rules_from_target)
 
         if baseline_path:
             import json as _json_bl

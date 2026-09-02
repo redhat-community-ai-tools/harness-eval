@@ -239,6 +239,7 @@ class TestCLIWatchFlag:
                     fmt="terminal",
                     user_config=None,
                     recursive=False,
+                    load_target_yaml=False,
                 )
 
 

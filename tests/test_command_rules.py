@@ -193,3 +193,17 @@ class TestCommandScriptExists:
             scan_state={"project_root": str(tmp_path)},
         )
         assert len(_diags_for(result, "command/script-exists")) == 0
+
+    def test_root_bare_filename_does_not_mask_missing_relative(self, tmp_path: Path) -> None:
+        (tmp_path / "conftest.py").write_text("# pytest\n")
+        cmd_dir = tmp_path / "commands" / "run-tests"
+        cmd_dir.mkdir(parents=True)
+        (cmd_dir / "command.md").write_text(
+            "---\ndescription: Run pytest helpers\n---\n\nCall conftest.py then pytest.\n"
+        )
+        result = lint_command(
+            str(cmd_dir),
+            {"command/script-exists": "warning"},
+            scan_state={"project_root": str(tmp_path)},
+        )
+        assert len(_diags_for(result, "command/script-exists")) == 1

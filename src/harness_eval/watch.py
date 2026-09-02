@@ -51,6 +51,7 @@ def run_watch(
     user_config: str | None,
     debounce_ms: int = DEBOUNCE_MS,
     recursive: bool = False,
+    load_target_yaml: bool = False,
 ) -> None:
     """Run lint in watch mode, re-running on file changes.
 
@@ -96,7 +97,7 @@ def run_watch(
         setup = discover_setup(
             name=root.name, path=path, user_config_dir=user_config, recursive=recursive
         )
-        results = inspect_setup(setup, config_rules)
+        results = inspect_setup(setup, config_rules, load_target_yaml=load_target_yaml)
         system = analyze_system(setup)
 
         if fmt == "json":

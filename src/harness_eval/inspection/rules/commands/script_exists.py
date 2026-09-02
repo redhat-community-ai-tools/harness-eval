@@ -48,7 +48,10 @@ class CommandScriptExists:
             script_path = safe_join(cmd_dir, script)
             if script_path is not None and script_path.exists():
                 continue
-            if project_root_path is not None:
+            # Only treat as repo-relative when the ref has a path separator.
+            # A bare `conftest.py` at the repo root must not mask a missing
+            # file next to the command.
+            if project_root_path is not None and "/" in script.replace("\\", "/"):
                 root_path = safe_join(project_root_path, script)
                 if root_path is not None and root_path.exists():
                     continue

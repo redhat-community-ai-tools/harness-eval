@@ -23,6 +23,10 @@ def register_rule(rule: Rule) -> None:
     _registry[rule.meta.id] = rule
 
 
+def unregister_rule(rule_id: str) -> None:
+    _registry.pop(rule_id, None)
+
+
 def get_all_rules() -> list[Rule]:
     return list(_registry.values())
 
