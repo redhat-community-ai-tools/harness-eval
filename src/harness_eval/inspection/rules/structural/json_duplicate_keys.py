@@ -46,7 +46,7 @@ class StructuralJsonDuplicateKeysMcp:
     )
 
     def create(self, context: RuleContext) -> None:
-        _check(context, context.skill.raw_content, context.skill.skill_md_path)
+        _check(context, *context.source_text())
 
 
 class StructuralJsonDuplicateKeysSettings:

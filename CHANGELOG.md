@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- `recommended` and `strict` presets are derived from the rule registry. New rules are on by default at `RuleMeta.default_severity`; only extras and severity overrides are hand-maintained. Gating-tier rules cannot drift out of default lint.
+- The component graph includes every hooks file and every MCP config, not only the first of each.
+- Inspection parses each discovered component once and dispatches lint by component type. `command.md` versus flat-file path handling lives only in the command parser.
+- `RuleContext.skill` is optional. MCP configs are a `ParsedMcpConfig` target instead of a dummy skill. YAML rules read `source_text()`.
+
 ## [7.13.0] - 2026-09-02
 
 ### Added

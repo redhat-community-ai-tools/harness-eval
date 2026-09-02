@@ -120,7 +120,7 @@ class McpCrossAssistantDivergence:
     )
 
     def create(self, context: RuleContext) -> None:
-        this_path = Path(context.skill.skill_md_path)
+        this_path = Path(context.source_text()[1])
         root = _find_project_root(this_path)
 
         key = f"mcp_cross_assistant_divergence_checked:{root}"

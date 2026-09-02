@@ -135,7 +135,7 @@ class ConfigInstructionConflict:
 
         # Gather skill paths to find settings files.
         # Use all_skills if populated, otherwise fall back to the current skill.
-        skills = context.all_skills if context.all_skills else [context.skill]
+        skills = [s for s in (context.all_skills or [context.skill]) if s is not None]
         skill_paths = [s.dir_path for s in skills]
 
         settings_files = _find_settings_files(skill_paths)

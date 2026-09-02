@@ -12,6 +12,7 @@ from harness_eval.inspection.types import (
     ParsedClaudeMd,
     ParsedCommand,
     ParsedHooks,
+    ParsedMcpConfig,
     ParsedSkill,
 )
 from harness_eval.utils.parsing import parse_frontmatter_rich
@@ -428,5 +429,22 @@ def parse_agent(agent_path: str) -> ParsedAgent:
         sibling_files=sibling_files,
         files=list_files(agent_dir),
         parse_errors=parse_errors,
+        tokens=count_tokens(raw_content),
+    )
+
+
+def parse_mcp_config_file(file_path: str) -> ParsedMcpConfig:
+    """Read an MCP config file into a ParsedMcpConfig. Does not validate JSON."""
+    path = Path(file_path)
+    if not path.exists():
+        return ParsedMcpConfig(
+            file_path=file_path,
+            raw_content="",
+            parse_errors=[f"File not found: {file_path}"],
+        )
+    raw_content = path.read_text(encoding="utf-8", errors="replace")
+    return ParsedMcpConfig(
+        file_path=file_path,
+        raw_content=raw_content,
         tokens=count_tokens(raw_content),
     )

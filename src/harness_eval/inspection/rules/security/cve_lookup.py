@@ -142,6 +142,8 @@ class CveLookup:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         if not skill.dir_path:
             return
         skill_dir = Path(skill.dir_path)

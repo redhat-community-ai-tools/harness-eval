@@ -73,6 +73,8 @@ class McpLeastPrivilege:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         if not skill.dir_path or not skill.frontmatter:
             return
 

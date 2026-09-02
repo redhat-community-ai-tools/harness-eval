@@ -100,6 +100,8 @@ class StaleReferences:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         if not skill.body:
             return
 

@@ -119,8 +119,11 @@ class TestLintSkill:
 
 
 class TestLintCommand:
-    def test_lint_command_missing_description(self) -> None:
-        result = lint_command(str(FIXTURES / "sample-setup-a/commands/review"))
+    def test_lint_command_missing_description(self, tmp_path: Path) -> None:
+        cmd_dir = tmp_path / "review"
+        cmd_dir.mkdir()
+        (cmd_dir / "command.md").write_text("Review the current branch.\n")
+        result = lint_command(str(cmd_dir))
         rule_ids = {d.rule_id for d in result.diagnostics}
         assert "command/description-required" in rule_ids
         assert result.error_count >= 1

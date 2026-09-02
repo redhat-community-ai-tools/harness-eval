@@ -75,7 +75,10 @@ class MultiAssistantDrift:
         context.scan_state["multi_assistant_drift_checked"] = True
 
         # Walk up from current skill to find project root
-        root = self._find_project_root(context.skill.dir_path)
+        skill = context.skill
+        if skill is None:
+            return
+        root = self._find_project_root(skill.dir_path)
         if not root:
             return
 

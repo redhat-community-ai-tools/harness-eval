@@ -117,6 +117,11 @@ Add your class to `src/harness_eval/inspection/rules/__init__.py`:
 1. Add the import (alphabetical within its section)
 2. Add the class to the `for rule_cls in [...]` list
 
+`recommended` and `strict` pick the new rule up from the registry automatically
+(`default_severity`, unless you add an override in `RECOMMENDED_OVERRIDES` /
+`STRICT_OVERRIDES`). Subset presets (`security`, `pre-workflow`, `gate`) still
+skip unlisted IDs — add the ID there only if that preset should run it.
+
 ### 4. Update the counts
 
 Update the rule count in all files that reference it:

@@ -36,7 +36,7 @@ def extract_content_and_path(
     """Extract raw content and file path from context based on target type."""
     if target_type == ComponentType.SKILL:
         skill = context.skill
-        if not skill.raw_content:
+        if skill is None or not skill.raw_content:
             return None
         return skill.raw_content, skill.skill_md_path
     elif target_type == ComponentType.COMMAND:
@@ -60,6 +60,8 @@ def extract_all_skill_md_content(
 
     skill = context.skill
     results: list[tuple[str, str]] = []
+    if skill is None:
+        return results
 
     if skill.raw_content:
         results.append((skill.raw_content, skill.skill_md_path))

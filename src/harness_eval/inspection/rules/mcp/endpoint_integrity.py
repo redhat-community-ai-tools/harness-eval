@@ -46,8 +46,7 @@ class McpEndpointIntegrity:
     )
 
     def create(self, context: RuleContext) -> None:
-        raw = context.skill.raw_content
-        path = context.skill.skill_md_path
+        raw, path = context.source_text()
         if not raw or not raw.strip():
             return
         try:

@@ -74,11 +74,11 @@ class McpNoPlaintextSecrets:
     )
 
     def create(self, context: RuleContext) -> None:
-        raw = context.skill.raw_content
+        raw, path = context.source_text()
         if not raw or not raw.strip():
             return
 
-        loc = Location(file=context.skill.skill_md_path)
+        loc = Location(file=path)
 
         try:
             data = json.loads(raw)

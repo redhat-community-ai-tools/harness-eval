@@ -75,6 +75,8 @@ class ScopeGrabDescription:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         if not skill.frontmatter:
             return
 

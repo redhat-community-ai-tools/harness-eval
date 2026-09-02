@@ -1,190 +1,106 @@
 from __future__ import annotations
 
-RECOMMENDED: dict[str, str] = {
-    "structural/skill-md-exists": "error",
-    "frontmatter/description-required": "error",
-    "frontmatter/description-quality": "warning",
-    "frontmatter/format-valid": "warning",
-    "content/token-budget": "warning",
-    "content/broken-references": "error",
-    "content/circular-references": "warning",
-    "content/orphan-skills": "warning",
-    "content/mcp-skill-alignment": "warning",
-    "content/total-context-budget": "warning",
-    "content/permission-escalation": "warning",
-    "content/duplicate-detection": "warning",
-    "security/no-prompt-injection": "error",
-    "security/no-credential-access": "error",
-    "security/reverse-shell": "error",
-    "security/obfuscation": "error",
-    "security/data-exfiltration": "error",
-    "security/ast-behavioral": "warning",
-    "security/taint-flow": "warning",
-    "security/bash-taint-flow": "warning",
-    "security/mcp-least-privilege": "warning",
-    "security/mcp-tool-poisoning": "warning",
-    # MCP rules
-    "mcp/valid-config": "warning",
-    "mcp/suspicious-endpoint": "warning",
-    "mcp/no-wildcard-tools": "info",
-    "mcp/no-plaintext-secrets": "error",
-    "mcp/unpinned-package": "warning",
-    "mcp/auto-approve-risk": "warning",
-    # Command rules
-    "command/no-prompt-injection": "error",
-    "command/no-credential-access": "error",
-    "command/reverse-shell": "error",
-    "command/obfuscation": "error",
-    "command/data-exfiltration": "error",
-    "command/references-nonexistent-skill": "warning",
-    # Hooks rules
-    "hooks/script-boundary": "error",
-    "hooks/dangerous-command": "error",
-    "hooks/env-leakage": "warning",
-    "hooks/network-access": "warning",
-    "hooks/matcher-matches-no-tool": "warning",
-    "hooks/silent-failure-masking": "warning",
-    # CLAUDE.md rules
-    "claude-md/exists": "warning",
-    # Agent rules
-    "agent/description-required": "error",
-    "agent/referenced-skills-exist": "error",
-    "agent/disallowed-tools-parseable": "warning",
-    "agent/constraint-body-match": "warning",
-    "agent/no-prompt-injection": "error",
-    "agent/no-credential-access": "error",
-    "agent/reverse-shell": "error",
-    "agent/obfuscation": "error",
-    "agent/data-exfiltration": "error",
+# recommended and strict are derived from the rule registry so a new rule is
+# on by default. Overrides below are the only hand-maintained bits: extras that
+# must stay off, and severities that differ from RuleMeta.default_severity.
+
+# Off, or severity different from default_severity.
+RECOMMENDED_OVERRIDES: dict[str, str] = {
     "agent/model-specified": "off",
-    # Quality rules
-    "quality/imprecise-instruction": "warning",
-    "quality/redundant-guidance": "warning",
-    "quality/unfinished-content": "warning",
-    "quality/example-gap": "info",
-    "quality/stale-references": "warning",
-    "quality/negative-only": "warning",
-    "quality/scope-overreach": "info",
-    "quality/trigger-manipulation": "warning",
-    "security/coercive-override": "error",
-    "security/stealth-persistence": "error",
-    "security/prompt-exfiltration": "error",
-    "security/cross-component-flow": "warning",
-    "agent/excessive-permissions": "warning",
-    "security/memory-write-unscoped": "warning",
-    "agent/memory-write-unscoped": "warning",
-    "security/unbounded-delegation": "warning",
-    "agent/unbounded-delegation": "warning",
-    # Content rules (new)
-    "content/hardcoded-machine-path": "warning",
-    # Cross-component rules (new)
-    "cross/config-instruction-conflict": "warning",
-    "cross/multi-assistant-drift": "warning",
-    # Command rules (new)
-    "command/allowed-tools-coverage": "warning",
-    "cross/overpermissive-grants": "warning",
-    "hooks/permission-contradiction": "warning",
-    "hooks/permission-prompt-disabled": "error",
-    "hooks/local-settings-committed": "warning",
-    "mcp/cross-assistant-divergence": "warning",
-    "claude-md/include-exists": "error",
-    "hooks/command-script-exists": "error",
-    "mcp/endpoint-integrity": "error",
-    "security/credential-file-present": "error",
-    "mcp/json-duplicate-keys": "error",
-    "hooks/json-duplicate-keys": "error",
-    "structural/symlink-escape": "error",
-    # Pre-trust config rules
-    "hooks/base-url-override": "error",
-    "hooks/api-key-helper": "error",
-    "hooks/env-credential-override": "warning",
-    "hooks/pre-trust-permissions": "warning",
-    # Allowed-tools auto-approve
-    "content/allowed-tools-auto-approve": "warning",
-    # Description rules
-    "content/description-length": "warning",
-    "content/total-description-budget": "warning",
-    "quality/scope-grab-description": "warning",
-    # Setup gap detection
-    "hooks/no-commit-guard": "warning",
-    "security/dangerous-permission-grant": "error",
-    "hooks/no-audit-trail": "info",
     "content/missing-boundary-policy": "off",
+    "security/yara-signatures": "off",
+    "security/cve-lookup": "off",
+    "submission/file-completeness": "off",
+    "mcp/suspicious-endpoint": "warning",
+    "quality/scope-overreach": "info",
+    "security/ast-behavioral": "warning",
+    "security/bash-taint-flow": "warning",
+    "security/cross-component-flow": "warning",
+    "security/mcp-tool-poisoning": "warning",
+    "security/taint-flow": "warning",
 }
 
-STRICT: dict[str, str] = {
-    **RECOMMENDED,
-    "content/circular-references": "error",
-    "content/orphan-skills": "error",
-    "content/mcp-skill-alignment": "error",
-    "content/total-context-budget": "error",
-    "content/permission-escalation": "error",
-    "command/references-nonexistent-skill": "error",
-    "frontmatter/description-quality": "error",
-    "frontmatter/format-valid": "error",
-    "content/token-budget": "error",
-    "claude-md/exists": "error",
-    "agent/disallowed-tools-parseable": "error",
+# Promotions relative to recommended. Keys absent here inherit recommended.
+STRICT_OVERRIDES: dict[str, str] = {
     "agent/constraint-body-match": "error",
-    "security/ast-behavioral": "error",
-    "security/taint-flow": "error",
-    "security/bash-taint-flow": "error",
-    "security/mcp-least-privilege": "error",
-    "security/mcp-tool-poisoning": "error",
-    "security/cross-component-flow": "error",
+    "agent/disallowed-tools-parseable": "error",
     "agent/excessive-permissions": "error",
-    "security/memory-write-unscoped": "error",
     "agent/memory-write-unscoped": "error",
-    "security/unbounded-delegation": "error",
-    "agent/unbounded-delegation": "error",
-    "mcp/valid-config": "error",
-    "mcp/suspicious-endpoint": "error",
-    "mcp/no-wildcard-tools": "warning",
-    "mcp/no-plaintext-secrets": "error",
-    "mcp/unpinned-package": "error",
-    "mcp/auto-approve-risk": "error",
     "agent/model-specified": "info",
-    "hooks/matcher-matches-no-tool": "error",
-    "hooks/silent-failure-masking": "error",
+    "agent/unbounded-delegation": "error",
+    "claude-md/exists": "error",
+    "command/allowed-tools-coverage": "error",
+    "command/references-nonexistent-skill": "error",
+    "content/allowed-tools-auto-approve": "error",
+    "content/circular-references": "error",
+    "content/description-length": "error",
     "content/hardcoded-machine-path": "error",
+    "content/mcp-skill-alignment": "error",
+    "content/missing-boundary-policy": "warning",
+    "content/orphan-skills": "error",
+    "content/permission-escalation": "error",
+    "content/token-budget": "error",
+    "content/total-context-budget": "error",
+    "content/total-description-budget": "error",
     "cross/config-instruction-conflict": "error",
     "cross/multi-assistant-drift": "error",
-    "command/allowed-tools-coverage": "error",
     "cross/overpermissive-grants": "error",
-    "hooks/permission-contradiction": "error",
-    "hooks/permission-prompt-disabled": "error",
-    "hooks/local-settings-committed": "error",
-    "mcp/cross-assistant-divergence": "error",
-    "claude-md/include-exists": "error",
-    "hooks/command-script-exists": "error",
-    "mcp/endpoint-integrity": "error",
-    "security/credential-file-present": "error",
-    "mcp/json-duplicate-keys": "error",
-    "hooks/json-duplicate-keys": "error",
-    "structural/symlink-escape": "error",
-    # Pre-trust config rules
-    "hooks/base-url-override": "error",
-    "hooks/api-key-helper": "error",
+    "frontmatter/description-quality": "error",
+    "frontmatter/format-valid": "error",
     "hooks/env-credential-override": "error",
+    "hooks/local-settings-committed": "error",
+    "hooks/matcher-matches-no-tool": "error",
+    "hooks/no-audit-trail": "warning",
+    "hooks/no-commit-guard": "error",
+    "hooks/permission-contradiction": "error",
     "hooks/pre-trust-permissions": "error",
-    # Allowed-tools auto-approve
-    "content/allowed-tools-auto-approve": "error",
-    # Description rules
-    "content/description-length": "error",
-    "content/total-description-budget": "error",
-    "quality/scope-grab-description": "error",
-    # Quality rules
+    "hooks/silent-failure-masking": "error",
+    "mcp/auto-approve-risk": "error",
+    "mcp/cross-assistant-divergence": "error",
+    "mcp/no-wildcard-tools": "warning",
+    "mcp/suspicious-endpoint": "error",
+    "mcp/unpinned-package": "error",
+    "mcp/valid-config": "error",
+    "quality/example-gap": "warning",
     "quality/imprecise-instruction": "error",
     "quality/redundant-guidance": "error",
-    "quality/unfinished-content": "error",
-    "quality/example-gap": "warning",
+    "quality/scope-grab-description": "error",
     "quality/stale-references": "error",
-    # Setup gap detection
-    "hooks/no-commit-guard": "error",
-    "security/dangerous-permission-grant": "error",
-    "hooks/no-audit-trail": "warning",
-    "content/missing-boundary-policy": "warning",
+    "quality/unfinished-content": "error",
+    "security/ast-behavioral": "error",
+    "security/bash-taint-flow": "error",
+    "security/cross-component-flow": "error",
+    "security/mcp-least-privilege": "error",
+    "security/mcp-tool-poisoning": "error",
+    "security/memory-write-unscoped": "error",
+    "security/taint-flow": "error",
+    "security/unbounded-delegation": "error",
 }
+
+
+def _registered_default_severities() -> dict[str, str]:
+    import harness_eval.inspection  # noqa: F401 — registers all rules
+    from harness_eval.inspection.registry import get_all_rules
+
+    return {r.meta.id: r.meta.default_severity.value for r in get_all_rules()}
+
+
+def recommended_rules() -> dict[str, str]:
+    """Every registered rule at default_severity, plus RECOMMENDED_OVERRIDES."""
+    rules = _registered_default_severities()
+    rules.update(RECOMMENDED_OVERRIDES)
+    return rules
+
+
+def strict_rules() -> dict[str, str]:
+    """Recommended, with STRICT_OVERRIDES applied on top."""
+    rules = recommended_rules()
+    rules.update(STRICT_OVERRIDES)
+    return rules
+
+
+RECOMMENDED: dict[str, str] = recommended_rules()
+STRICT: dict[str, str] = strict_rules()
 
 SECURITY: dict[str, str] = {
     "structural/skill-md-exists": "off",
@@ -507,4 +423,8 @@ __all__ = [
     "SKILL_SUBMISSION",
     "GATE",
     "gate_rules",
+    "recommended_rules",
+    "strict_rules",
+    "RECOMMENDED_OVERRIDES",
+    "STRICT_OVERRIDES",
 ]

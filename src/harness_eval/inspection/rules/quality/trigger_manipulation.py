@@ -56,6 +56,8 @@ class TriggerManipulation:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         content_parts = []
         start_line = 1
 

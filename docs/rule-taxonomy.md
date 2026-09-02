@@ -35,7 +35,12 @@ Structural rules carry one of three tiers:
   gated.
 
 The gating and provisional sets are pinned by `tests/test_rule_taxonomy.py`, so a
-tier change is a deliberate, reviewed edit.
+tier change is a deliberate, reviewed edit. The `recommended` and `strict`
+presets are derived from the same registry: every rule starts at
+`RuleMeta.default_severity`, then a small override map turns extras off or
+changes severity. A test requires every gating-tier ID to be present and not
+`"off"` in `recommended`, so those rules cannot silently drop out of default
+lint.
 
 ## Axis 2: analysis scope
 

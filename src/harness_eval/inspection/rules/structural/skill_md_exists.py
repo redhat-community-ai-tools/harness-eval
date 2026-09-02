@@ -27,6 +27,8 @@ class SkillMdExists:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         if any("SKILL.md not found" in e for e in skill.parse_errors):
             context.report(
                 ReportDescriptor(

@@ -27,6 +27,8 @@ class DescriptionRequired:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         if skill.parse_errors:
             return
 

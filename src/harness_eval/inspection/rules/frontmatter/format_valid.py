@@ -27,6 +27,8 @@ class FormatValid:
 
     def create(self, context: RuleContext) -> None:
         skill = context.skill
+        if skill is None:
+            return
         loc = Location(
             file=skill.skill_md_path,
             start_line=skill.frontmatter_start_line or 1,

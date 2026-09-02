@@ -55,7 +55,10 @@ class SecurityCredentialFilePresent:
     )
 
     def create(self, context: RuleContext) -> None:
-        skill_dir = Path(context.skill.skill_md_path).parent
+        skill = context.skill
+        if skill is None:
+            return
+        skill_dir = Path(skill.skill_md_path).parent
         for p in skill_dir.rglob("*"):
             if not p.is_file() or any(fnmatch.fnmatch(p.name, a) for a in _ALLOW):
                 continue

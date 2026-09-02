@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -12,7 +13,12 @@ from harness_eval.core.types import ComponentType
 from harness_eval.data import load_capabilities
 
 if TYPE_CHECKING:
-    from harness_eval.inspection.types import ParsedAgent, ParsedCommand, ParsedHooks, ParsedSkill
+    from harness_eval.inspection.types import (
+        ParsedAgent,
+        ParsedCommand,
+        ParsedHooks,
+        ParsedSkill,
+    )
 
 
 @dataclass(frozen=True)
@@ -94,7 +100,7 @@ def _extract_mcp_tool_calls(body: str) -> list[tuple[str, str]]:
 
 
 def _parse_mcp_config(mcp_path: str) -> dict[str, dict]:
-    """Parse .mcp.json and return {server_name: config_dict}."""
+    """Parse an MCP config and return {server_name: config_dict}."""
     path = Path(mcp_path)
     if not path.exists():
         return {}
@@ -102,18 +108,47 @@ def _parse_mcp_config(mcp_path: str) -> dict[str, dict]:
         data = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         return {}
-    servers = data.get("mcpServers", {})
+    if not isinstance(data, dict):
+        return {}
+    from harness_eval.inspection.rules.mcp._shared import extract_servers
+
+    servers = extract_servers(data)
     if not isinstance(servers, dict):
         return {}
-    return servers
+    return {name: cfg for name, cfg in servers.items() if isinstance(cfg, dict)}
+
+
+def _hook_list(
+    hooks: ParsedHooks | Sequence[ParsedHooks] | None,
+) -> list[ParsedHooks]:
+    if hooks is None:
+        return []
+    if isinstance(hooks, Sequence):
+        return list(hooks)
+    return [hooks]
+
+
+def _mcp_path_list(
+    mcp_config_path: str | Sequence[str] | None,
+    mcp_config_paths: Sequence[str] | None,
+) -> list[str]:
+    paths: list[str] = []
+    if isinstance(mcp_config_path, str):
+        paths.append(mcp_config_path)
+    elif mcp_config_path:
+        paths.extend(mcp_config_path)
+    if mcp_config_paths:
+        paths.extend(mcp_config_paths)
+    return list(dict.fromkeys(paths))
 
 
 def build_component_graph(
     all_skills: list[ParsedSkill],
     all_commands: list[ParsedCommand],
     agents: list[ParsedAgent] | None = None,
-    hooks: ParsedHooks | None = None,
-    mcp_config_path: str | None = None,
+    hooks: ParsedHooks | Sequence[ParsedHooks] | None = None,
+    mcp_config_path: str | Sequence[str] | None = None,
+    mcp_config_paths: Sequence[str] | None = None,
 ) -> ComponentGraph:
     """Build a unified component graph from all discovered components."""
     from harness_eval.inspection.rules.content._skill_refs import extract_references
@@ -122,6 +157,8 @@ def build_component_graph(
     graph = ComponentGraph()
     agents = agents or []
     skill_names: set[str] = set()
+    hook_list = _hook_list(hooks)
+    mcp_paths = _mcp_path_list(mcp_config_path, mcp_config_paths)
 
     for skill in all_skills:
         name = skill.dir_name
@@ -197,13 +234,14 @@ def build_component_graph(
                         )
                     )
 
-    if hooks:
-        graph.nodes["hooks"] = GraphNode(
+    for parsed_hooks in hook_list:
+        node_key = f"hooks:{parsed_hooks.file_path}"
+        graph.nodes[node_key] = GraphNode(
             name="hooks",
             component_type=ComponentType.HOOKS,
-            file_path=hooks.file_path,
+            file_path=parsed_hooks.file_path,
         )
-        for hook in hooks.hooks:
+        for hook in parsed_hooks.hooks:
             cmd = hook.get("command", "")
             if not isinstance(cmd, str):
                 continue
@@ -211,23 +249,25 @@ def build_component_graph(
                 if skill_name in cmd:
                     graph.edges.append(
                         GraphEdge(
-                            source="hooks",
+                            source=node_key,
                             target=skill_name,
                             edge_type="references",
                             evidence=f"hook command mentions {skill_name}",
                         )
                     )
 
-    if mcp_config_path:
-        servers = _parse_mcp_config(mcp_config_path)
+    for mcp_path in mcp_paths:
+        servers = _parse_mcp_config(mcp_path)
         for server_name, _config in servers.items():
             node_key = f"mcp:{server_name}"
-            graph.nodes[node_key] = GraphNode(
-                name=server_name,
-                component_type=ComponentType.MCP_CONFIG,
-                file_path=mcp_config_path,
-            )
+            if node_key not in graph.nodes:
+                graph.nodes[node_key] = GraphNode(
+                    name=server_name,
+                    component_type=ComponentType.MCP_CONFIG,
+                    file_path=mcp_path,
+                )
 
+    if mcp_paths:
         for skill in all_skills:
             if not skill.body:
                 continue

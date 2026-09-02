@@ -81,24 +81,9 @@ class YamlRule:
         self._message_template = message_template
 
     def create(self, context: RuleContext) -> None:
-        skill = context.skill
-        if not skill.raw_content:
+        content, file_path = context.source_text()
+        if not content:
             return
-
-        file_path = skill.skill_md_path
-        if context.target:
-            if hasattr(context.target, "skill_md_path"):
-                file_path = context.target.skill_md_path
-            elif hasattr(context.target, "command_md_path"):
-                file_path = context.target.command_md_path
-            elif hasattr(context.target, "agent_md_path"):
-                file_path = context.target.agent_md_path
-            elif hasattr(context.target, "file_path"):
-                file_path = context.target.file_path
-
-        content = skill.raw_content
-        if context.target and hasattr(context.target, "raw_content") and context.target.raw_content:
-            content = context.target.raw_content
 
         for i, line in enumerate(content.split("\n")):
             for pat in self._patterns:

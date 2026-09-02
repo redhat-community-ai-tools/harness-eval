@@ -14,6 +14,7 @@ from harness_eval.inspection.parsers import (
     parse_claude_md,
     parse_command,
     parse_hooks,
+    parse_mcp_config_file,
     parse_skill,
 )
 from harness_eval.inspection.registry import (
@@ -26,7 +27,11 @@ from harness_eval.inspection.types import (
     Finding,
     InspectionResult,
     Location,
+    ParsedAgent,
+    ParsedClaudeMd,
     ParsedCommand,
+    ParsedHooks,
+    ParsedMcpConfig,
     ParsedSkill,
     ReportDescriptor,
     Rule,
@@ -194,19 +199,6 @@ def _run_rules(
     config_rules = config_rules or {}
     scan_state = scan_state if scan_state is not None else {}
 
-    dummy_skill = skill or ParsedSkill(
-        dir_path="",
-        dir_name="",
-        skill_md_path=file_path,
-        raw_content="",
-        frontmatter={},
-        raw_frontmatter="",
-        frontmatter_start_line=0,
-        body="",
-        body_start_line=0,
-        files=[],
-    )
-
     rules = get_all_rules()
 
     for rule in rules:
@@ -228,7 +220,6 @@ def _run_rules(
         findings_before = len(findings)
 
         context = RuleContext(
-            skill=dummy_skill,
             report=_make_report_fn(
                 rule.meta.id,
                 severity,
@@ -243,6 +234,7 @@ def _run_rules(
                 rule.meta.default_suggestion,
             ),
             severity=severity,
+            skill=skill,
             options=options,
             target=target,
             all_skills=all_skills or [],
@@ -295,9 +287,10 @@ def lint(
     all_skills: list[ParsedSkill] | None = None,
     all_commands: list[ParsedCommand] | None = None,
     source_tool: str | None = None,
+    parsed: ParsedSkill | None = None,
 ) -> InspectionResult:
     """Lint a single skill directory or SKILL.md file."""
-    skill = parse_skill(skill_path)
+    skill = parsed if parsed is not None else parse_skill(skill_path)
     diagnostics = _parse_errors_to_findings(
         skill.parse_errors,
         skill.skill_md_path,
@@ -335,9 +328,10 @@ def lint_command(
     all_commands: list[ParsedCommand] | None = None,
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
+    parsed: ParsedCommand | None = None,
 ) -> InspectionResult:
     """Lint a single command directory."""
-    cmd = parse_command(command_path)
+    cmd = parsed if parsed is not None else parse_command(command_path)
     diagnostics = _parse_errors_to_findings(cmd.parse_errors, cmd.command_md_path)
 
     rule_diags, suppression_count, rules_run = _run_rules(
@@ -371,9 +365,10 @@ def lint_claude_md(
     all_skills: list[ParsedSkill] | None = None,
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
+    parsed: ParsedClaudeMd | None = None,
 ) -> InspectionResult:
     """Lint a CLAUDE.md file."""
-    claude_md = parse_claude_md(file_path)
+    claude_md = parsed if parsed is not None else parse_claude_md(file_path)
     diagnostics = _parse_errors_to_findings(claude_md.parse_errors, file_path)
 
     rule_diags, suppression_count, rules_run = _run_rules(
@@ -405,9 +400,10 @@ def lint_hooks(
     config_rules: dict[str, str | list[Any]] | None = None,
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
+    parsed: ParsedHooks | None = None,
 ) -> InspectionResult:
     """Lint hooks from settings.json."""
-    hooks = parse_hooks(settings_path)
+    hooks = parsed if parsed is not None else parse_hooks(settings_path)
     diagnostics = _parse_errors_to_findings(hooks.parse_errors, settings_path)
 
     rule_diags, suppression_count, rules_run = _run_rules(
@@ -439,9 +435,10 @@ def lint_agent(
     all_skills: list[ParsedSkill] | None = None,
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
+    parsed: ParsedAgent | None = None,
 ) -> InspectionResult:
     """Lint a single agent .md file."""
-    agent = parse_agent(agent_path)
+    agent = parsed if parsed is not None else parse_agent(agent_path)
     diagnostics = _parse_errors_to_findings(agent.parse_errors, agent.agent_md_path)
 
     rule_diags, suppression_count, rules_run = _run_rules(
@@ -473,46 +470,28 @@ def lint_mcp_config(
     config_rules: dict[str, str | list[Any]] | None = None,
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
+    parsed: ParsedMcpConfig | None = None,
 ) -> InspectionResult:
     """Lint an MCP configuration file."""
-    path = Path(mcp_config_path)
-    if not path.exists():
-        return _build_result(mcp_config_path, path.name, 0, "mcp_config", [], 0)
-
-    from harness_eval.utils.tokens import count_tokens
-
-    raw_content = path.read_text(encoding="utf-8", errors="replace")
-    tokens = count_tokens(raw_content)
-
-    dummy_skill = ParsedSkill(
-        dir_path=str(path.parent),
-        dir_name=path.parent.name,
-        skill_md_path=mcp_config_path,
-        raw_content=raw_content,
-        frontmatter={},
-        raw_frontmatter="",
-        frontmatter_start_line=0,
-        body=raw_content,
-        body_start_line=1,
-        files=[path.name],
-        tokens=tokens,
-    )
+    mcp = parsed if parsed is not None else parse_mcp_config_file(mcp_config_path)
+    if not mcp.raw_content and mcp.parse_errors:
+        return _build_result(mcp_config_path, Path(mcp_config_path).name, 0, "mcp_config", [], 0)
 
     rule_diags, suppression_count, rules_run = _run_rules(
         ComponentType.MCP_CONFIG,
-        mcp_config_path,
-        raw_content,
-        skill=dummy_skill,
-        target=None,
+        mcp.file_path,
+        mcp.raw_content,
+        skill=None,
+        target=mcp,
         config_rules=config_rules,
         scan_state=scan_state,
         source_tool=source_tool,
     )
 
     return _build_result(
-        mcp_config_path,
-        path.name,
-        tokens,
+        mcp.file_path,
+        Path(mcp.file_path).name,
+        mcp.tokens,
         "mcp_config",
         rule_diags,
         suppression_count,
@@ -672,121 +651,107 @@ def _inspect_setup(
     scan_state: dict[str, Any] = {"project_root": setup.path}
     results: list[InspectionResult] = []
 
-    all_skills = [parse_skill(str(Path(comp.path).parent)) for comp in setup.by_type(CT.SKILL)]
-    all_commands = [
-        parse_command(
-            str(Path(comp.path).parent)
-            if Path(comp.path).is_dir() or Path(comp.path).name == "command.md"
-            else str(Path(comp.path))
-        )
-        for comp in setup.by_type(CT.COMMAND)
-    ]
-
     from harness_eval.analysis.component_graph import build_component_graph
-    from harness_eval.inspection.parsers import parse_agent, parse_hooks
 
-    parsed_agents = [parse_agent(comp.path) for comp in setup.by_type(CT.AGENT)]
-    hooks_comps = setup.by_type(CT.HOOKS)
-    parsed_hooks = parse_hooks(hooks_comps[0].path) if hooks_comps else None
-    mcp_comps = setup.by_type(CT.MCP_CONFIG)
-    mcp_path = mcp_comps[0].path if mcp_comps else None
+    # Discoverers store file paths. Parsers accept a file or a directory, so
+    # pass comp.path through — do not re-derive command.md vs flat-file here.
+    skill_comps = list(setup.by_type(CT.SKILL))
+    command_comps = list(setup.by_type(CT.COMMAND))
+    claude_comps = list(setup.by_type(CT.CLAUDE_MD))
+    hooks_comps = list(setup.by_type(CT.HOOKS))
+    agent_comps = list(setup.by_type(CT.AGENT))
+    mcp_comps = list(setup.by_type(CT.MCP_CONFIG))
+
+    all_skills = [parse_skill(c.path) for c in skill_comps]
+    all_commands = [parse_command(c.path) for c in command_comps]
+    all_claude = [parse_claude_md(c.path) for c in claude_comps]
+    all_hooks = [parse_hooks(c.path) for c in hooks_comps]
+    all_agents = [parse_agent(c.path) for c in agent_comps]
+    all_mcp = [parse_mcp_config_file(c.path) for c in mcp_comps]
 
     scan_state["component_graph"] = build_component_graph(
-        all_skills, all_commands, parsed_agents, parsed_hooks, mcp_path
+        all_skills,
+        all_commands,
+        all_agents,
+        all_hooks,
+        mcp_config_paths=[c.path for c in mcp_comps],
     )
 
-    for comp in setup.by_type(CT.SKILL):
-        results.append(
-            lint(
-                str(Path(comp.path).parent),
-                config_rules,
-                scan_state=scan_state,
-                all_skills=all_skills,
-                all_commands=all_commands,
-                source_tool=comp.source_tool,
-            )
-        )
-    for comp in setup.by_type(CT.COMMAND):
-        cmd_path = Path(comp.path)
-        if cmd_path.is_file() and cmd_path.name != "command.md":
+    lint_dispatch: dict[CT, Callable[..., InspectionResult]] = {
+        CT.SKILL: lambda comp, parsed: lint(
+            parsed.dir_path,
+            config_rules,
+            scan_state=scan_state,
+            all_skills=all_skills,
+            all_commands=all_commands,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+        ),
+        CT.COMMAND: lambda comp, parsed: lint_command(
+            parsed.command_md_path,
+            config_rules,
+            all_skills=all_skills,
+            all_commands=all_commands,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+        ),
+        CT.CLAUDE_MD: lambda comp, parsed: lint_claude_md(
+            parsed.file_path,
+            config_rules,
+            all_skills=all_skills,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+        ),
+        CT.HOOKS: lambda comp, parsed: lint_hooks(
+            parsed.file_path,
+            config_rules,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+        ),
+        CT.AGENT: lambda comp, parsed: lint_agent(
+            parsed.agent_md_path,
+            config_rules,
+            all_skills=all_skills,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+        ),
+        CT.MCP_CONFIG: lambda comp, parsed: lint_mcp_config(
+            parsed.file_path,
+            config_rules,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+        ),
+    }
+
+    parsed_by_type: list[tuple[CT, list[Any], list[Any]]] = [
+        (CT.SKILL, skill_comps, all_skills),
+        (CT.COMMAND, command_comps, all_commands),
+        (CT.CLAUDE_MD, claude_comps, all_claude),
+        (CT.HOOKS, hooks_comps, all_hooks),
+        (CT.AGENT, agent_comps, all_agents),
+        (CT.MCP_CONFIG, mcp_comps, all_mcp),
+    ]
+    for ctype, comps, parsed_list in parsed_by_type:
+        run = lint_dispatch[ctype]
+        for comp, parsed in zip(comps, parsed_list, strict=True):
+            results.append(run(comp, parsed))
+
+    for ctype in (CT.RULE, CT.OUTPUT_STYLE, CT.UNCATEGORIZED):
+        for comp in setup.by_type(ctype):
             results.append(
-                lint_command(
-                    str(cmd_path),
+                lint_text_file(
+                    comp.path,
+                    ctype,
                     config_rules,
-                    all_skills=all_skills,
-                    all_commands=all_commands,
                     scan_state=scan_state,
                     source_tool=comp.source_tool,
                 )
             )
-        else:
-            results.append(
-                lint_command(
-                    str(cmd_path.parent),
-                    config_rules,
-                    all_skills=all_skills,
-                    all_commands=all_commands,
-                    scan_state=scan_state,
-                    source_tool=comp.source_tool,
-                )
-            )
-    for comp in setup.by_type(CT.CLAUDE_MD):
-        results.append(
-            lint_claude_md(
-                comp.path,
-                config_rules,
-                all_skills=all_skills,
-                scan_state=scan_state,
-                source_tool=comp.source_tool,
-            )
-        )
-    for comp in setup.by_type(CT.HOOKS):
-        results.append(
-            lint_hooks(comp.path, config_rules, scan_state=scan_state, source_tool=comp.source_tool)
-        )
-    for comp in setup.by_type(CT.AGENT):
-        results.append(
-            lint_agent(comp.path, config_rules, scan_state=scan_state, source_tool=comp.source_tool)
-        )
-    for comp in setup.by_type(CT.RULE):
-        results.append(
-            lint_text_file(
-                comp.path,
-                CT.RULE,
-                config_rules,
-                scan_state=scan_state,
-                source_tool=comp.source_tool,
-            )
-        )
-    for comp in setup.by_type(CT.OUTPUT_STYLE):
-        results.append(
-            lint_text_file(
-                comp.path,
-                CT.OUTPUT_STYLE,
-                config_rules,
-                scan_state=scan_state,
-                source_tool=comp.source_tool,
-            )
-        )
-    for comp in setup.by_type(CT.MCP_CONFIG):
-        results.append(
-            lint_mcp_config(
-                comp.path,
-                config_rules,
-                scan_state=scan_state,
-                source_tool=comp.source_tool,
-            )
-        )
-    for comp in setup.by_type(CT.UNCATEGORIZED):
-        results.append(
-            lint_text_file(
-                comp.path,
-                CT.UNCATEGORIZED,
-                config_rules,
-                scan_state=scan_state,
-                source_tool=comp.source_tool,
-            )
-        )
 
     graph = scan_state.get("component_graph")
     if graph:

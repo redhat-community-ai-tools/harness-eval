@@ -38,7 +38,10 @@ class StructuralSymlinkEscape:
     )
 
     def create(self, context: RuleContext) -> None:
-        skill_dir = Path(context.skill.skill_md_path).parent
+        skill = context.skill
+        if skill is None:
+            return
+        skill_dir = Path(skill.skill_md_path).parent
         root = project_root(skill_dir)
         for p in skill_dir.rglob("*"):
             if p.is_symlink():

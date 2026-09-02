@@ -172,20 +172,45 @@ class ParsedAgent:
     tokens: int = 0
 
 
-ParsedFile = ParsedSkill | ParsedCommand | ParsedClaudeMd | ParsedHooks | ParsedAgent
+@dataclass
+class ParsedMcpConfig:
+    file_path: str
+    raw_content: str
+    parse_errors: list[str] = field(default_factory=list)
+    tokens: int = 0
+
+
+ParsedFile = (
+    ParsedSkill | ParsedCommand | ParsedClaudeMd | ParsedHooks | ParsedAgent | ParsedMcpConfig
+)
 
 
 @dataclass
 class RuleContext:
-    skill: ParsedSkill
     report: Callable[[ReportDescriptor], None]
     severity: Severity
+    skill: ParsedSkill | None = None
     options: list[Any] = field(default_factory=list)
     target: ParsedFile | None = None
     all_skills: list[ParsedSkill] = field(default_factory=list)
     all_commands: list[ParsedCommand] = field(default_factory=list)
     scan_state: dict[str, Any] = field(default_factory=dict)
     source_tool: str | None = None
+
+    def source_text(self) -> tuple[str, str]:
+        """Raw content and file path for the component being linted."""
+        t = self.target
+        if isinstance(t, ParsedSkill):
+            return t.raw_content, t.skill_md_path
+        if isinstance(t, ParsedCommand):
+            return t.raw_content, t.command_md_path
+        if isinstance(t, ParsedAgent):
+            return t.raw_content, t.agent_md_path
+        if isinstance(t, (ParsedClaudeMd, ParsedHooks, ParsedMcpConfig)):
+            return t.raw_content, t.file_path
+        if self.skill is not None:
+            return self.skill.raw_content, self.skill.skill_md_path
+        return "", ""
 
     @property
     def command(self) -> ParsedCommand | None:
@@ -202,6 +227,10 @@ class RuleContext:
     @property
     def agent(self) -> ParsedAgent | None:
         return self.target if isinstance(self.target, ParsedAgent) else None
+
+    @property
+    def mcp_config(self) -> ParsedMcpConfig | None:
+        return self.target if isinstance(self.target, ParsedMcpConfig) else None
 
 
 @dataclass
