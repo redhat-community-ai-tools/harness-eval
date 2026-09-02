@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.14.0] - 2026-09-02
+
 ### Changed
 - `recommended` and `strict` presets are derived from the rule registry. New rules are on by default at `RuleMeta.default_severity`; only extras and severity overrides are hand-maintained. Gating-tier rules cannot drift out of default lint.
 - The component graph includes every hooks file and every MCP config, not only the first of each.
