@@ -234,6 +234,20 @@ class TestBrokenReferencesTemplates:
         ]
         assert len(diags) == 0
 
+    def test_eg_backtick_path_not_flagged(self, tmp_path: Path) -> None:
+        """`e.g.` is followed by a space, so a trailing \\b must not apply to it."""
+        skill_dir = _make_skill(
+            tmp_path,
+            "eg-backtick-skill",
+            body="Avoid this, e.g. `lib/x.py` in docs.",
+        )
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) == 0
+
     def test_real_path_before_eg_still_flagged(self, tmp_path: Path) -> None:
         skill_dir = _make_skill(
             tmp_path,

@@ -68,7 +68,7 @@ _KNOWN_EXTENSIONS = frozenset(
 _TRAILING_PUNCT_RE = re.compile(r"[.,;:!?)]+$")
 _NON_ASCII_SEGMENT_RE = re.compile(r"[^\x00-\x7f]")
 _ANTI_PATTERN_LINE_RE = re.compile(r"(?i)\banti-pattern\b")
-_EXAMPLE_MARKER_RE = re.compile(r"(?i)(?:e\.g\.|for example|pattern in|such as)\b")
+_EXAMPLE_MARKER_RE = re.compile(r"(?i)(?:e\.g\.|(?:for example|pattern in|such as)\b)")
 _DATE_PLACEHOLDER_RE = re.compile(r"YYYY|MM-DD|<[^>]+>")
 _PLACEHOLDER_NAMES = frozenset({"url", "path", "file", "filename", "name"})
 
