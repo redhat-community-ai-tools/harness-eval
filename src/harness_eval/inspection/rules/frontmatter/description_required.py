@@ -13,6 +13,7 @@ from harness_eval.inspection.types import (
 class DescriptionRequired:
     meta: RuleMeta = RuleMeta(
         id="frontmatter/description-required",
+        tier="gating",
         default_severity=Severity.ERROR,
         fixable=False,
         description="The 'description' field is required in frontmatter",

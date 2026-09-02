@@ -98,14 +98,15 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
                 paths.append(f)
 
         # Agents
-        agents_dir = root / ".claude" / "agents"
-        if agents_dir.is_dir():
-            for f in sorted(agents_dir.glob("*.md")):
-                if f.is_file():
-                    paths.append(f)
+        for agents_dir in (root / ".claude" / "agents", root / "agents"):
+            if agents_dir.is_dir():
+                for f in sorted(agents_dir.glob("*.md")):
+                    if f.is_file():
+                        paths.append(f)
         if recursive:
-            for f in _recursive_glob(root, ".claude/agents/*.md"):
-                paths.append(f)
+            for pattern in (".claude/agents/*.md", "agents/*.md"):
+                for f in _recursive_glob(root, pattern):
+                    paths.append(f)
 
         # MCP configs
         for pattern in [".mcp.json", "**/.mcp.json"]:
@@ -278,18 +279,23 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
     def _discover_agents(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
         results = []
         seen_paths: set[str] = set()
-        agents_dir = root / ".claude" / "agents"
-        if agents_dir.is_dir():
+        for agents_dir, tool in (
+            (root / ".claude" / "agents", "claude"),
+            (root / "agents", None),
+        ):
+            if not agents_dir.is_dir():
+                continue
             for f in sorted(agents_dir.glob("*.md")):
                 if f.is_file():
                     seen_paths.add(str(f.resolve()))
-                    results.append(parse_file(f, ComponentType.AGENT, source_tool="claude"))
+                    results.append(parse_file(f, ComponentType.AGENT, source_tool=tool))
         if recursive:
-            for f in _recursive_glob(root, ".claude/agents/*.md"):
-                resolved = str(f.resolve())
-                if resolved not in seen_paths:
-                    seen_paths.add(resolved)
-                    results.append(parse_file(f, ComponentType.AGENT, source_tool="claude"))
+            for pattern, tool in ((".claude/agents/*.md", "claude"), ("agents/*.md", None)):
+                for f in _recursive_glob(root, pattern):
+                    resolved = str(f.resolve())
+                    if resolved not in seen_paths:
+                        seen_paths.add(resolved)
+                        results.append(parse_file(f, ComponentType.AGENT, source_tool=tool))
         return results
 
     def _discover_mcp_configs(self, root: Path) -> list[ParsedComponent]:

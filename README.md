@@ -3,10 +3,10 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-107-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
+[![Rules](https://img.shields.io/badge/rules-108-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, OpenCode, Codex CLI), builds a component graph across all of them, and runs 107 deterministic rules to catch issues that per-file linters miss: credential exfiltration chains, confused deputy attacks, skill/hook conflicts, and token budget blowouts.
+A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Claude Code, Cursor, Windsurf, Cline, Copilot, Gemini CLI, OpenCode, Codex CLI), builds a component graph across all of them, and runs 108 deterministic rules to catch issues that per-file linters miss: credential exfiltration chains, confused deputy attacks, skill/hook conflicts, and token budget blowouts.
 
 Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`, `.codex/`.
 
@@ -14,7 +14,7 @@ Most tools test whether a skill produces correct output. This one checks the set
 
 ```bash
 pip install harness-eval
-harness-eval harness-lint .                    # 107 deterministic rules, fully offline
+harness-eval harness-lint .                    # 108 deterministic rules, fully offline
 harness-eval harness-gate .                     # validated (gating-tier) rules only; exits 1 on any finding, no LLM
 harness-eval harness-security .                # security scan
 harness-eval skill-verify ./downloaded-skill   # SAFE / CAUTION / UNSAFE before you install
@@ -61,7 +61,7 @@ See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tie
 
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
-| `harness-lint` | 107 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
+| `harness-lint` | 108 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. | No |
 | `harness-security` | All security rules + YARA + CVE lookups + optional semantic review. SAFE/CAUTION/UNSAFE. | Scan: no. `--review`: `[llm]` extra or in-session. |
 | `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
 | `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
@@ -99,7 +99,7 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 
 ## Inspection rules
 
-107 deterministic rules across 12 categories: structural, frontmatter, content, quality, security, cross-component, commands, CLAUDE.md, MCP, hooks, agents, and submission. Six presets: `recommended` (default), `strict`, `security`, `pre-workflow`, `skill-submission`, and `gate`.
+108 deterministic rules across 12 categories: structural, frontmatter, content, quality, security, cross-component, commands, CLAUDE.md, MCP, hooks, agents, and submission. Six presets: `recommended` (default), `strict`, `security`, `pre-workflow`, `skill-submission`, and `gate`.
 
 **Rule tiers.** Each rule carries an evidence tier. **Gating** rules are structural checks that are safe to block a build on; `harness-gate` runs exactly these (corpus-validated rules plus decidable FILE/FILE_FS integrity checks). **Provisional** rules have no observed false positives but too few findings to promote yet. **Advisory** rules (including every heuristic, prose-judgment rule) are reported but never gate. Rules are also tagged by analysis scope (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`) — the last two are findings a per-file linter structurally cannot see. See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
 
@@ -108,9 +108,9 @@ Rules by tier:
 <!-- BEGIN GENERATED: tier-counts -->
 | Tier | Rules |
 |------|-------|
-| gating | 19 |
+| gating | 23 |
 | provisional | 0 |
-| advisory | 88 |
+| advisory | 85 |
 <!-- END GENERATED: tier-counts -->
 
 Rules by scope:
@@ -118,7 +118,7 @@ Rules by scope:
 <!-- BEGIN GENERATED: scope-counts -->
 | Scope | Rules |
 |-------|-------|
-| FILE | 81 |
+| FILE | 82 |
 | FILE_FS | 10 |
 | PAIRWISE | 9 |
 | SETUP | 7 |

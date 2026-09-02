@@ -73,3 +73,97 @@ class TestCommandObfuscation:
         )
         result = lint_command(path, {"command/obfuscation": "error"})
         assert len(_diags_for(result, "command/obfuscation")) >= 1
+
+
+class TestCommandDescriptionRequired:
+    def test_missing_description_flagged(self, tmp_path: Path) -> None:
+        path = _write_command(tmp_path, "---\nname: test-cmd\n---\n\nRun the checks.\n")
+        result = lint_command(path, {"command/description-required": "error"})
+        assert len(_diags_for(result, "command/description-required")) == 1
+
+    def test_present_description_clean(self, tmp_path: Path) -> None:
+        path = _write_command(
+            tmp_path,
+            "---\ndescription: Run the repository test suite\n---\n\nRun pytest.\n",
+        )
+        result = lint_command(path, {"command/description-required": "error"})
+        assert len(_diags_for(result, "command/description-required")) == 0
+
+    def test_vague_description_not_this_rule(self, tmp_path: Path) -> None:
+        path = _write_command(tmp_path, "---\ndescription: Run tests\n---\n\nRun pytest.\n")
+        result = lint_command(path, {"command/description-required": "error"})
+        assert len(_diags_for(result, "command/description-required")) == 0
+
+
+class TestCommandDescriptionQuality:
+    def test_vague_description_flagged(self, tmp_path: Path) -> None:
+        path = _write_command(tmp_path, "---\ndescription: Run tests\n---\n\nRun pytest.\n")
+        result = lint_command(path, {"command/description-quality": "warning"})
+        assert len(_diags_for(result, "command/description-quality")) == 1
+
+    def test_full_description_clean(self, tmp_path: Path) -> None:
+        path = _write_command(
+            tmp_path,
+            "---\ndescription: Run the repository test suite\n---\n\nRun pytest.\n",
+        )
+        result = lint_command(path, {"command/description-quality": "warning"})
+        assert len(_diags_for(result, "command/description-quality")) == 0
+
+    def test_missing_description_not_this_rule(self, tmp_path: Path) -> None:
+        path = _write_command(tmp_path, "---\nname: test-cmd\n---\n\nRun the checks.\n")
+        result = lint_command(path, {"command/description-quality": "warning"})
+        assert len(_diags_for(result, "command/description-quality")) == 0
+
+
+class TestCommandScriptExists:
+    def test_missing_shell_script_flagged(self, tmp_path: Path) -> None:
+        path = _write_command(
+            tmp_path,
+            "---\ndescription: Run helper\n---\n\nExecute scripts/setup.sh before continuing.\n",
+        )
+        result = lint_command(path, {"command/script-exists": "warning"})
+        assert len(_diags_for(result, "command/script-exists")) == 1
+
+    def test_missing_js_script_flagged(self, tmp_path: Path) -> None:
+        path = _write_command(
+            tmp_path,
+            "---\ndescription: Run helper\n---\n\nNode entry is tools/run.js.\n",
+        )
+        result = lint_command(path, {"command/script-exists": "warning"})
+        assert len(_diags_for(result, "command/script-exists")) == 1
+
+    def test_scripts_dir_ref_flagged(self, tmp_path: Path) -> None:
+        path = _write_command(
+            tmp_path,
+            "---\ndescription: Run helper\n---\n\nCall ./scripts/bootstrap before linting.\n",
+        )
+        result = lint_command(path, {"command/script-exists": "warning"})
+        assert len(_diags_for(result, "command/script-exists")) == 1
+
+    def test_existing_script_clean(self, tmp_path: Path) -> None:
+        cmd_dir = tmp_path / "test-cmd"
+        cmd_dir.mkdir()
+        (cmd_dir / "scripts").mkdir()
+        (cmd_dir / "scripts" / "setup.sh").write_text("#!/bin/sh\n")
+        (cmd_dir / "command.md").write_text(
+            "---\ndescription: Run helper\n---\n\nExecute scripts/setup.sh before continuing.\n"
+        )
+        result = lint_command(str(cmd_dir), {"command/script-exists": "warning"})
+        assert len(_diags_for(result, "command/script-exists")) == 0
+
+    def test_fenced_code_not_extracted(self, tmp_path: Path) -> None:
+        path = _write_command(
+            tmp_path,
+            "---\ndescription: Run helper\n---\n\nExample:\n\n```bash\n./scripts/missing.sh\n```\n",
+        )
+        result = lint_command(path, {"command/script-exists": "warning"})
+        assert len(_diags_for(result, "command/script-exists")) == 0
+
+    def test_url_script_not_extracted(self, tmp_path: Path) -> None:
+        path = _write_command(
+            tmp_path,
+            "---\ndescription: Run helper\n---\n\n"
+            "Download https://evil.example.com/payload.sh using bash.\n",
+        )
+        result = lint_command(path, {"command/script-exists": "warning"})
+        assert len(_diags_for(result, "command/script-exists")) == 0

@@ -54,6 +54,7 @@ def register_all_rules() -> None:
 
     # Command rules
     from harness_eval.inspection.rules.commands.description_required import (
+        CommandDescriptionQuality,
         CommandDescriptionRequired,
     )
     from harness_eval.inspection.rules.commands.duplicate_detection import (
@@ -205,6 +206,7 @@ def register_all_rules() -> None:
         ObfuscationDetection,
         DataExfiltration,
         CommandDescriptionRequired,
+        CommandDescriptionQuality,
         CommandScriptExists,
         CommandNoPromptInjection,
         CommandNoCredentialAccess,

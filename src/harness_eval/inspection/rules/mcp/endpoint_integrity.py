@@ -14,6 +14,7 @@ from urllib.parse import urlsplit
 
 from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules._config_fs import project_root
+from harness_eval.inspection.rules.mcp._shared import extract_servers
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -55,7 +56,7 @@ class McpEndpointIntegrity:
             return
         if not isinstance(data, dict):
             return
-        servers = data.get("mcpServers") or data.get("servers") or data.get("mcp") or {}
+        servers = extract_servers(data)
         if not isinstance(servers, dict):
             return
         root = project_root(Path(path))

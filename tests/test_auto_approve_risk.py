@@ -99,6 +99,25 @@ class TestAutoApproveRisk:
         # Non-list autoApprove is silently ignored by the rule
         assert len(diags) == 0
 
+    def test_vscode_servers_key(self, tmp_path: Path) -> None:
+        path = tmp_path / "mcp.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "servers": {
+                        "github": {
+                            "command": "gh",
+                            "autoApprove": ["create_issue"],
+                        }
+                    }
+                }
+            )
+        )
+        result = lint_mcp_config(str(path), RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
+        assert len(diags) == 1
+        assert "create_issue" in diags[0].message
+
     def test_multiple_servers(self, tmp_path: Path) -> None:
         """Multiple servers each with autoApprove should each be checked."""
         path = _make_mcp_config(

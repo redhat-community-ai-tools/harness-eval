@@ -67,6 +67,7 @@ _KNOWN_EXTENSIONS = frozenset(
 
 _TRAILING_PUNCT_RE = re.compile(r"[.,;:!?)]+$")
 _NON_ASCII_SEGMENT_RE = re.compile(r"[^\x00-\x7f]")
+_EXAMPLE_LINE_RE = re.compile(r"(?i)(?:e\.g\.|for example|pattern in|such as)\b")
 
 
 def _strip_trailing_punctuation(ref: str) -> str:
@@ -126,9 +127,23 @@ def _paths_base_dirs(frontmatter: dict[str, Any]) -> list[str]:
     return dirs
 
 
+def _absolute_outside_project(ref: str, project_root: Path | None) -> bool:
+    path = Path(ref)
+    if not path.is_absolute():
+        return False
+    if project_root is None:
+        return True
+    try:
+        path.resolve().relative_to(project_root.resolve())
+    except ValueError:
+        return True
+    return False
+
+
 class BrokenReferences:
     meta: RuleMeta = RuleMeta(
         id="content/broken-references",
+        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,
@@ -156,6 +171,8 @@ class BrokenReferences:
         for i, line in enumerate(lines):
             if i in fenced:
                 continue
+            if _EXAMPLE_LINE_RE.search(line):
+                continue
 
             refs_on_line: list[str] = []
             for match in _MD_LINK_PATTERN.finditer(line):
@@ -173,6 +190,8 @@ class BrokenReferences:
                 if not ref:
                     continue
                 if _is_not_a_file_ref(ref):
+                    continue
+                if _absolute_outside_project(ref, project_root_path):
                     continue
                 if ref in checked:
                     continue

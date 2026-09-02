@@ -9,14 +9,21 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Gemini CLI `.toml` commands are parsed and linted with the same command rules as `.md`.
 - Discover `.vscode/mcp.json` (VS Code / Copilot MCP) and treat the `servers` key as an MCP server map.
+- Discover repo-root `agents/*.md` (not only `.claude/agents/`).
+- `command/description-quality`: advisory check that a command description is more than two words (split out of `command/description-required`).
 
 ### Changed
 - `harness-gate` now includes decidable FILE/FILE_FS integrity rules: missing SKILL.md / hook scripts / command scripts / `@imports`, duplicate JSON keys, committed secret-named files, symlink escape, MCP endpoint integrity and valid-config, permission contradictions, disabled permission prompts, and committed `settings.local.json`. Heuristic and linguistic rules stay advisory.
+- `harness-gate` also includes `content/broken-references`, `command/description-required`, `hooks/valid-structure`, and `frontmatter/description-required` after the heuristic halves of those mixed rules were split off.
+- `command/script-exists` extracts `.sh`, `.js`, `.bash`, and `./scripts/` paths, not only `.py`.
+- `hooks/valid-structure` only flags hook entries with no command; `rm -rf`, `curl | bash`, and `git push --force` moved to `hooks/dangerous-command`.
 - `frontmatter/format-valid` no longer requires `name` to match the directory name (nested forge overlays and path-based skill ids were false positives).
 - `claude-md/exists` is not Claude-Code-only; Windsurf and Cline instruction files are linted, not discovery-only.
 - `lint` and `security` are CLI aliases for `harness-lint` and `harness-security`.
 
 ### Fixed
+- `content/broken-references` no longer flags absolute paths outside the project (`/sandbox/...`) or example backtick paths (`for example`, `e.g.`, `pattern in`).
+- `mcp/auto-approve-risk` only read `mcpServers`, so VS Code `.vscode/mcp.json` `servers` auto-approve lists were skipped.
 - `harness-security --review` crashed with `ModuleNotFoundError` because `rubric/prompts.py` shadowed the `rubric/prompts/` package.
 - `harness_eval.__version__` and the Tekton `app.kubernetes.io/version` label were behind pyproject (`7.11.0` / `7.10.0` vs `7.12.0`).
 - Pre-push hooks and CONTRIBUTING still invoked the removed `harness-eval lint` / `harness-eval security` command names.

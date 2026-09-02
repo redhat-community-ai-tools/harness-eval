@@ -13,11 +13,15 @@ from harness_eval.inspection.types import (
 )
 
 _DANGEROUS_PATTERNS = [
-    (re.compile(r"\brm\s+-rf\s+/"), "rm -rf /"),
+    (re.compile(r"\brm\s+-rf\b"), "rm -rf"),
     (re.compile(r"\bchmod\s+777\b"), "chmod 777"),
     (re.compile(r"\bdd\s+if="), "dd if="),
     (re.compile(r"\bmkfs\b"), "mkfs"),
     (re.compile(r":\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:"), "fork bomb"),
+    (re.compile(r"\bgit\s+push\s+--force\b"), "git push --force"),
+    (re.compile(r"\bgit\s+reset\s+--hard\b"), "git reset --hard"),
+    (re.compile(r"\bcurl\b.*\|\s*(?:bash|sh)\b"), "curl pipe to shell"),
+    (re.compile(r"\bwget\b.*\|\s*(?:bash|sh)\b"), "wget pipe to shell"),
 ]
 
 

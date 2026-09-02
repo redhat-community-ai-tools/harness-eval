@@ -133,8 +133,20 @@ def parse_skill(skill_path: str) -> ParsedSkill:
     )
 
 
+_SCRIPT_FILE_RE = re.compile(r"[\w./-]+\.(?:py|sh|bash|js)\b")
+_SCRIPTS_DIR_RE = re.compile(r"\./scripts/[\w./-]+")
+
+
+def _is_remote_script_ref(ref: str) -> bool:
+    """True if *ref* looks like a URL path, not a local script."""
+    if "://" in ref or ref.startswith("//"):
+        return True
+    head, sep, _ = ref.lstrip("./").partition("/")
+    return bool(sep) and "." in head
+
+
 def _extract_script_refs_outside_code_blocks(body: str) -> list[str]:
-    """Extract .py references only from lines outside fenced code blocks."""
+    """Extract script path references from lines outside fenced code blocks."""
     refs: list[str] = []
     in_fence = False
     for line in body.split("\n"):
@@ -142,7 +154,10 @@ def _extract_script_refs_outside_code_blocks(body: str) -> list[str]:
             in_fence = not in_fence
             continue
         if not in_fence:
-            refs.extend(re.findall(r"[\w./-]+\.py\b", line))
+            for ref in _SCRIPT_FILE_RE.findall(line):
+                if not _is_remote_script_ref(ref):
+                    refs.append(ref)
+            refs.extend(_SCRIPTS_DIR_RE.findall(line))
     return refs
 
 

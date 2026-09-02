@@ -201,6 +201,52 @@ class TestBrokenReferencesTemplates:
         ]
         assert len(diags) == 0
 
+    def test_sandbox_absolute_path_not_flagged(self, tmp_path: Path) -> None:
+        """Runtime paths like /sandbox/... are not files in the project tree."""
+        from harness_eval.inspection.engine import lint
+        from harness_eval.inspection.parsers import parse_skill
+
+        skill_dir = _make_skill(
+            tmp_path,
+            "runtime-skill",
+            body="Write findings to `/sandbox/workspace/prior-review.txt`.",
+        )
+        result = lint(
+            str(skill_dir),
+            self.RULE_CONFIG,
+            scan_state={"project_root": str(tmp_path)},
+            all_skills=[parse_skill(str(skill_dir))],
+            all_commands=[],
+        )
+        diags = [d for d in result.diagnostics if d.rule_id == self.RULE_ID]
+        assert len(diags) == 0
+
+    def test_example_backtick_path_not_flagged(self, tmp_path: Path) -> None:
+        skill_dir = _make_skill(
+            tmp_path,
+            "example-skill",
+            body="For example, a handler lives at `src/api/handlers/users.ts`.",
+        )
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) == 0
+
+    def test_pattern_in_example_not_flagged(self, tmp_path: Path) -> None:
+        skill_dir = _make_skill(
+            tmp_path,
+            "pattern-skill",
+            body="A typical pattern in `src/api/handlers/users.ts` is a thin wrapper.",
+        )
+        diags = [
+            d
+            for d in _lint_skill(tmp_path, skill_dir, self.RULE_CONFIG)
+            if d.rule_id == self.RULE_ID
+        ]
+        assert len(diags) == 0
+
 
 class TestSentenceBoundaryPatterns:
     """Ensure greedy patterns don't match across sentence boundaries."""

@@ -145,3 +145,40 @@ class TestSymlinkSafety:
         # Should not raise
         results = _recursive_glob(tmp_path, "skills/*/SKILL.md")
         assert len(results) == 0
+
+
+class TestRootAgentsDiscovery:
+    def test_discovers_repo_root_agents(self, tmp_path: Path) -> None:
+        (tmp_path / "CLAUDE.md").write_text("# Root\n")
+        agents_dir = tmp_path / "agents"
+        agents_dir.mkdir()
+        (agents_dir / "review.md").write_text(
+            "---\nname: review\ndescription: Reviews pull requests\n---\n\nReview the diff.\n"
+        )
+        (agents_dir / "triage.md").write_text(
+            "---\nname: triage\ndescription: Triages incoming issues\n---\n\nTriage issues.\n"
+        )
+
+        setup = discover_setup("test", str(tmp_path))
+        agents = setup.by_type(ComponentType.AGENT)
+        names = {Path(a.path).name for a in agents}
+        assert "review.md" in names
+        assert "triage.md" in names
+
+    def test_root_agents_not_duplicated_with_claude_agents(self, tmp_path: Path) -> None:
+        (tmp_path / "CLAUDE.md").write_text("# Root\n")
+        claude_agents = tmp_path / ".claude" / "agents"
+        claude_agents.mkdir(parents=True)
+        (claude_agents / "review.md").write_text(
+            "---\nname: review\ndescription: Reviews pull requests\n---\n\nReview.\n"
+        )
+        root_agents = tmp_path / "agents"
+        root_agents.mkdir()
+        (root_agents / "triage.md").write_text(
+            "---\nname: triage\ndescription: Triages incoming issues\n---\n\nTriage.\n"
+        )
+
+        setup = discover_setup("test", str(tmp_path))
+        agents = setup.by_type(ComponentType.AGENT)
+        paths = {Path(a.path).resolve() for a in agents}
+        assert len(paths) == 2

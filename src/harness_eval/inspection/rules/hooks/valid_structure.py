@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import re
-
 from harness_eval.core.types import ComponentType
 from harness_eval.inspection.types import (
     Location,
@@ -12,25 +10,17 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
-_DANGEROUS_PATTERNS = [
-    (re.compile(r"\brm\s+-rf\b"), "rm -rf"),
-    (re.compile(r"\bgit\s+push\s+--force\b"), "git push --force"),
-    (re.compile(r"\bgit\s+reset\s+--hard\b"), "git reset --hard"),
-    (re.compile(r"\bcurl\b.*\|\s*(?:bash|sh)\b"), "curl pipe to shell"),
-    (re.compile(r"\bwget\b.*\|\s*(?:bash|sh)\b"), "wget pipe to shell"),
-]
-
 
 class HooksValidStructure:
     meta = RuleMeta(
         id="hooks/valid-structure",
+        tier="gating",
         default_severity=Severity.WARNING,
         fixable=False,
-        description="Validate hook definitions for structure and dangerous patterns",
-        category=RuleCategory.SECURITY,
+        description="Flag hook definitions that have no command, which the runtime ignores",
+        category=RuleCategory.STRUCTURAL,
         messages={
             "missing_command": "Hook for event '{{event}}' has no command defined",
-            "dangerous_pattern": "Hook for event '{{event}}' contains dangerous pattern: '{{pattern}}'",
         },
         target_type=ComponentType.HOOKS,
         default_suggestion="Add a 'command' field to the hook definition.",
@@ -44,24 +34,11 @@ class HooksValidStructure:
         for hook in hooks_data.hooks:
             event = hook.get("event", "unknown")
             command = hook.get("command", "")
-            loc = Location(file=hooks_data.file_path)
-
             if not command:
                 context.report(
                     ReportDescriptor(
                         message_id="missing_command",
                         data={"event": event},
-                        location=loc,
+                        location=Location(file=hooks_data.file_path),
                     )
                 )
-                continue
-
-            for pattern, label in _DANGEROUS_PATTERNS:
-                if pattern.search(command):
-                    context.report(
-                        ReportDescriptor(
-                            message_id="dangerous_pattern",
-                            data={"event": event, "pattern": label},
-                            location=loc,
-                        )
-                    )
