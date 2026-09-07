@@ -163,10 +163,6 @@ YAML rules support regex pattern matching on component content. Patterns are cas
 
 For complex logic (AST analysis, cross-component checks), use Python rules instead.
 
-## Paper experiments
-
-[`paper_experiments/`](paper_experiments/README.md) is the study artifact for *Scanning the Harness*: pinned corpus, scan and audit outputs, reproduction scripts, and figures. It is not part of the PyPI package. Paper TeX sources are not in this tree.
-
 ## Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for adding rules and submitting PRs.

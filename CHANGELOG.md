@@ -10,9 +10,6 @@ Calibration release. A corpus audit re-derived every finding of the decidable
 rules from 3,837 re-cloned repositories at pinned commits; every refuted
 class below is now a regression fixture (`tests/test_audit_calibration_v715.py`).
 
-### Added
-- `paper_experiments/`: study artifact for *Scanning the Harness* (pinned corpus, scan and audit outputs, reproduction scripts, figures). Paper TeX sources are not in this tree.
-
 ### Changed
 - `command/script-exists` is advisory, not gating: the script regex matched
   prose (`Node.js`, `foo.py`, `path/to/x.sh`) and the audit measured 88.7%

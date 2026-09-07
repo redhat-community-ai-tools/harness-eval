@@ -48,7 +48,6 @@ The most common CI failure is forgetting `ruff format`. The security gate blocks
   - `data/` - versioned JSON data files (builtins, tautological patterns) for knowledge that decays
 - `skills/` - plugin skills with SKILL.md + rubric files + scripts
 - `tests/` - pytest test suite with fixtures
-- `paper_experiments/` - corpus study artifact (data, scripts, figures); not shipped on PyPI. See `paper_experiments/README.md`. TeX sources are not in this tree.
 
 ## Conventions
 
