@@ -1,9 +1,9 @@
 # Scanning the Harness: study artifact
 
-Data, scripts, and paper sources for *Scanning the Harness: An Empirical Study of
-Supply-Chain Defects in AI Coding-Agent Configurations*. Every number in the paper
+Data, scripts, and figures for *Scanning the Harness: An Empirical Study of
+Supply-Chain Defects in AI Coding-Agent Configurations*. Every number in the study
 regenerates from the files in this directory with the harness-eval version in this
-repository (7.15.0).
+repository (7.15.0). Paper TeX sources are not included in this tree.
 
 ## What was measured
 
@@ -51,15 +51,13 @@ specification, or an inconsistency between two assistants' declarations.
 | Any confirmed finding (all gating rules) | 18.4% | 6.8% |
 | Raw output of the same rules before validation | 25.5% | 9.6% |
 
-Per-rule agreement, pair counts, and adjudication outcomes are in `paper/table_precision.tex`
-and `paper/table_observations.tex`; `data/summary.json` holds every figure the paper prints.
+Per-rule agreement, pair counts, and adjudication outcomes are in `data/summary.json`
+and `data/audit_summary.json`; `data/summary.json` holds every figure the study prints.
 
 ## Layout
 
 | Path | Contents |
 |---|---|
-| `paper/main.tex`, `paper/main_standalone.tex` | The paper (ACM format); the standalone file inlines every generated number and table for arXiv or Overleaf. |
-| `paper/numbers.tex`, `paper/reachability.tex`, `paper/second_reader.tex`, `paper/table_*.tex` | Generated macros and tables. |
 | `figures/` | The results figure and the values it was drawn from. |
 | `data/frame.jsonl`, `data/corpus_repos.txt` | The candidate list the scan reads, and the names of the corpus repositories. |
 | `data/results.jsonl.gz` | Scan output per corpus repository: pinned commit, component inventory, findings. |
@@ -82,8 +80,10 @@ uv sync --all-extras                # from the repository root: installs harness
 cd paper_experiments
 make audit evidence                 # re-clones the flagged repositories at their pinned commits
 make adjudicate                     # needs ANTHROPIC_API_KEY; resumable, skips recorded pairs
-make reach analyze verdicts standalone
+make reach analyze verdicts
 ```
+
+`make standalone` and `make paper` need the TeX sources (`paper/main.tex` and generated macros). Those files are not in this tree; `analyze.py` will recreate `paper/` locally if you run it.
 
 `make scan` rescans the corpus from scratch with the installed harness-eval; it takes about an
 hour with eight workers. No third-party repository content is stored here: the artifact consists

@@ -1,7 +1,7 @@
 # Regenerate the study behind "Scanning the Harness" from the pinned corpus.
 PY ?= python3
 
-all: classify audit evidence adjudicate reach analyze verdicts standalone pack
+all: classify audit evidence adjudicate reach analyze verdicts pack
 
 scan:             ## scan the corpus (data/corpus_repos.txt) with the installed harness-eval; resumable
 	$(PY) scripts/scan.py --only data/corpus_repos.txt --workers 8
@@ -21,8 +21,9 @@ adjudicate:       ## LLM adjudication of the disagreements (ANTHROPIC_API_KEY in
 reach:            ## reachable-impact sample for grants and unpinned servers
 	$(PY) scripts/reachability.py 40
 
-analyze:          ## write data/summary.json, data/manifest.jsonl, paper/numbers.tex, the tables, and the figure
-	$(PY) scripts/analyze.py && $(PY) scripts/inline_paper.py
+analyze:          ## write data/summary.json, data/manifest.jsonl, figures, and paper macros
+	$(PY) scripts/analyze.py
+	@if [ -f paper/main.tex ]; then $(PY) scripts/inline_paper.py; else echo 'skip standalone: paper/main.tex not in this tree'; fi
 
 verdicts:         ## data/defects_table.{csv,xlsx}, the per-rule Markdown view, and the second-reading score
 	$(PY) scripts/verdict_table.py && $(PY) scripts/second_reader.py
@@ -30,7 +31,7 @@ verdicts:         ## data/defects_table.{csv,xlsx}, the per-rule Markdown view, 
 repos:            ## data/repos.md, the corpus table with stars and descriptions
 	$(PY) scripts/repo_table.py
 
-standalone:       ## single-file paper (paper/main_standalone.tex) for arXiv or Overleaf
+standalone:       ## single-file paper (needs paper/main.tex, not in this tree)
 	$(PY) scripts/inline_paper.py
 
 pack:             ## data/results.jsonl.gz from the plain scan output
