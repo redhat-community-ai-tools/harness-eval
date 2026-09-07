@@ -1,0 +1,2963 @@
+{
+ "n_scanned": 3188,
+ "status": {
+  "ok": 3184,
+  "timeout": 4
+ },
+ "n_ok": 3171,
+ "n_duplicates": 0,
+ "n_empty": 2,
+ "n_instruction_only": 10,
+ "n_sparse": 1,
+ "strata": {
+  "SETUP": 2660,
+  "COLLECTION": 511
+ },
+ "reported_rules": {
+  "mcp/unpinned-package": {
+   "name": "Unpinned MCP package",
+   "family": "S",
+   "tier": "gating"
+  },
+  "cross/overpermissive-grants": {
+   "name": "Arbitrary-execution grant",
+   "family": "S",
+   "tier": "gating"
+  },
+  "hooks/local-settings-committed": {
+   "name": "Local settings committed",
+   "family": "S",
+   "tier": "provisional"
+  },
+  "content/allowed-tools-auto-approve": {
+   "name": "Skill pre-approves shell",
+   "family": "S",
+   "tier": "gating"
+  },
+  "frontmatter/format-valid": {
+   "name": "Skill without frontmatter",
+   "family": "P",
+   "tier": "gating"
+  },
+  "frontmatter/description-required": {
+   "name": "Skill description missing",
+   "family": "P",
+   "tier": "gating"
+  },
+  "agent/description-required": {
+   "name": "Agent description missing",
+   "family": "Q",
+   "tier": "gating"
+  }
+ },
+ "gating_rules": [
+  "mcp/unpinned-package",
+  "cross/overpermissive-grants",
+  "content/allowed-tools-auto-approve",
+  "frontmatter/format-valid",
+  "frontmatter/description-required",
+  "agent/description-required"
+ ],
+ "provisional_rules": [
+  "hooks/local-settings-committed"
+ ],
+ "headline_rules": [
+  "mcp/unpinned-package",
+  "cross/overpermissive-grants",
+  "content/allowed-tools-auto-approve",
+  "frontmatter/format-valid",
+  "frontmatter/description-required",
+  "agent/description-required"
+ ],
+ "observation_rules": {
+  "mcp/endpoint-integrity": {
+   "name": "MCP endpoint integrity",
+   "family": "S"
+  },
+  "mcp/valid-config": {
+   "name": "MCP config structurally invalid",
+   "family": "Q"
+  },
+  "claude-md/include-exists": {
+   "name": "Broken @import in context file",
+   "family": "Q"
+  },
+  "agent/referenced-skills-exist": {
+   "name": "Agent declares absent skill",
+   "family": "Q"
+  },
+  "cross/multi-assistant-drift": {
+   "name": "Context files diverge across assistants",
+   "family": "C"
+  },
+  "mcp/cross-assistant-divergence": {
+   "name": "MCP server diverges across assistants",
+   "family": "C"
+  }
+ },
+ "consequence_bar": 0.8,
+ "rule_scope_counts": {
+  "FILE": 74,
+  "PAIRWISE": 9,
+  "FILE_FS": 18,
+  "SETUP": 7
+ },
+ "rules_total": 108,
+ "rules_beyond_file": 34,
+ "rules_hand_corrected": 11,
+ "candidate_rules": [
+  "mcp/unpinned-package",
+  "cross/overpermissive-grants",
+  "security/dangerous-permission-grant",
+  "hooks/permission-prompt-disabled",
+  "hooks/local-settings-committed",
+  "hooks/api-key-helper",
+  "hooks/base-url-override",
+  "hooks/env-credential-override",
+  "hooks/dangerous-command",
+  "content/allowed-tools-auto-approve",
+  "mcp/auto-approve-risk",
+  "mcp/no-plaintext-secrets",
+  "mcp/endpoint-integrity",
+  "security/credential-file-present",
+  "structural/symlink-escape",
+  "frontmatter/format-valid",
+  "frontmatter/description-required",
+  "agent/description-required",
+  "structural/skill-md-exists",
+  "hooks/command-script-exists",
+  "hooks/valid-structure",
+  "hooks/matcher-matches-no-tool",
+  "hooks/permission-contradiction",
+  "mcp/valid-config",
+  "mcp/json-duplicate-keys",
+  "hooks/json-duplicate-keys",
+  "claude-md/include-exists",
+  "command/references-nonexistent-skill",
+  "agent/referenced-skills-exist",
+  "cross/multi-assistant-drift",
+  "mcp/cross-assistant-divergence"
+ ],
+ "per_stratum": {
+  "SETUP": {
+   "n": 2660,
+   "any_raw": [
+    2574,
+    2660,
+    [
+     96.76691729323308,
+     96.02439845592555,
+     97.37454838836129
+    ]
+   ],
+   "any_error_raw": [
+    1373,
+    2660,
+    [
+     51.61654135338346,
+     49.71643341255292,
+     53.511986775794625
+    ]
+   ],
+   "any_security_raw": [
+    1621,
+    2660,
+    [
+     60.93984962406015,
+     59.071244293593125,
+     62.776901632200655
+    ]
+   ],
+   "any_confirmed": [
+    490,
+    2660,
+    [
+     18.421052631578945,
+     16.99375255691324,
+     19.939434461413974
+    ]
+   ],
+   "any_confirmed_defect": [
+    445,
+    2660,
+    [
+     16.729323308270676,
+     15.359109367551655,
+     18.195498383900233
+    ]
+   ],
+   "any_reported": [
+    500,
+    2660,
+    [
+     18.796992481203006,
+     17.357656732194982,
+     20.326325678771195
+    ]
+   ],
+   "confirmed_beyond_file": [
+    0,
+    2660,
+    [
+     0.0,
+     0.0,
+     0.14421277901809176
+    ]
+   ],
+   "confirmed_security": [
+    425,
+    2660,
+    [
+     15.977443609022558,
+     14.634238971589255,
+     17.41877799458471
+    ]
+   ],
+   "confirmed_security_incl_provisional": [
+    436,
+    2660,
+    [
+     16.390977443609025,
+     15.032786935908375,
+     17.84610496216845
+    ]
+   ],
+   "tolerated_only": [
+    0,
+    2660,
+    [
+     0.0,
+     0.0,
+     0.14421277901809176
+    ]
+   ],
+   "reference_rule": [
+    880,
+    2660,
+    [
+     33.08270676691729,
+     31.32015509481043,
+     34.8940522364363
+    ]
+   ],
+   "integrity_any": [
+    22,
+    2660,
+    [
+     0.8270676691729323,
+     0.5468175438843548,
+     1.249145098939453
+    ]
+   ],
+   "spec_any": [
+    63,
+    2660,
+    [
+     2.368421052631579,
+     1.8555746778966191,
+     3.018649074746932
+    ]
+   ],
+   "confirmed_cross": [
+    0,
+    2660,
+    [
+     0.0,
+     0.0,
+     0.14421277901809176
+    ]
+   ],
+   "any_gate_raw": [
+    678,
+    2660,
+    [
+     25.48872180451128,
+     23.868734998367277,
+     27.179405401572428
+    ]
+   ],
+   "per_rule": {
+    "mcp/unpinned-package": [
+     260,
+     2660,
+     [
+      9.774436090225564,
+      8.703206269002314,
+      10.961686718628783
+     ]
+    ],
+    "cross/overpermissive-grants": [
+     83,
+     2660,
+     [
+      3.1203007518796992,
+      2.524192775648918,
+      3.8516217622725564
+     ]
+    ],
+    "security/dangerous-permission-grant": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "hooks/permission-prompt-disabled": [
+     10,
+     2660,
+     [
+      0.37593984962406013,
+      0.20433140370806074,
+      0.6906767679489927
+     ]
+    ],
+    "hooks/pre-trust-permissions": [
+     181,
+     2660,
+     [
+      6.804511278195488,
+      5.908469963782816,
+      7.8251394220004835
+     ]
+    ],
+    "hooks/local-settings-committed": [
+     19,
+     2660,
+     [
+      0.7142857142857143,
+      0.4577567797199268,
+      1.1129672453121924
+     ]
+    ],
+    "hooks/api-key-helper": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/base-url-override": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/env-credential-override": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/dangerous-command": [
+     3,
+     2660,
+     [
+      0.11278195488721805,
+      0.03836259569162553,
+      0.3310888011181548
+     ]
+    ],
+    "content/allowed-tools-auto-approve": [
+     102,
+     2660,
+     [
+      3.8345864661654137,
+      3.168889946164507,
+      4.633435837770994
+     ]
+    ],
+    "mcp/auto-approve-risk": [
+     2,
+     2660,
+     [
+      0.07518796992481204,
+      0.020621243775068347,
+      0.2737506137708158
+     ]
+    ],
+    "mcp/no-plaintext-secrets": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "mcp/endpoint-integrity": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "security/credential-file-present": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "structural/symlink-escape": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "frontmatter/format-valid": [
+     60,
+     2660,
+     [
+      2.2556390977443606,
+      1.7564297452926,
+      2.892555389559262
+     ]
+    ],
+    "frontmatter/description-required": [
+     4,
+     2660,
+     [
+      0.15037593984962408,
+      0.058492375860301246,
+      0.38603856021337524
+     ]
+    ],
+    "agent/description-required": [
+     22,
+     2660,
+     [
+      0.8270676691729323,
+      0.5468175438843548,
+      1.249145098939453
+     ]
+    ],
+    "structural/skill-md-exists": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/command-script-exists": [
+     6,
+     2660,
+     [
+      0.2255639097744361,
+      0.10341628300907443,
+      0.49127373159239435
+     ]
+    ],
+    "hooks/valid-structure": [
+     2,
+     2660,
+     [
+      0.07518796992481204,
+      0.020621243775068347,
+      0.2737506137708158
+     ]
+    ],
+    "hooks/matcher-matches-no-tool": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/permission-contradiction": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "mcp/valid-config": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "mcp/json-duplicate-keys": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/json-duplicate-keys": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "claude-md/include-exists": [
+     9,
+     2660,
+     [
+      0.3383458646616541,
+      0.17810679913784425,
+      0.6418218332553131
+     ]
+    ],
+    "command/script-exists": [
+     219,
+     2660,
+     [
+      8.233082706766917,
+      7.247758148698698,
+      9.338873729112658
+     ]
+    ],
+    "command/references-nonexistent-skill": [
+     81,
+     2660,
+     [
+      3.045112781954887,
+      2.4568116815694045,
+      3.7688437778242783
+     ]
+    ],
+    "agent/referenced-skills-exist": [
+     3,
+     2660,
+     [
+      0.11278195488721805,
+      0.03836259569162553,
+      0.3310888011181548
+     ]
+    ],
+    "cross/multi-assistant-drift": [
+     26,
+     2660,
+     [
+      0.9774436090225564,
+      0.6679035102227042,
+      1.4283772896566884
+     ]
+    ],
+    "mcp/cross-assistant-divergence": [
+     8,
+     2660,
+     [
+      0.30075187969924816,
+      0.15247275038740093,
+      0.5923763427418602
+     ]
+    ],
+    "cross/grant-network-tool": [
+     24,
+     2660,
+     [
+      0.9022556390977444,
+      0.6070606060329945,
+      1.3390611153186058
+     ]
+    ],
+    "cross/grant-indirect-exec": [
+     15,
+     2660,
+     [
+      0.5639097744360901,
+      0.34203553818122423,
+      0.9283703297953101
+     ]
+    ],
+    "cross/grant-bare-tool": [
+     35,
+     2660,
+     [
+      1.3157894736842104,
+      0.9476078830785394,
+      1.8243887701759185
+     ]
+    ],
+    "hooks/auto-accept-edits": [
+     7,
+     2660,
+     [
+      0.2631578947368421,
+      0.1275309570872163,
+      0.5422385967781487
+     ]
+    ],
+    "hooks/all-project-mcp": [
+     20,
+     2660,
+     [
+      0.7518796992481203,
+      0.4872538579057893,
+      1.1585497063902261
+     ]
+    ],
+    "hooks/pre-trust-allow": [
+     191,
+     2660,
+     [
+      7.180451127819548,
+      6.259872740539089,
+      8.224532037883172
+     ]
+    ],
+    "content/allowed-tools-scoped": [
+     109,
+     2660,
+     [
+      4.097744360902256,
+      3.408220674629868,
+      4.919661884152907
+     ]
+    ],
+    "frontmatter/name-missing": [
+     73,
+     2660,
+     [
+      2.744360902255639,
+      2.188366364720379,
+      3.4366527805621336
+     ]
+    ]
+   },
+   "per_rule_raw": {
+    "mcp/unpinned-package": [
+     272,
+     2660,
+     [
+      10.225563909774436,
+      9.130901531453706,
+      11.434945927344147
+     ]
+    ],
+    "cross/overpermissive-grants": [
+     83,
+     2660,
+     [
+      3.1203007518796992,
+      2.524192775648918,
+      3.8516217622725564
+     ]
+    ],
+    "security/dangerous-permission-grant": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "hooks/permission-prompt-disabled": [
+     11,
+     2660,
+     [
+      0.41353383458646614,
+      0.23106762038985,
+      0.7390200905310996
+     ]
+    ],
+    "hooks/pre-trust-permissions": [
+     196,
+     2660,
+     [
+      7.368421052631578,
+      6.435868069334734,
+      8.423934405407008
+     ]
+    ],
+    "hooks/local-settings-committed": [
+     22,
+     2660,
+     [
+      0.8270676691729323,
+      0.5468175438843548,
+      1.249145098939453
+     ]
+    ],
+    "hooks/api-key-helper": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/base-url-override": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/env-credential-override": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/dangerous-command": [
+     4,
+     2660,
+     [
+      0.15037593984962408,
+      0.058492375860301246,
+      0.38603856021337524
+     ]
+    ],
+    "content/allowed-tools-auto-approve": [
+     102,
+     2660,
+     [
+      3.8345864661654137,
+      3.168889946164507,
+      4.633435837770994
+     ]
+    ],
+    "mcp/auto-approve-risk": [
+     2,
+     2660,
+     [
+      0.07518796992481204,
+      0.020621243775068347,
+      0.2737506137708158
+     ]
+    ],
+    "mcp/no-plaintext-secrets": [
+     5,
+     2660,
+     [
+      0.18796992481203006,
+      0.08031422634999215,
+      0.4392962489875805
+     ]
+    ],
+    "mcp/endpoint-integrity": [
+     5,
+     2660,
+     [
+      0.18796992481203006,
+      0.08031422634999215,
+      0.4392962489875805
+     ]
+    ],
+    "security/credential-file-present": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "structural/symlink-escape": [
+     1,
+     2660,
+     [
+      0.03759398496240602,
+      0.006636399024117015,
+      0.21265591925787095
+     ]
+    ],
+    "frontmatter/format-valid": [
+     60,
+     2660,
+     [
+      2.2556390977443606,
+      1.7564297452926,
+      2.892555389559262
+     ]
+    ],
+    "frontmatter/description-required": [
+     4,
+     2660,
+     [
+      0.15037593984962408,
+      0.058492375860301246,
+      0.38603856021337524
+     ]
+    ],
+    "agent/description-required": [
+     23,
+     2660,
+     [
+      0.8646616541353384,
+      0.5768595127363559,
+      1.2941826693513483
+     ]
+    ],
+    "structural/skill-md-exists": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/command-script-exists": [
+     6,
+     2660,
+     [
+      0.2255639097744361,
+      0.10341628300907443,
+      0.49127373159239435
+     ]
+    ],
+    "hooks/valid-structure": [
+     2,
+     2660,
+     [
+      0.07518796992481204,
+      0.020621243775068347,
+      0.2737506137708158
+     ]
+    ],
+    "hooks/matcher-matches-no-tool": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/permission-contradiction": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "mcp/valid-config": [
+     13,
+     2660,
+     [
+      0.4887218045112782,
+      0.28583583413051183,
+      0.8344109553182303
+     ]
+    ],
+    "mcp/json-duplicate-keys": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "hooks/json-duplicate-keys": [
+     0,
+     2660,
+     [
+      0.0,
+      0.0,
+      0.14421277901809176
+     ]
+    ],
+    "claude-md/include-exists": [
+     20,
+     2660,
+     [
+      0.7518796992481203,
+      0.4872538579057893,
+      1.1585497063902261
+     ]
+    ],
+    "command/script-exists": [
+     220,
+     2660,
+     [
+      8.270676691729323,
+      7.283138503969121,
+      9.37857291310613
+     ]
+    ],
+    "command/references-nonexistent-skill": [
+     97,
+     2660,
+     [
+      3.6466165413533833,
+      2.9984954084787527,
+      4.428432679137268
+     ]
+    ],
+    "agent/referenced-skills-exist": [
+     7,
+     2660,
+     [
+      0.2631578947368421,
+      0.1275309570872163,
+      0.5422385967781487
+     ]
+    ],
+    "cross/multi-assistant-drift": [
+     62,
+     2660,
+     [
+      2.330827067669173,
+      1.8224878818778454,
+      2.9766563315018097
+     ]
+    ],
+    "mcp/cross-assistant-divergence": [
+     22,
+     2660,
+     [
+      0.8270676691729323,
+      0.5468175438843548,
+      1.249145098939453
+     ]
+    ],
+    "cross/grant-network-tool": [
+     24,
+     2660,
+     [
+      0.9022556390977444,
+      0.6070606060329945,
+      1.3390611153186058
+     ]
+    ],
+    "cross/grant-indirect-exec": [
+     15,
+     2660,
+     [
+      0.5639097744360901,
+      0.34203553818122423,
+      0.9283703297953101
+     ]
+    ],
+    "cross/grant-bare-tool": [
+     35,
+     2660,
+     [
+      1.3157894736842104,
+      0.9476078830785394,
+      1.8243887701759185
+     ]
+    ],
+    "hooks/auto-accept-edits": [
+     7,
+     2660,
+     [
+      0.2631578947368421,
+      0.1275309570872163,
+      0.5422385967781487
+     ]
+    ],
+    "hooks/all-project-mcp": [
+     20,
+     2660,
+     [
+      0.7518796992481203,
+      0.4872538579057893,
+      1.1585497063902261
+     ]
+    ],
+    "hooks/pre-trust-allow": [
+     191,
+     2660,
+     [
+      7.180451127819548,
+      6.259872740539089,
+      8.224532037883172
+     ]
+    ],
+    "content/allowed-tools-scoped": [
+     110,
+     2660,
+     [
+      4.135338345864661,
+      3.4424806331005544,
+      4.960481464946116
+     ]
+    ],
+    "frontmatter/name-missing": [
+     73,
+     2660,
+     [
+      2.744360902255639,
+      2.188366364720379,
+      3.4366527805621336
+     ]
+    ]
+   },
+   "multi_assistant": [
+    465,
+    2660,
+    [
+     17.481203007518797,
+     16.085009268201166,
+     18.971189268528647
+    ]
+   ],
+   "median_components": 6.0,
+   "max_components": 500,
+   "median_tokens": 7057.5,
+   "max_tokens": 1611649,
+   "median_always_loaded": 1198.0,
+   "findings_by_scope": {
+    "FILE": 67988,
+    "SETUP": 14763,
+    "PAIRWISE": 14320,
+    "FILE_FS": 16974
+   },
+   "tools": {
+    "Claude Code": 1680,
+    "Copilot": 293,
+    "Cursor": 284,
+    "Gemini CLI": 238,
+    "Codex CLI": 196,
+    "OpenCode": 121,
+    "Windsurf": 63,
+    "Cline": 34
+   },
+   "median_duration_s": 4.52,
+   "p95_duration_s": 27.87
+  },
+  "COLLECTION": {
+   "n": 511,
+   "any_raw": [
+    511,
+    511,
+    [
+     100.0,
+     99.2538287504351,
+     100.0
+    ]
+   ],
+   "any_error_raw": [
+    374,
+    511,
+    [
+     73.18982387475538,
+     69.18644175584832,
+     76.84713439650612
+    ]
+   ],
+   "any_security_raw": [
+    313,
+    511,
+    [
+     61.25244618395303,
+     56.959380765393995,
+     65.37758656591723
+    ]
+   ],
+   "any_confirmed": [
+    35,
+    511,
+    [
+     6.8493150684931505,
+     4.965759208738889,
+     9.3768269381459
+    ]
+   ],
+   "any_confirmed_defect": [
+    19,
+    511,
+    [
+     3.7181996086105675,
+     2.3930572884821983,
+     5.734024905342077
+    ]
+   ],
+   "any_reported": [
+    35,
+    511,
+    [
+     6.8493150684931505,
+     4.965759208738889,
+     9.3768269381459
+    ]
+   ],
+   "confirmed_beyond_file": [
+    0,
+    511,
+    [
+     0.0,
+     0.0,
+     0.7461712495649148
+    ]
+   ],
+   "confirmed_security": [
+    19,
+    511,
+    [
+     3.7181996086105675,
+     2.3930572884821983,
+     5.734024905342077
+    ]
+   ],
+   "confirmed_security_incl_provisional": [
+    19,
+    511,
+    [
+     3.7181996086105675,
+     2.3930572884821983,
+     5.734024905342077
+    ]
+   ],
+   "tolerated_only": [
+    0,
+    511,
+    [
+     0.0,
+     0.0,
+     0.7461712495649148
+    ]
+   ],
+   "reference_rule": [
+    327,
+    511,
+    [
+     63.992172211350294,
+     59.739957452442184,
+     68.035575837797
+    ]
+   ],
+   "integrity_any": [
+    0,
+    511,
+    [
+     0.0,
+     0.0,
+     0.7461712495649148
+    ]
+   ],
+   "spec_any": [
+    18,
+    511,
+    [
+     3.522504892367906,
+     2.2395587442720646,
+     5.499054452485928
+    ]
+   ],
+   "confirmed_cross": [
+    0,
+    511,
+    [
+     0.0,
+     0.0,
+     0.7461712495649148
+    ]
+   ],
+   "any_gate_raw": [
+    49,
+    511,
+    [
+     9.58904109589041,
+     7.329348258800361,
+     12.451803847012377
+    ]
+   ],
+   "per_rule": {
+    "mcp/unpinned-package": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/overpermissive-grants": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "security/dangerous-permission-grant": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/permission-prompt-disabled": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/pre-trust-permissions": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/local-settings-committed": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/api-key-helper": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/base-url-override": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/env-credential-override": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/dangerous-command": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "content/allowed-tools-auto-approve": [
+     19,
+     511,
+     [
+      3.7181996086105675,
+      2.3930572884821983,
+      5.734024905342077
+     ]
+    ],
+    "mcp/auto-approve-risk": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/no-plaintext-secrets": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/endpoint-integrity": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "security/credential-file-present": [
+     2,
+     511,
+     [
+      0.3913894324853229,
+      0.10739655092148895,
+      1.4157126927759902
+     ]
+    ],
+    "structural/symlink-escape": [
+     1,
+     511,
+     [
+      0.19569471624266144,
+      0.034552390392660406,
+      1.1000878562385366
+     ]
+    ],
+    "frontmatter/format-valid": [
+     18,
+     511,
+     [
+      3.522504892367906,
+      2.2395587442720646,
+      5.499054452485928
+     ]
+    ],
+    "frontmatter/description-required": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "agent/description-required": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "structural/skill-md-exists": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/command-script-exists": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/valid-structure": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/matcher-matches-no-tool": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/permission-contradiction": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/valid-config": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/json-duplicate-keys": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/json-duplicate-keys": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "claude-md/include-exists": [
+     2,
+     511,
+     [
+      0.3913894324853229,
+      0.10739655092148895,
+      1.4157126927759902
+     ]
+    ],
+    "command/script-exists": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "command/references-nonexistent-skill": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "agent/referenced-skills-exist": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/multi-assistant-drift": [
+     3,
+     511,
+     [
+      0.5870841487279843,
+      0.19985469401570385,
+      1.7117235467480574
+     ]
+    ],
+    "mcp/cross-assistant-divergence": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/grant-network-tool": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/grant-indirect-exec": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/grant-bare-tool": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/auto-accept-edits": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/all-project-mcp": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/pre-trust-allow": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "content/allowed-tools-scoped": [
+     17,
+     511,
+     [
+      3.326810176125244,
+      2.0872834702113607,
+      5.26286072948035
+     ]
+    ],
+    "frontmatter/name-missing": [
+     11,
+     511,
+     [
+      2.152641878669276,
+      1.2061588817774234,
+      3.813171335516594
+     ]
+    ]
+   },
+   "per_rule_raw": {
+    "mcp/unpinned-package": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/overpermissive-grants": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "security/dangerous-permission-grant": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/permission-prompt-disabled": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/pre-trust-permissions": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/local-settings-committed": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/api-key-helper": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/base-url-override": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/env-credential-override": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/dangerous-command": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "content/allowed-tools-auto-approve": [
+     19,
+     511,
+     [
+      3.7181996086105675,
+      2.3930572884821983,
+      5.734024905342077
+     ]
+    ],
+    "mcp/auto-approve-risk": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/no-plaintext-secrets": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/endpoint-integrity": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "security/credential-file-present": [
+     2,
+     511,
+     [
+      0.3913894324853229,
+      0.10739655092148895,
+      1.4157126927759902
+     ]
+    ],
+    "structural/symlink-escape": [
+     1,
+     511,
+     [
+      0.19569471624266144,
+      0.034552390392660406,
+      1.1000878562385366
+     ]
+    ],
+    "frontmatter/format-valid": [
+     18,
+     511,
+     [
+      3.522504892367906,
+      2.2395587442720646,
+      5.499054452485928
+     ]
+    ],
+    "frontmatter/description-required": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "agent/description-required": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "structural/skill-md-exists": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/command-script-exists": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/valid-structure": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/matcher-matches-no-tool": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/permission-contradiction": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/valid-config": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "mcp/json-duplicate-keys": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/json-duplicate-keys": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "claude-md/include-exists": [
+     3,
+     511,
+     [
+      0.5870841487279843,
+      0.19985469401570385,
+      1.7117235467480574
+     ]
+    ],
+    "command/script-exists": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "command/references-nonexistent-skill": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "agent/referenced-skills-exist": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/multi-assistant-drift": [
+     9,
+     511,
+     [
+      1.761252446183953,
+      0.9293030489648213,
+      3.3130891741966324
+     ]
+    ],
+    "mcp/cross-assistant-divergence": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/grant-network-tool": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/grant-indirect-exec": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "cross/grant-bare-tool": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/auto-accept-edits": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/all-project-mcp": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "hooks/pre-trust-allow": [
+     0,
+     511,
+     [
+      0.0,
+      0.0,
+      0.7461712495649148
+     ]
+    ],
+    "content/allowed-tools-scoped": [
+     17,
+     511,
+     [
+      3.326810176125244,
+      2.0872834702113607,
+      5.26286072948035
+     ]
+    ],
+    "frontmatter/name-missing": [
+     11,
+     511,
+     [
+      2.152641878669276,
+      1.2061588817774234,
+      3.813171335516594
+     ]
+    ]
+   },
+   "multi_assistant": [
+    56,
+    511,
+    [
+     10.95890410958904,
+     8.536189340582476,
+     13.96424574469424
+    ]
+   ],
+   "median_components": 12,
+   "max_components": 138,
+   "median_tokens": 22736,
+   "max_tokens": 372609,
+   "median_always_loaded": 189,
+   "findings_by_scope": {
+    "SETUP": 7866,
+    "FILE": 19979,
+    "PAIRWISE": 3043,
+    "FILE_FS": 6378
+   },
+   "tools": {
+    "Claude Code": 207,
+    "Gemini CLI": 35,
+    "Cursor": 31,
+    "Copilot": 31,
+    "OpenCode": 21,
+    "Codex CLI": 16,
+    "Windsurf": 6,
+    "Cline": 3
+   },
+   "median_duration_s": 5.5,
+   "p95_duration_s": 27.82
+  }
+ },
+ "channel_check": {
+  "topic_only": [
+   56,
+   324,
+   [
+    17.28395061728395,
+    13.55641056308091,
+    21.77821445095026
+   ]
+  ],
+  "readme_only": [
+   31,
+   182,
+   [
+    17.032967032967033,
+    12.266811788205162,
+    23.162069581735693
+   ]
+  ],
+  "curated": [
+   396,
+   2100,
+   [
+    18.857142857142858,
+    17.24151833874751,
+    20.58650065279635
+   ]
+  ],
+  "curated_all": [
+   422,
+   2482,
+   [
+    17.002417405318294,
+    15.575779978815662,
+    18.531043239526173
+   ]
+  ],
+  "curated_n_by_stratum": {
+   "SETUP": 2100,
+   "COLLECTION": 382
+  },
+  "agents": [
+   0,
+   1,
+   [
+    0.0,
+    0.0,
+    79.34567085261071
+   ]
+  ],
+  "agents_raw": [
+   1,
+   1,
+   [
+    100.0,
+    20.654329147389294,
+    100.0
+   ]
+  ],
+  "agents_with_components": 1
+ },
+ "assembled": {
+  "n": 2660,
+  "any_confirmed": [
+   490,
+   2660,
+   [
+    18.421052631578945,
+    16.99375255691324,
+    19.939434461413974
+   ]
+  ],
+  "confirmed_security": [
+   425,
+   2660,
+   [
+    15.977443609022558,
+    14.634238971589255,
+    17.41877799458471
+   ]
+  ],
+  "confirmed_beyond_file": [
+   0,
+   2660,
+   [
+    0.0,
+    0.0,
+    0.14421277901809176
+   ]
+  ]
+ },
+ "grant_mechanisms": {
+  "unrestricted": 19,
+  "interpreter": 54,
+  "shell-escape-tool": 58,
+  "package-runner": 18,
+  "shell": 10
+ },
+ "grant_setups": 83,
+ "grant_mechanism_sum": 159,
+ "tool_ranking": [
+  [
+   "Claude Code",
+   1887
+  ],
+  [
+   "Copilot",
+   324
+  ],
+  [
+   "Cursor",
+   315
+  ],
+  [
+   "Gemini CLI",
+   273
+  ],
+  [
+   "Codex CLI",
+   212
+  ],
+  [
+   "OpenCode",
+   142
+  ],
+  [
+   "Windsurf",
+   69
+  ],
+  [
+   "Cline",
+   37
+  ]
+ ],
+ "flow_repos": 6,
+ "flow_repo_names": [
+  "aklofas/kicad-happy",
+  "OpenSenseNova/SenseNova-Skills",
+  "Pluviobyte/rnskill",
+  "tradermonty/claude-trading-skills",
+  "whit3rabbit/rabbit-writes",
+  "zytedata/claude-skills"
+ ],
+ "audit": {
+  "cross/multi-assistant-drift": {
+   "audited": 144,
+   "confirmed": 144,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 144,
+   "breakdown": {
+    "diverged": 144
+   },
+   "audited_repos": 71,
+   "pairs": 71,
+   "disagreements": 71,
+   "adjudicated": {
+    "defect": 29,
+    "not_defect": 42
+   },
+   "adjudication_reasons": {
+    "live_config": 29,
+    "per_assistant_variant": 42
+   },
+   "adjudicated_n": 71,
+   "adjudicated_defect": 29,
+   "agreed_pairs": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 29,
+   "defect_share": 0.4084507042253521,
+   "exhaustive": true
+  },
+  "mcp/unpinned-package": {
+   "audited": 961,
+   "confirmed": 961,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 907,
+   "breakdown": {
+    "npx": 291,
+    "own_package": 550,
+    "uvx": 59,
+    "template_path": 37,
+    "fixture_path": 17,
+    "docker": 7
+   },
+   "audited_repos": 272,
+   "pairs": 272,
+   "agreed_pairs": 258,
+   "disagreements": 14,
+   "adjudicated": {
+    "not_defect": 12,
+    "defect": 2
+   },
+   "adjudication_reasons": {
+    "test_fixture": 6,
+    "shipped_template": 6,
+    "live_config": 2
+   },
+   "adjudicated_n": 14,
+   "adjudicated_defect": 2,
+   "unadjudicated": 0,
+   "defect_pairs": 260,
+   "defect_share": 0.9558823529411765,
+   "exhaustive": true
+  },
+  "frontmatter/format-valid": {
+   "audited": 306,
+   "confirmed": 306,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 306,
+   "breakdown": {
+    "no_frontmatter": 306
+   },
+   "audited_repos": 78,
+   "pairs": 78,
+   "agreed_pairs": 78,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 78,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "frontmatter/name-missing": {
+   "audited": 721,
+   "confirmed": 721,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 721,
+   "breakdown": {
+    "missing_name": 721
+   },
+   "audited_repos": 84,
+   "pairs": 84,
+   "agreed_pairs": 84,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 84,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "command/script-exists": {
+   "audited": 1204,
+   "confirmed": 1204,
+   "refuted": 0,
+   "unverifiable": 2,
+   "consequential": 1204,
+   "breakdown": {
+    "misrouted": 746,
+    "dead": 458,
+    "command_not_found": 2
+   },
+   "audited_repos": 220,
+   "pairs": 220,
+   "agreed_pairs": 219,
+   "disagreements": 1,
+   "unadjudicated": 1,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "defect_pairs": 219,
+   "defect_share": 0.9954545454545455,
+   "exhaustive": true
+  },
+  "hooks/pre-trust-permissions": {
+   "audited": 404,
+   "confirmed": 375,
+   "refuted": 29,
+   "unverifiable": 0,
+   "consequential": 375,
+   "breakdown": {
+    "lifecycle_sessionstart": 149,
+    "lifecycle_stop": 104,
+    "lifecycle_precompact": 40,
+    "lifecycle_notification": 20,
+    "lifecycle_subagentstop": 26,
+    "lifecycle_sessionend": 36
+   },
+   "audited_repos": 196,
+   "pairs": 196,
+   "agreed_pairs": 181,
+   "disagreements": 15,
+   "unadjudicated": 15,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "defect_pairs": 181,
+   "defect_share": 0.923469387755102,
+   "exhaustive": true
+  },
+  "content/allowed-tools-auto-approve": {
+   "audited": 898,
+   "confirmed": 898,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 898,
+   "breakdown": {
+    "bash_unrestricted": 818,
+    "bash_exec_cmd": 80
+   },
+   "audited_repos": 121,
+   "pairs": 121,
+   "agreed_pairs": 121,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 121,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "content/allowed-tools-scoped": {
+   "audited": 2453,
+   "confirmed": 2411,
+   "refuted": 42,
+   "unverifiable": 0,
+   "consequential": 2411,
+   "breakdown": {
+    "write_tool": 1197,
+    "bash_scoped": 1214,
+    "entry_absent": 42
+   },
+   "audited_repos": 127,
+   "pairs": 127,
+   "agreed_pairs": 126,
+   "disagreements": 1,
+   "unadjudicated": 1,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "defect_pairs": 126,
+   "defect_share": 0.9921259842519685,
+   "exhaustive": true
+  },
+  "hooks/pre-trust-allow": {
+   "audited": 191,
+   "confirmed": 191,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 191,
+   "breakdown": {
+    "allow_with_exec_grant": 125,
+    "allow_scoped_only": 66
+   },
+   "audited_repos": 191,
+   "pairs": 191,
+   "agreed_pairs": 191,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 191,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "cross/overpermissive-grants": {
+   "audited": 161,
+   "confirmed": 161,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 161,
+   "breakdown": {
+    "arbitrary_exec": 142,
+    "bare_tool": 8,
+    "bash_star": 11
+   },
+   "audited_repos": 83,
+   "pairs": 83,
+   "agreed_pairs": 83,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 83,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "hooks/local-settings-committed": {
+   "audited": 22,
+   "confirmed": 22,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 19,
+   "breakdown": {
+    "no_grants": 3,
+    "with_grants": 19
+   },
+   "audited_repos": 22,
+   "pairs": 22,
+   "agreed_pairs": 19,
+   "disagreements": 3,
+   "adjudicated": {
+    "not_defect": 3
+   },
+   "adjudication_reasons": {
+    "other": 3
+   },
+   "adjudicated_n": 3,
+   "adjudicated_defect": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 19,
+   "defect_share": 0.8636363636363636,
+   "exhaustive": true
+  },
+  "hooks/all-project-mcp": {
+   "audited": 20,
+   "confirmed": 20,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 20,
+   "breakdown": {
+    "all_mcp": 20
+   },
+   "audited_repos": 20,
+   "pairs": 20,
+   "agreed_pairs": 20,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 20,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "security/dangerous-permission-grant": {
+   "audited": 1,
+   "confirmed": 1,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 1,
+   "breakdown": {
+    "privilege_escalation": 1
+   },
+   "audited_repos": 1,
+   "pairs": 1,
+   "agreed_pairs": 1,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 1,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "command/references-nonexistent-skill": {
+   "audited": 282,
+   "confirmed": 243,
+   "refuted": 39,
+   "unverifiable": 0,
+   "consequential": 243,
+   "breakdown": {
+    "dangling": 243,
+    "path_segment": 17,
+    "token_absent": 21,
+    "is_command": 1
+   },
+   "audited_repos": 97,
+   "pairs": 97,
+   "agreed_pairs": 81,
+   "disagreements": 16,
+   "unadjudicated": 16,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "defect_pairs": 81,
+   "defect_share": 0.8350515463917526,
+   "exhaustive": true
+  },
+  "hooks/command-script-exists": {
+   "audited": 12,
+   "confirmed": 12,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 12,
+   "breakdown": {
+    "misrouted": 10,
+    "dead": 2
+   },
+   "audited_repos": 6,
+   "pairs": 6,
+   "agreed_pairs": 6,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 6,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "mcp/cross-assistant-divergence": {
+   "audited": 40,
+   "confirmed": 40,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 40,
+   "breakdown": {},
+   "audited_repos": 22,
+   "pairs": 22,
+   "disagreements": 22,
+   "adjudicated": {
+    "not_defect": 14,
+    "defect": 8
+   },
+   "adjudication_reasons": {
+    "equivalent_declarations": 12,
+    "live_config": 8,
+    "test_fixture": 1,
+    "per_assistant_variant": 1
+   },
+   "adjudicated_n": 22,
+   "adjudicated_defect": 8,
+   "agreed_pairs": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 8,
+   "defect_share": 0.36363636363636365,
+   "exhaustive": true
+  },
+  "cross/grant-bare-tool": {
+   "audited": 77,
+   "confirmed": 77,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 77,
+   "breakdown": {
+    "bare_tool": 77
+   },
+   "audited_repos": 35,
+   "pairs": 35,
+   "agreed_pairs": 35,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 35,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "mcp/valid-config": {
+   "audited": 73,
+   "confirmed": 73,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 25,
+   "breakdown": {
+    "empty_url_placeholder": 48,
+    "invalid_json": 18,
+    "missing_servers_key": 6,
+    "no_transport": 1
+   },
+   "audited_repos": 13,
+   "pairs": 13,
+   "disagreements": 13,
+   "adjudicated": {
+    "not_defect": 12,
+    "defect": 1
+   },
+   "adjudication_reasons": {
+    "equivalent_declarations": 2,
+    "test_fixture": 1,
+    "shipped_template": 9,
+    "live_config": 1
+   },
+   "adjudicated_n": 13,
+   "adjudicated_defect": 1,
+   "agreed_pairs": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 1,
+   "defect_share": 0.07692307692307693,
+   "exhaustive": true
+  },
+  "security/credential-file-present": {
+   "audited": 5,
+   "confirmed": 5,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 5,
+   "breakdown": {
+    ".npmrc": 1,
+    "*.pem": 4
+   },
+   "audited_repos": 3,
+   "pairs": 3,
+   "agreed_pairs": 3,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 3,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "mcp/no-plaintext-secrets": {
+   "audited": 12,
+   "confirmed": 11,
+   "refuted": 1,
+   "unverifiable": 0,
+   "consequential": 4,
+   "breakdown": {
+    "high_entropy_value": 7,
+    "placeholder": 1,
+    "known_prefix": 3,
+    "sk_prefix": 1
+   },
+   "audited_repos": 5,
+   "pairs": 5,
+   "disagreements": 4,
+   "unadjudicated": 4,
+   "agreed_pairs": 1,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "defect_pairs": 1,
+   "defect_share": 0.2,
+   "exhaustive": true
+  },
+  "claude-md/include-exists": {
+   "audited": 37,
+   "confirmed": 37,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 34,
+   "breakdown": {
+    "local_import": 3,
+    "cursor_rule_import": 2
+   },
+   "audited_repos": 23,
+   "pairs": 23,
+   "disagreements": 23,
+   "adjudicated": {
+    "not_defect": 12,
+    "defect": 11
+   },
+   "adjudication_reasons": {
+    "runtime_created_file": 8,
+    "live_config": 11,
+    "shipped_template": 3,
+    "other": 1
+   },
+   "adjudicated_n": 23,
+   "adjudicated_defect": 11,
+   "agreed_pairs": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 11,
+   "defect_share": 0.4782608695652174,
+   "exhaustive": true
+  },
+  "agent/description-required": {
+   "audited": 158,
+   "confirmed": 157,
+   "refuted": 1,
+   "unverifiable": 0,
+   "consequential": 157,
+   "breakdown": {
+    "no_frontmatter": 97,
+    "missing": 60,
+    "non_agent_file": 1
+   },
+   "audited_repos": 23,
+   "pairs": 23,
+   "agreed_pairs": 22,
+   "disagreements": 1,
+   "adjudicated": {
+    "not_defect": 1
+   },
+   "adjudication_reasons": {
+    "other": 1
+   },
+   "adjudicated_n": 1,
+   "adjudicated_defect": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 22,
+   "defect_share": 0.9565217391304348,
+   "exhaustive": true
+  },
+  "frontmatter/description-required": {
+   "audited": 63,
+   "confirmed": 63,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 63,
+   "breakdown": {
+    "missing": 63
+   },
+   "audited_repos": 4,
+   "pairs": 4,
+   "agreed_pairs": 4,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 4,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "cross/grant-network-tool": {
+   "audited": 25,
+   "confirmed": 25,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 25,
+   "breakdown": {
+    "arbitrary_exec": 25
+   },
+   "audited_repos": 24,
+   "pairs": 24,
+   "agreed_pairs": 24,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 24,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "cross/grant-indirect-exec": {
+   "audited": 21,
+   "confirmed": 21,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 21,
+   "breakdown": {
+    "arbitrary_exec": 21
+   },
+   "audited_repos": 15,
+   "pairs": 15,
+   "agreed_pairs": 15,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 15,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "mcp/endpoint-integrity": {
+   "audited": 13,
+   "confirmed": 13,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 1,
+   "breakdown": {
+    "internal_hostname": 5,
+    "fixture_path": 7,
+    "missing_path": 1
+   },
+   "audited_repos": 5,
+   "pairs": 5,
+   "agreed_pairs": 1,
+   "disagreements": 4,
+   "adjudicated": {
+    "not_defect": 4
+   },
+   "adjudication_reasons": {
+    "other": 2,
+    "test_fixture": 2
+   },
+   "adjudicated_n": 4,
+   "adjudicated_defect": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 1,
+   "defect_share": 0.2,
+   "exhaustive": true
+  },
+  "structural/symlink-escape": {
+   "audited": 6,
+   "confirmed": 6,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 6,
+   "breakdown": {},
+   "audited_repos": 2,
+   "pairs": 2,
+   "agreed_pairs": 2,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 2,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "hooks/dangerous-command": {
+   "audited": 10,
+   "confirmed": 10,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 7,
+   "breakdown": {
+    "rm_rf_path": 3,
+    "git_push_force": 3,
+    "chmod_777": 1,
+    "git_reset_hard": 1,
+    "curl_pipe_to_shell": 1,
+    "wget_pipe_to_shell": 1
+   },
+   "audited_repos": 4,
+   "pairs": 4,
+   "agreed_pairs": 3,
+   "disagreements": 1,
+   "unadjudicated": 1,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "defect_pairs": 3,
+   "defect_share": 0.75,
+   "exhaustive": true
+  },
+  "content/broken-references": {
+   "audited": 112,
+   "confirmed": 112,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 112,
+   "breakdown": {
+    "dead": 49,
+    "runtime_output": 42,
+    "misrouted": 21
+   },
+   "audited_repos": 10,
+   "pairs": 10,
+   "agreed_pairs": 10,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 10,
+   "defect_share": 1.0,
+   "exhaustive": false
+  },
+  "hooks/valid-structure": {
+   "audited": 7,
+   "confirmed": 7,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 7,
+   "breakdown": {
+    "no_command_key": 7
+   },
+   "audited_repos": 2,
+   "pairs": 2,
+   "agreed_pairs": 2,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 2,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "agent/referenced-skills-exist": {
+   "audited": 85,
+   "confirmed": 85,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 85,
+   "breakdown": {
+    "missing": 85
+   },
+   "audited_repos": 7,
+   "pairs": 7,
+   "disagreements": 7,
+   "adjudicated": {
+    "defect": 3,
+    "not_defect": 4
+   },
+   "adjudication_reasons": {
+    "live_config": 3,
+    "external_dependency": 3,
+    "other": 1
+   },
+   "adjudicated_n": 7,
+   "adjudicated_defect": 3,
+   "agreed_pairs": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 3,
+   "defect_share": 0.42857142857142855,
+   "exhaustive": true
+  },
+  "mcp/auto-approve-risk": {
+   "audited": 4,
+   "confirmed": 4,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 4,
+   "breakdown": {
+    "write_or_exec_tool": 4
+   },
+   "audited_repos": 2,
+   "pairs": 2,
+   "agreed_pairs": 2,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 2,
+   "defect_share": 1.0,
+   "exhaustive": true
+  },
+  "hooks/permission-prompt-disabled": {
+   "audited": 12,
+   "confirmed": 12,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 10,
+   "breakdown": {
+    "bypassPermissions": 9,
+    "dotfiles_repo": 2,
+    "skip_dangerous": 1
+   },
+   "audited_repos": 11,
+   "pairs": 11,
+   "agreed_pairs": 10,
+   "disagreements": 1,
+   "adjudicated": {
+    "not_defect": 1
+   },
+   "adjudication_reasons": {
+    "other": 1
+   },
+   "adjudicated_n": 1,
+   "adjudicated_defect": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 10,
+   "defect_share": 0.9090909090909091,
+   "exhaustive": true
+  },
+  "hooks/auto-accept-edits": {
+   "audited": 7,
+   "confirmed": 7,
+   "refuted": 0,
+   "unverifiable": 0,
+   "consequential": 7,
+   "breakdown": {
+    "acceptEdits": 7
+   },
+   "audited_repos": 7,
+   "pairs": 7,
+   "agreed_pairs": 7,
+   "adjudicated": {},
+   "adjudication_reasons": {},
+   "adjudicated_n": 0,
+   "adjudicated_defect": 0,
+   "disagreements": 0,
+   "unadjudicated": 0,
+   "defect_pairs": 7,
+   "defect_share": 1.0,
+   "exhaustive": true
+  }
+ },
+ "audit_repos": 1115,
+ "audit_findings_total": 8549
+}

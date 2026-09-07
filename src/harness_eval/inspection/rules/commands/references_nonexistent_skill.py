@@ -3,6 +3,11 @@ from __future__ import annotations
 import re
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules._component_index import (
+    BUILTIN_SLASH,
+    component_index,
+    resolve_skill_reference,
+)
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -17,7 +22,13 @@ _SKILL_REF_PATTERNS = [
         r"(?:invokes?|calls?|triggers?|runs?|uses?)\s+(?:the\s+)?skill\s+[\"'`/](\w[\w-]{2,})[\"'`]?",
         re.IGNORECASE,
     ),
-    re.compile(r"(?:^|\s)/(\w[\w-]{2,})(?:\s|$|[),.\]])", re.IGNORECASE | re.MULTILINE),
+    # A bare /name counts only where it is written as an invocation: at the
+    # start of a line or list item, inside backticks, or after run/invoke/use/call.
+    re.compile(
+        r"(?:^\s*(?:[-*\d.]+\s+)?|`|(?:\b(?:run|invoke|use|call|execute|trigger|then|and|or)s?\s+))"
+        r"/(\w[\w-]{2,})(?:`|\s|$|[),.\]])",
+        re.IGNORECASE | re.MULTILINE,
+    ),
 ]
 
 _INSTALL_CMD = re.compile(
@@ -50,7 +61,7 @@ class CommandReferencesNonexistentSkill:
         if cmd is None or not cmd.body or not context.all_skills:
             return
 
-        known_skills = {s.dir_name for s in context.all_skills}
+        idx = component_index(context)
 
         installed_binaries: set[str] = set()
         for m in _INSTALL_CMD.finditer(cmd.body):
@@ -82,7 +93,15 @@ class CommandReferencesNonexistentSkill:
                     referenced.add(name)
 
         for skill_name in referenced:
-            if skill_name not in known_skills:
+            # A slash token may name a command, an agent, or a built-in; only
+            # a name that exists nowhere in the tree is a dangling reference.
+            if (
+                skill_name.lower() in BUILTIN_SLASH
+                or skill_name in idx["commands"]
+                or skill_name in idx["agents"]
+            ):
+                continue
+            if resolve_skill_reference(skill_name, idx) == "missing":
                 context.report(
                     ReportDescriptor(
                         message_id="missing_skill",

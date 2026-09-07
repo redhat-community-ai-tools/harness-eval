@@ -1,0 +1,48 @@
+{
+ "grants": {
+  "eligible": 65,
+  "sampled": 40,
+  "clone_failed": 0,
+  "reachable": 22,
+  "examples": [
+   {
+    "commit": "465060bf91d1ffc053f1ee4a4ab37b91afc1eba6",
+    "grant": "Bash(node:*)",
+    "component": "skills/orchestrator-multi-agent-development/SKILL.md"
+   },
+   {
+    "commit": "e4674109b867d69332d05438bf2f7f5d63654ae0",
+    "grant": "Bash(node:*)",
+    "component": "CLAUDE.md"
+   },
+   {
+    "commit": "cd53c6a75fe64d291afd3d7139a6b71ebf9d86f3",
+    "grant": "Bash(python3:*)",
+    "component": "GEMINI.md"
+   }
+  ]
+ },
+ "unpinned": {
+  "eligible": 272,
+  "sampled": 40,
+  "clone_failed": 0,
+  "reachable": 29,
+  "examples": [
+   {
+    "commit": "2d9cac6498c9715e4de7fb7b8da2252a6c7f9881",
+    "server": "neurodock-task-fractionator",
+    "component": "claude-code/neurodock/skills/decompose-task/SKILL.md"
+   },
+   {
+    "commit": "062a2d533430180e81a9051c1d24deea0e5f34dd",
+    "server": "paigy",
+    "component": "plugins/paigy/skills/paigy/SKILL.md"
+   },
+   {
+    "commit": "42451f546de75e0c4f38d5d3bb0999e54661bf32",
+    "server": "haiku-playwright",
+    "component": "CLAUDE.md"
+   }
+  ]
+ }
+}

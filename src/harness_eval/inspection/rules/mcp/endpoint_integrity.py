@@ -9,6 +9,7 @@ Three decidable conditions:
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -25,6 +26,16 @@ from harness_eval.inspection.types import (
 )
 
 _LOOPBACK = {"localhost", "127.0.0.1", "::1", "0.0.0.0", "host.docker.internal"}
+
+
+def _is_private_host(host: str) -> bool:
+    if "." not in host:
+        return True  # a bare service name (docker compose, kubernetes)
+    if host.endswith(
+        (".local", ".internal", ".lan", ".localdomain", ".example.com", ".example.net")
+    ):
+        return True
+    return re.match(r"^(?:10|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.", host) is not None
 
 
 class McpEndpointIntegrity:
@@ -70,7 +81,12 @@ class McpEndpointIntegrity:
                 relative = v.startswith(("./", "../")) or (
                     field == "cwd" and not v.startswith(("/", "~", "$"))
                 )
-                if relative and not (root / v).exists():
+                if relative and re.search(
+                    r"(^|/)(node_modules|dist|build|target|out|bin|venv|\.venv|\.[A-Za-z][\w.-]*)/",
+                    v,
+                ):
+                    continue  # produced by a build or an install step, not committed
+                if relative and not (root / v).exists() and not (Path(path).parent / v).exists():
                     context.report(
                         ReportDescriptor(
                             message_id="missing_path",
@@ -93,6 +109,9 @@ class McpEndpointIntegrity:
                             message_id="insecure_url",
                             data={"server": name, "host": host},
                             location=loc,
+                            # a compose-network name, LAN address, or .local/.internal host
+                            # carries traffic inside a private network; informational only
+                            severity_override=Severity.INFO if _is_private_host(host) else None,
                         )
                     )
                 if parts.username or parts.password:

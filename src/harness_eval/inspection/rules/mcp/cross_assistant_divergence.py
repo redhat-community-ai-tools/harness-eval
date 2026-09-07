@@ -69,6 +69,16 @@ def _normalise(server: dict[str, Any]) -> dict[str, Any]:
         if k in server:
             v = server[k]
             out[k] = [str(a) for a in v] if isinstance(v, list) else str(v)
+    # An absent ``type`` is the transport the other fields imply, and clients
+    # spell the remote transports differently; compare the implied class so an
+    # explicit "stdio"/"http" on one side and nothing on the other is not drift.
+    if "type" in _COMPARE_KEYS:
+        t = str(server.get("type") or "").lower()
+        if not t:
+            t = "remote" if server.get("url") else "stdio"
+        elif t in ("http", "sse", "streamable-http", "streamable_http", "remote"):
+            t = "remote"
+        out["type"] = t
     # OpenCode nests the command as a list under "command"
     if isinstance(server.get("command"), list):
         out["command"] = " ".join(str(a) for a in server["command"])
@@ -99,7 +109,7 @@ class McpCrossAssistantDivergence:
     meta = RuleMeta(
         id="mcp/cross-assistant-divergence",
         scope="PAIRWISE",
-        default_severity=Severity.WARNING,
+        default_severity=Severity.INFO,  # a review item: most pairs are equivalent declarations
         fixable=False,
         description=(
             "Flag an MCP server that is declared with a different command, args, or"

@@ -42,11 +42,12 @@ class HooksPermissionPromptDisabled:
         messages={
             "default_mode": (
                 "permissions.defaultMode is '{{mode}}', which {{effect}} for every"
-                " user who opens this project."
+                " user who opens this project.{{scope_note}}"
             ),
             "all_mcp": (
-                "enableAllProjectMcpServers is true, which pre-approves every server"
-                " in the project MCP configuration without a prompt."
+                "enableAllProjectMcpServers is true, which approves every server in the"
+                " project MCP configuration without the per-server prompt. Tool"
+                " permission prompts are not affected."
             ),
             "skip_dangerous": (
                 "skipDangerousModePermissionPrompt is true, which suppresses the"
@@ -85,16 +86,30 @@ class HooksPermissionPromptDisabled:
                     if mode in _SEVERE_MODES
                     else "auto-accepts file edits without a prompt"
                 )
+                scope_note = ""
+                if mode == "bypassPermissions":
+                    # Project and local settings stopped being honoured for this
+                    # value in Claude Code v2.1.257; earlier clients apply it.
+                    scope_note = (
+                        " Claude Code v2.1.257 and later ignore this value in project"
+                        " settings; earlier versions apply it."
+                    )
                 context.report(
                     ReportDescriptor(
                         message_id="default_mode",
-                        data={"mode": mode, "effect": effect},
+                        data={"mode": mode, "effect": effect, "scope_note": scope_note},
                         location=loc,
                     )
                 )
 
         if data.get("enableAllProjectMcpServers") is True:
-            context.report(ReportDescriptor(message_id="all_mcp", location=loc))
+            # Server trust, not tool authorisation: narrower than a permission
+            # mode, so advisory rather than gating.
+            context.report(
+                ReportDescriptor(
+                    message_id="all_mcp", location=loc, severity_override=Severity.INFO
+                )
+            )
 
         if data.get("skipDangerousModePermissionPrompt") is True:
             context.report(ReportDescriptor(message_id="skip_dangerous", location=loc))

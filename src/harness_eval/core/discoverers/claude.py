@@ -8,6 +8,7 @@ from harness_eval.core.discoverers.base import (
     ToolDiscoverer,
     _is_excluded_path,
     _recursive_glob,
+    is_agent_file,
     parse_file,
 )
 from harness_eval.core.types import (
@@ -72,7 +73,7 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
         # Skills
         for skills_dir in [root / "skills", root / ".claude" / "skills"]:
             if skills_dir.is_dir():
-                for f in sorted(skills_dir.rglob("SKILL.md")):
+                for f in sorted(skills_dir.glob("*/SKILL.md")):
                     paths.append(f)
         if recursive:
             for f in _recursive_glob(root, "skills/*/SKILL.md"):
@@ -201,7 +202,7 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
             if not skills_dir.is_dir():
                 continue
             tool = "claude" if ".claude" in skills_dir.parts else None
-            for skill_md in sorted(skills_dir.rglob("SKILL.md")):
+            for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
                 resolved = str(skill_md.resolve())
                 if resolved in seen_paths:
                     continue
@@ -291,14 +292,14 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
             if not agents_dir.is_dir():
                 continue
             for f in sorted(agents_dir.glob("*.md")):
-                if f.is_file():
+                if f.is_file() and is_agent_file(f, strict=tool is None):
                     seen_paths.add(str(f.resolve()))
                     results.append(parse_file(f, ComponentType.AGENT, source_tool=tool))
         if recursive:
             for pattern, tool in ((".claude/agents/*.md", "claude"), ("agents/*.md", None)):
                 for f in _recursive_glob(root, pattern):
                     resolved = str(f.resolve())
-                    if resolved not in seen_paths:
+                    if resolved not in seen_paths and is_agent_file(f, strict=tool is None):
                         seen_paths.add(resolved)
                         results.append(parse_file(f, ComponentType.AGENT, source_tool=tool))
         return results

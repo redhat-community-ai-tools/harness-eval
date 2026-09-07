@@ -329,6 +329,8 @@ def _build_json_inspection(inspection_results: list[InspectionResult]) -> dict:
                         "rule": d.rule_id,
                         "severity": d.severity.value,
                         "message": d.message,
+                        "file": d.location.file,
+                        **({"line": d.location.start_line} if d.location.start_line else {}),
                         **({"suggestion": d.suggestion} if d.suggestion else {}),
                     }
                     for d in r.diagnostics

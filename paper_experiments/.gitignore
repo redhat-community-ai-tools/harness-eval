@@ -1,0 +1,11 @@
+data/results.jsonl
+data/*.log
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.bbl
+paper/*.blg
+__pycache__/
+.env

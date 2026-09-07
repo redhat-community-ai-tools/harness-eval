@@ -1,0 +1,974 @@
+{
+ "agent/constraint-body-match": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "agent/data-exfiltration": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "agent/description-required": {
+  "auto": "FILE",
+  "category": "frontmatter",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "field presence in one file",
+  "scope": "FILE",
+  "security": false
+ },
+ "agent/disallowed-tools-parseable": {
+  "auto": "FILE",
+  "category": "frontmatter",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "agent/excessive-permissions": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "agent/memory-write-unscoped": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "agent/model-specified": {
+  "auto": "FILE",
+  "category": "best_practices",
+  "corrected": false,
+  "default_severity": "info",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "agent/no-credential-access": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "agent/no-prompt-injection": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "agent/obfuscation": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "agent/referenced-skills-exist": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": true,
+  "default_severity": "error",
+  "reason": "one agent against the skill inventory",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "agent/reverse-shell": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "agent/unbounded-delegation": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "claude-md/exists": {
+  "auto": "FILE",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "claude-md/generic-advice": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "claude-md/include-exists": {
+  "auto": "FILE_FS",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": false
+ },
+ "claude-md/skill-duplication": {
+  "auto": "PAIRWISE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "context file against each skill",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "command/allowed-tools-coverage": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "command/data-exfiltration": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "command/description-quality": {
+  "auto": "FILE",
+  "category": "frontmatter",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "command/description-required": {
+  "auto": "FILE",
+  "category": "frontmatter",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "command/duplicate-detection": {
+  "auto": "PAIRWISE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "similarity between two commands",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "command/no-credential-access": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "command/no-prompt-injection": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "command/obfuscation": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "command/references-nonexistent-skill": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "one command against the skill inventory",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "command/reverse-shell": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "command/script-exists": {
+  "auto": "FILE_FS",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": false
+ },
+ "command/shadows-builtin": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "command/skill-overlap": {
+  "auto": "PAIRWISE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "one command's triggers against each skill",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "content/allowed-tools-auto-approve": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "content/broken-references": {
+  "auto": "FILE_FS",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "path resolution against the filesystem",
+  "scope": "FILE_FS",
+  "security": false
+ },
+ "content/circular-references": {
+  "auto": "SETUP",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "cycle in the reference graph over all skills and commands",
+  "scope": "SETUP",
+  "security": false
+ },
+ "content/description-length": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "content/duplicate-detection": {
+  "auto": "PAIRWISE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "similarity between two skills",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "content/hardcoded-machine-path": {
+  "auto": "PAIRWISE",
+  "category": "content",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "pattern on one file's text",
+  "scope": "FILE",
+  "security": false
+ },
+ "content/mcp-skill-alignment": {
+  "auto": "PAIRWISE",
+  "category": "content",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "configured servers against every skill that references a tool",
+  "scope": "SETUP",
+  "security": false
+ },
+ "content/missing-boundary-policy": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "info",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "content/orphan-skills": {
+  "auto": "PAIRWISE",
+  "category": "content",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "reachability from any component",
+  "scope": "SETUP",
+  "security": false
+ },
+ "content/permission-escalation": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "capabilities along delegation edges",
+  "scope": "SETUP",
+  "security": false
+ },
+ "content/token-budget": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "content/total-context-budget": {
+  "auto": "SETUP",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "aggregate over all always-loaded components",
+  "scope": "SETUP",
+  "security": false
+ },
+ "content/total-description-budget": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "aggregate over all skill descriptions",
+  "scope": "SETUP",
+  "security": false
+ },
+ "cross/config-instruction-conflict": {
+  "auto": "PAIRWISE",
+  "category": "cross_component",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "settings deny list against one instruction file",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "cross/multi-assistant-drift": {
+  "auto": "PAIRWISE",
+  "category": "cross_component",
+  "corrected": false,
+  "default_severity": "info",
+  "reason": "similarity between two context files",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "cross/overpermissive-grants": {
+  "auto": "FILE_FS",
+  "category": "cross_component",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "reads one settings file; each entry is judged on its own text",
+  "scope": "FILE",
+  "security": false
+ },
+ "frontmatter/description-quality": {
+  "auto": "FILE",
+  "category": "frontmatter",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "frontmatter/description-required": {
+  "auto": "FILE",
+  "category": "frontmatter",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "field presence in one file",
+  "scope": "FILE",
+  "security": false
+ },
+ "frontmatter/format-valid": {
+  "auto": "FILE",
+  "category": "frontmatter",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "YAML parse of one file",
+  "scope": "FILE",
+  "security": false
+ },
+ "hooks/api-key-helper": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/base-url-override": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/command-script-exists": {
+  "auto": "FILE_FS",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": false
+ },
+ "hooks/dangerous-command": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/env-credential-override": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/env-leakage": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/json-duplicate-keys": {
+  "auto": "FILE",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "hooks/local-settings-committed": {
+  "auto": "FILE_FS",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "presence of a sibling file",
+  "scope": "FILE_FS",
+  "security": false
+ },
+ "hooks/matcher-matches-no-tool": {
+  "auto": "FILE",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "matcher string against a fixed tool list",
+  "scope": "FILE",
+  "security": false
+ },
+ "hooks/network-access": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/no-audit-trail": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "info",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "hooks/no-commit-guard": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/permission-contradiction": {
+  "auto": "FILE",
+  "category": "cross_component",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "compares two lists inside one settings file",
+  "scope": "FILE",
+  "security": false
+ },
+ "hooks/permission-prompt-disabled": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "key presence in one settings file",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/pre-trust-permissions": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "key presence in one settings file",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/script-boundary": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "hooks/silent-failure-masking": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "hooks/valid-structure": {
+  "auto": "FILE",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "mcp/auto-approve-risk": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "mcp/cross-assistant-divergence": {
+  "auto": "FILE_FS",
+  "category": "cross_component",
+  "corrected": true,
+  "default_severity": "info",
+  "reason": "same server in two assistants' MCP configs",
+  "scope": "PAIRWISE",
+  "security": false
+ },
+ "mcp/endpoint-integrity": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "mcp/json-duplicate-keys": {
+  "auto": "FILE",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "mcp/no-plaintext-secrets": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "mcp/no-wildcard-tools": {
+  "auto": "FILE",
+  "category": "best_practices",
+  "corrected": false,
+  "default_severity": "info",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "mcp/suspicious-endpoint": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "info",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "mcp/unpinned-package": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": true,
+  "default_severity": "warning",
+  "reason": "package spec text in one config",
+  "scope": "FILE",
+  "security": true
+ },
+ "mcp/valid-config": {
+  "auto": "FILE",
+  "category": "structural",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/example-gap": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "info",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/imprecise-instruction": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/negative-only": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/redundant-guidance": {
+  "auto": "FILE_FS",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": false
+ },
+ "quality/scope-grab-description": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/scope-overreach": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/stale-references": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/trigger-manipulation": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "quality/unfinished-content": {
+  "auto": "FILE",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": false
+ },
+ "security/ast-behavioral": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "security/bash-taint-flow": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "security/coercive-override": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/credential-file-present": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "security/cross-component-flow": {
+  "auto": "SETUP",
+  "category": "cross_component",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "reachability over the component graph",
+  "scope": "SETUP",
+  "security": true
+ },
+ "security/cve-lookup": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "security/dangerous-permission-grant": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "pattern match on one settings file",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/data-exfiltration": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/mcp-least-privilege": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "security/mcp-tool-poisoning": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/memory-write-unscoped": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/no-credential-access": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/no-prompt-injection": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/obfuscation": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/prompt-exfiltration": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/reverse-shell": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/stealth-persistence": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/taint-flow": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "security/unbounded-delegation": {
+  "auto": "FILE",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "",
+  "scope": "FILE",
+  "security": true
+ },
+ "security/yara-signatures": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "structural/skill-md-exists": {
+  "auto": "FILE",
+  "category": "structural",
+  "corrected": true,
+  "default_severity": "error",
+  "reason": "file presence in the skill directory",
+  "scope": "FILE_FS",
+  "security": false
+ },
+ "structural/symlink-escape": {
+  "auto": "FILE_FS",
+  "category": "security",
+  "corrected": false,
+  "default_severity": "error",
+  "reason": "",
+  "scope": "FILE_FS",
+  "security": true
+ },
+ "submission/file-completeness": {
+  "auto": "FILE_FS",
+  "category": "content",
+  "corrected": false,
+  "default_severity": "warning",
+  "reason": "expected files in the skill directory",
+  "scope": "FILE_FS",
+  "security": false
+ }
+}

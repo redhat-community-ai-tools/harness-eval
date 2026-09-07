@@ -1,0 +1,10 @@
+{
+ "n_candidates": 9295,
+ "n_failed": 22,
+ "n_no_component": 3065,
+ "n_instruction_only": 1633,
+ "n_sparse": 1322,
+ "n_setup_or_collection": 3253,
+ "n_duplicates": 65,
+ "note": "counts from the full candidate scan on the pre-0022 tool; the corpus was then rescanned from scratch on patch 0022"
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -129,3 +130,43 @@ class ToolDiscoverer(ABC):
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[Path]:
         """Return file paths this discoverer would scan (for watch mode)."""
+
+
+# Files that live in an agents directory but are not agent definitions: the
+# directory README, an index, project meta files. A root-level ``agents/``
+# directory is ambiguous (it also holds per-assistant instruction documents
+# and agent-framework code), so there a file counts as an agent only when it
+# opens with a YAML frontmatter block.
+_NOT_AGENT_STEMS = {
+    "readme",
+    "index",
+    "changelog",
+    "contributing",
+    "license",
+    "agents",
+    "claude",
+    "template",
+    "_template",
+    "example",
+}
+
+
+def is_agent_file(path: Path, *, strict: bool = False) -> bool:
+    stem = path.stem.removesuffix(".agent")
+    if stem.lower() in _NOT_AGENT_STEMS:
+        return False
+    # ALL-CAPS names (README, CUSTOMIZATION_NOTES, WORKFLOW_EXAMPLES, ATTRIBUTION)
+    # follow the documentation convention, not the agent one.
+    if stem.upper() == stem and any(ch.isalpha() for ch in stem) and len(stem) > 2:
+        return False
+    try:
+        head = path.read_text(encoding="utf-8", errors="replace")[:2048].lstrip("\ufeff")
+    except OSError:
+        return False
+    # A Copilot path-scoped instructions file (``applyTo:`` frontmatter) is a
+    # rule, not an agent, wherever it is stored.
+    if head.startswith("---") and re.search(r"^applyTo\s*:", head, re.M):
+        return False
+    if not strict:
+        return True
+    return head.startswith("---")

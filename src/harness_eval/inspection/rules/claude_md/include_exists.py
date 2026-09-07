@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules._config_fs import project_root
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -63,6 +64,15 @@ def imports_in(text: str) -> list[str]:
     return out
 
 
+_CONDITIONAL_RE = re.compile(
+    r"if (?:it )?(?:exists|present|available)|\(optional\)|when present", re.I
+)
+
+
+def _conditional(text: str, ref: str) -> bool:
+    return any("@" + ref in line and _CONDITIONAL_RE.search(line) for line in text.splitlines())
+
+
 class ClaudeMdIncludeExists:
     meta = RuleMeta(
         id="claude-md/include-exists",
@@ -84,15 +94,27 @@ class ClaudeMdIncludeExists:
         if cmd is None or not cmd.raw_content:
             return
         base = Path(cmd.file_path).resolve().parent
+        # Cursor rule files (.cursor/rules/*.mdc, .cursorrules) reference files
+        # with @path relative to the project root, not to the rule file.
+        norm = cmd.file_path.replace("\\", "/")
+        cursor_rule = "/.cursor/rules/" in norm or norm.endswith((".mdc", ".cursorrules"))
+        root = project_root(Path(cmd.file_path)) if cursor_rule else None
         for ref in imports_in(cmd.raw_content):
             target = Path(ref).expanduser() if ref.startswith("~") else (base / ref)
             if ref.startswith("~"):
                 continue  # home-relative imports are per-machine by design; not checkable in a clone
+            if _conditional(cmd.raw_content, ref):
+                continue  # "@X.md if exists": the author declared the file optional
+            if root is not None and (root / ref.lstrip("/")).exists():
+                continue
             if not target.exists():
+                # A *.local.md import is per-machine by design (gitignored on creation).
+                local = ref.lower().endswith(".local.md")
                 context.report(
                     ReportDescriptor(
                         message_id="missing",
                         data={"ref": ref, "resolved": str(target)},
                         location=Location(file=cmd.file_path),
+                        severity_override=Severity.INFO if local else None,
                     )
                 )

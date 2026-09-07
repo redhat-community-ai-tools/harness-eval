@@ -4,6 +4,92 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- `frontmatter/format-valid` and `frontmatter/description-required` now describe the actual consequence: the Agent Skills specification requires the block and the field, while Claude Code loads the file anyway and falls back to the directory name and the first paragraph. `description-required` is a warning, not an error.
+- `hooks/permission-prompt-disabled` reports `enableAllProjectMcpServers` as an advisory (info) finding about MCP server approval only (it does not affect tool permission prompts), and notes that Claude Code v2.1.257 and later ignore `bypassPermissions` in project settings.
+
+### Fixed
+- `agent/referenced-skills-exist` resolves references by the skill's frontmatter `name` as well as its directory name.
+- `mcp/endpoint-integrity` treats `bin/` as a build output like `dist/` and `build/`.
+- `mcp/unpinned-package` no longer reads a `uvx`/`pipx` flag value (`--python ">=3.11"`) as the package, honours `--from pkg==x`, skips servers marked `"disabled": true`, and treats an `npx` package the project declares in its own package.json as local.
+- Agent discovery skips Copilot path-scoped instruction files (`applyTo:` frontmatter) stored in an agents directory.
+- `agent/referenced-skills-exist` stays silent when the skills directory is a git submodule absent from the checkout.
+
+## [7.15.0] - 2026-09-04
+
+Calibration release. A corpus audit re-derived every finding of the decidable
+rules from 3,837 re-cloned repositories at pinned commits; every refuted
+class below is now a regression fixture (`tests/test_audit_calibration_v715.py`).
+
+### Changed
+- `command/script-exists` is advisory, not gating: the script regex matched
+  prose (`Node.js`, `foo.py`, `path/to/x.sh`) and the audit measured 88.7%
+  precision. Framework names and placeholders are skipped, `..` paths that
+  stay inside the project resolve, and a bare `setup.py` resolves from the
+  project root because commands run there.
+- Agent discovery skips `README`, `index`, `CHANGELOG`, `CONTRIBUTING`, and
+  similar files in an agents directory, and counts a file in a root-level
+  `agents/` directory only when it opens with YAML frontmatter (that
+  directory also holds per-assistant instruction documents).
+- `agent/referenced-skills-exist` and `command/references-nonexistent-skill`
+  resolve against every `SKILL.md` in the tree (root-level skill directories,
+  plugin bundles), strip the `plugin:` namespace when the plugin is this
+  repository, and ignore references into other plugins. The command rule also
+  accepts commands, agents, built-in slash commands, and numeric tokens.
+- `hooks/matcher-matches-no-tool` checks only tool events (`PreToolUse`,
+  `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`); `SessionStart`,
+  `PreCompact`, and `SessionEnd` matchers use their own vocabularies. Literal
+  `mcp__server__tool` matchers are not dead. The known-tool list covers
+  `MultiEdit`, `NotebookRead`, `LS`, `TodoRead`, `BashOutput`, `KillShell`,
+  `ExitPlanMode`, `AskUserQuestion`, `SlashCommand`, `Skill`, and `Agent`.
+- `mcp/valid-config` accepts the plugin-style flat server map used by
+  `.claude-plugin` bundles, Gemini CLI `httpUrl`, and JSONC comments and
+  trailing commas.
+- `frontmatter/description-required` no longer fires on a `SKILL.md` with no
+  frontmatter block; `frontmatter/format-valid` already reports that.
+- `hooks/command-script-exists` expands `${CLAUDE_PROJECT_DIR:-.}`, checks
+  only the first token of a command, and ignores `$HOME`, `~`, and other
+  per-machine variables.
+- `hooks/local-settings-committed` fires only for a `.claude/` directory.
+- `claude-md/include-exists` resolves `@path` in Cursor rule files from the
+  project root as well as the rule file. `mcp/endpoint-integrity` accepts a
+  relative `command` that resolves from the config file's directory (plugin
+  bundles). `hooks/command-script-exists` accepts a script next to a Cursor
+  `hooks.json`. A path-style skill reference (`group/skill`) resolves to the
+  nested skill directory. `your-token` values are placeholders, not secrets.
+- JSON findings carry `file` and, where known, `line`.
+- `content/allowed-tools-auto-approve` uses the same grant classifier as
+  `cross/overpermissive-grants`: only a bare `Bash`, `Bash(*)`, or a wildcard
+  on a command that executes arbitrary code is high risk; `Bash(npm test:*)`
+  and `Bash(curl *)` are scoped grants. Agent discovery skips ALL-CAPS
+  documentation files in agents directories. MCP configs accept Codex's
+  `mcp_servers` key. `claude-md/include-exists` skips imports the author
+  marked conditional (`@AGENTS.override.md if exists`).
+
+### Fixed
+- `command/references-nonexistent-skill` counts a bare `/name` only where it is written as an invocation (line or list start, backticks, after run/invoke/use/call), so path segments and prose no longer dangle.
+- `hooks/command-script-exists` skips a relative path that contains a variable (`./$PKG/hook.sh`).
+- `mcp/valid-config` accepts an empty `{}` placeholder and recognizes an MCP registry server manifest saved as `.mcp.json` instead of reporting them as invalid.
+- `mcp/endpoint-integrity` reports plain `http://` to a compose-network name, a private address, or a `.local`/`.internal` host as informational.
+- OpenCode is detected from `.opencode/` or `opencode.json` only; `AGENTS.md` is a shared file and no longer counts as OpenCode evidence (the component is still discovered).
+- `frontmatter/format-valid` reports a missing `name` as informational (clients default it); `cross/multi-assistant-drift` and `mcp/cross-assistant-divergence` are informational review items; `claude-md/include-exists` reports a `*.local.md` import as informational.
+- `agent/referenced-skills-exist` and `command/references-nonexistent-skill` accept glob references such as `business-growth/*`, satisfied by any skill whose path matches; a glob that matches nothing still dangles.
+- Skill discovery reads `skills/<name>/SKILL.md` only, matching how clients load skills; a `SKILL.md` nested deeper inside a skill directory is a supporting file, not a skill.
+- `hooks/matcher-matches-no-tool` knows the current Claude Code tools (TaskCreate, TaskUpdate, SendMessage, EnterWorktree, ...), treats any matcher containing `mcp__` as an MCP pattern, and skips Cursor `hooks.json`.
+- `hooks/command-script-exists` ignores globs, shell substitutions, assignments, and paths under build or install directories (`dist/`, `node_modules/`, `target/`, `venv/`, ...).
+- `mcp/endpoint-integrity` no longer reports a relative `command` or `cwd` under a build or install directory as missing.
+- `mcp/unpinned-package` accepts `npx --no-install`/`--offline` and a runner (`tsx`, `ts-node`, `node`, `bun`) given a file in the repository.
+- A UTF-8 byte-order mark before the frontmatter delimiter no longer hides the frontmatter from every frontmatter rule.
+- `mcp/cross-assistant-divergence` no longer reports two declarations that differ only in an explicit versus implied transport `type` (`stdio`, `http`, `sse`, `streamable-http`).
+- `hooks/command-script-exists` strips a trailing shell separator (`;`, `&&`, `|`) from the path token, so an inline `if ...; then script.sh; fi` hook resolves the script.
+- Agent frontmatter `tools:` given as a map (OpenCode style, `{write: true, bash: false}`) or a bare scalar no longer crashes `parse_agent`; truthy keys are allowed tools, false keys disallowed.
+- Token counting no longer raises on text containing tiktoken special tokens such as `<|endoftext|>`.
+- `mcp/unpinned-package` read the value of a `docker run --pull` (and other
+  value-taking flags such as `--restart`, `--cap-drop`, `--security-opt`,
+  `--mount`) as the image name.
+- `security/credential-file-present` flagged `.env.*.example`, `*.sample`,
+  `*.template`, and `*.dist` files.
+
 ## [7.14.0] - 2026-09-02
 
 ### Changed

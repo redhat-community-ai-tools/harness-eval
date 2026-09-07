@@ -13,7 +13,6 @@ GATING_RULES = {
     "agent/description-required",
     "claude-md/include-exists",
     "command/description-required",
-    "command/script-exists",
     "content/hardcoded-machine-path",
     "cross/multi-assistant-drift",
     "cross/overpermissive-grants",

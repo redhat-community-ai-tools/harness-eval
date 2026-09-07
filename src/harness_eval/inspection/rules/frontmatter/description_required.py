@@ -14,13 +14,21 @@ class DescriptionRequired:
     meta: RuleMeta = RuleMeta(
         id="frontmatter/description-required",
         tier="gating",
-        default_severity=Severity.ERROR,
+        default_severity=Severity.WARNING,
         fixable=False,
         description="The 'description' field is required in frontmatter",
         category=RuleCategory.FRONTMATTER,
         messages={
-            "missing": "Required field 'description' is missing from frontmatter",
-            "empty": "Field 'description' must not be empty",
+            "missing": (
+                "Field 'description' is missing: the Agent Skills specification requires"
+                " it. Claude Code falls back to the first paragraph of the body to decide"
+                " when to use the skill; spec-conformant consumers may reject the skill."
+            ),
+            "empty": (
+                "Field 'description' is empty: the Agent Skills specification requires a"
+                " non-empty description. Claude Code falls back to the first paragraph of"
+                " the body; spec-conformant consumers may reject the skill."
+            ),
         },
         default_suggestion="Add a 'description' field to the frontmatter.",
     )
@@ -30,6 +38,10 @@ class DescriptionRequired:
         if skill is None:
             return
         if skill.parse_errors:
+            return
+        # No frontmatter block at all is frontmatter/format-valid's finding;
+        # reporting a missing description as well counts one defect twice.
+        if not skill.frontmatter and not skill.raw_content.lstrip("\ufeff").startswith("---"):
             return
 
         description = skill.frontmatter.get("description")

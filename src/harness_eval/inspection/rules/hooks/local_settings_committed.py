@@ -69,6 +69,8 @@ class HooksLocalSettingsCommitted:
         if hooks_data is None:
             return
         settings_path = Path(hooks_data.file_path)
+        if settings_path.parent.name != ".claude":
+            return
         local = settings_path.with_name("settings.local.json")
         key = f"local_settings_committed_checked:{local.resolve()}"
         if context.scan_state.get(key):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules._component_index import component_index, resolve_skill_reference
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -31,9 +32,11 @@ class ReferencedSkillsExist:
         if not agent or not agent.referenced_skills:
             return
 
-        known_skills = {s.dir_name for s in context.all_skills}
+        idx = component_index(context)
+        if idx.get("skills_in_submodule"):
+            return  # the skills live in a submodule absent from this checkout
         for skill_name in agent.referenced_skills:
-            if skill_name not in known_skills:
+            if resolve_skill_reference(str(skill_name), idx) == "missing":
                 context.report(
                     ReportDescriptor(
                         message_id="missing_skill",

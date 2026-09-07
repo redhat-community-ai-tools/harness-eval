@@ -1,0 +1,14 @@
+{
+ "left": {
+  "SETUP": 16.7,
+  "COLLECTION": 3.7
+ },
+ "right": {
+  "Skill description missing": 0.2,
+  "Agent description missing": 0.8,
+  "Skill without frontmatter": 2.3,
+  "Arbitrary-execution grant": 3.1,
+  "Skill pre-approves shell": 3.8,
+  "Unpinned MCP package": 9.8
+ }
+}

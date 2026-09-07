@@ -1,0 +1,123 @@
+{
+ "n_reader": 752,
+ "n_table": 744,
+ "n_joined": 743,
+ "all": {
+  "n": 743,
+  "agreement": 0.9327,
+  "kappa": 0.7559,
+  "reader_defect": 603,
+  "ours_defect": 639
+ },
+ "adjudicated": {
+  "n": 157,
+  "agreement": 0.707,
+  "kappa": 0.231,
+  "reader_defect": 21,
+  "ours_defect": 53
+ },
+ "agreed": {
+  "n": 586,
+  "agreement": 0.9932,
+  "kappa": 0.0,
+  "reader_defect": 582,
+  "ours_defect": 586
+ },
+ "excluding_spec": {
+  "n": 661,
+  "agreement": 0.9244,
+  "kappa": 0.7499,
+  "reader_defect": 521,
+  "ours_defect": 557
+ },
+ "per_rule": {
+  "agent/description-required": {
+   "n": 23,
+   "agreement": 0.9565,
+   "reader_defect": 21,
+   "ours_defect": 22
+  },
+  "agent/referenced-skills-exist": {
+   "n": 7,
+   "agreement": 1.0,
+   "reader_defect": 3,
+   "ours_defect": 3
+  },
+  "claude-md/include-exists": {
+   "n": 23,
+   "agreement": 0.8696,
+   "reader_defect": 8,
+   "ours_defect": 11
+  },
+  "content/allowed-tools-auto-approve": {
+   "n": 121,
+   "agreement": 0.9752,
+   "reader_defect": 118,
+   "ours_defect": 121
+  },
+  "cross/multi-assistant-drift": {
+   "n": 71,
+   "agreement": 0.6056,
+   "reader_defect": 3,
+   "ours_defect": 29
+  },
+  "cross/overpermissive-grants": {
+   "n": 83,
+   "agreement": 1.0,
+   "reader_defect": 83,
+   "ours_defect": 83
+  },
+  "frontmatter/description-required": {
+   "n": 4,
+   "agreement": 1.0,
+   "reader_defect": 4,
+   "ours_defect": 4
+  },
+  "frontmatter/format-valid": {
+   "n": 78,
+   "agreement": 1.0,
+   "reader_defect": 78,
+   "ours_defect": 78
+  },
+  "hooks/local-settings-committed": {
+   "n": 22,
+   "agreement": 1.0,
+   "reader_defect": 19,
+   "ours_defect": 19
+  },
+  "mcp/cross-assistant-divergence": {
+   "n": 21,
+   "agreement": 0.6667,
+   "reader_defect": 0,
+   "ours_defect": 7
+  },
+  "mcp/endpoint-integrity": {
+   "n": 5,
+   "agreement": 1.0,
+   "reader_defect": 1,
+   "ours_defect": 1
+  },
+  "mcp/unpinned-package": {
+   "n": 272,
+   "agreement": 0.9706,
+   "reader_defect": 264,
+   "ours_defect": 260
+  },
+  "mcp/valid-config": {
+   "n": 13,
+   "agreement": 1.0,
+   "reader_defect": 1,
+   "ours_defect": 1
+  }
+ },
+ "gating_adjudicated": {
+  "n": 18,
+  "agree": 10,
+  "review_defect_study_not": 6,
+  "review_not_study_defect": 2
+ },
+ "labels": {
+  "yes defect": 603,
+  "no defect": 140
+ }
+}

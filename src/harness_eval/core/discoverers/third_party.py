@@ -35,7 +35,7 @@ class ThirdPartyDiscoverer(ToolDiscoverer):
 
                 skills_dir = module_dir / "skills"
                 if skills_dir.is_dir():
-                    for skill_md in sorted(skills_dir.rglob("SKILL.md")):
+                    for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
                         seen_paths.add(str(skill_md.resolve()))
                         results.append(
                             parse_file(
@@ -91,7 +91,7 @@ class ThirdPartyDiscoverer(ToolDiscoverer):
                     continue
                 skills_dir = module_dir / "skills"
                 if skills_dir.is_dir():
-                    for f in sorted(skills_dir.rglob("SKILL.md")):
+                    for f in sorted(skills_dir.glob("*/SKILL.md")):
                         paths.append(f)
                 commands_dir = module_dir / "commands"
                 if commands_dir.is_dir():

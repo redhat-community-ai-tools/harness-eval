@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from harness_eval.core.types import ComponentType
@@ -13,11 +14,30 @@ from harness_eval.inspection.types import (
 )
 from harness_eval.utils.paths import safe_join
 
+# Tokens the script regex matches that are names, not paths: framework
+# names (Node.js, Next.js), placeholders (foo.py, example.sh), `path/to/x`.
+_PROSE_MENTION = re.compile(
+    r"^(?:[A-Z][\w.-]*\.js|(?:foo|bar|baz|example|sample|placeholder|my[_-]?script|your[_-]?script|script|file|test)\.\w+"
+    r"|(?:\./)?path/to/.*)$"
+)
+
+
+def _resolve(base: Path, ref: str) -> Path | None:
+    """Resolve *ref* under *base*, allowing `..` as long as the result stays
+    inside the project (a command one directory below the scripts it runs)."""
+    direct = safe_join(base, ref)
+    if direct is not None:
+        return direct
+    try:
+        candidate = (base / ref).resolve()
+    except OSError:
+        return None
+    return candidate if candidate.exists() else None
+
 
 class CommandScriptExists:
     meta = RuleMeta(
         id="command/script-exists",
-        tier="gating",
         scope="FILE_FS",
         default_severity=Severity.WARNING,
         fixable=False,
@@ -45,14 +65,15 @@ class CommandScriptExists:
                 continue
             checked.add(script)
 
-            script_path = safe_join(cmd_dir, script)
+            if _PROSE_MENTION.match(script):
+                continue
+            script_path = _resolve(cmd_dir, script)
             if script_path is not None and script_path.exists():
                 continue
-            # Only treat as repo-relative when the ref has a path separator.
-            # A bare `conftest.py` at the repo root must not mask a missing
-            # file next to the command.
-            if project_root_path is not None and "/" in script.replace("\\", "/"):
-                root_path = safe_join(project_root_path, script)
+            # A command runs with the project root as working directory, so
+            # `python setup.py` resolves there whether or not it has a slash.
+            if project_root_path is not None:
+                root_path = _resolve(project_root_path, script)
                 if root_path is not None and root_path.exists():
                     continue
             context.report(

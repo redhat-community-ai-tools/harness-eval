@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +51,12 @@ def project_root(start: Path) -> Path:
 
 
 def expand_project_vars(value: str, root: Path) -> str:
+    # ${VAR:-default} / ${VAR:=default} forms of the project variables.
+    value = re.sub(
+        r"\$\{(?:CLAUDE_PROJECT_DIR|CURSOR_PROJECT_DIR|PROJECT_DIR|PWD):[-=][^}]*\}",
+        str(root),
+        value,
+    )
     for var in (
         "$CLAUDE_PROJECT_DIR",
         "${CLAUDE_PROJECT_DIR}",

@@ -8,6 +8,7 @@ from harness_eval.core.discoverers.base import (
     ToolDiscoverer,
     _json_top_level_keys,
     _recursive_glob,
+    is_agent_file,
     parse_file,
 )
 from harness_eval.core.types import ComponentType, ParsedComponent
@@ -56,7 +57,7 @@ class CopilotDiscoverer(ToolDiscoverer):
         # Copilot skills
         copilot_skills = root / ".github" / "skills"
         if copilot_skills.is_dir():
-            for f in sorted(copilot_skills.rglob("SKILL.md")):
+            for f in sorted(copilot_skills.glob("*/SKILL.md")):
                 paths.append(f)
         if recursive:
             for f in _recursive_glob(root, ".github/skills/*/SKILL.md"):
@@ -106,7 +107,7 @@ class CopilotDiscoverer(ToolDiscoverer):
         seen_paths: set[str] = set()
         skills_dir = root / ".github" / "skills"
         if skills_dir.is_dir():
-            for skill_md in sorted(skills_dir.rglob("SKILL.md")):
+            for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
                 seen_paths.add(str(skill_md.resolve()))
                 results.append(
                     parse_file(
@@ -158,13 +159,13 @@ class CopilotDiscoverer(ToolDiscoverer):
         agents_dir = root / ".github" / "agents"
         if agents_dir.is_dir():
             for f in sorted(agents_dir.glob("*.md")):
-                if f.is_file():
+                if f.is_file() and is_agent_file(f):
                     seen_paths.add(str(f.resolve()))
                     results.append(parse_file(f, ComponentType.AGENT, source_tool="copilot"))
         if recursive:
             for f in _recursive_glob(root, ".github/agents/*.md"):
                 resolved = str(f.resolve())
-                if resolved not in seen_paths:
+                if resolved not in seen_paths and is_agent_file(f):
                     seen_paths.add(resolved)
                     results.append(parse_file(f, ComponentType.AGENT, source_tool="copilot"))
         return results

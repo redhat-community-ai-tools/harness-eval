@@ -1,0 +1,281 @@
+{
+ "frontmatter/format-valid": {
+  "audited": 1027,
+  "confirmed": 1027,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "no_frontmatter": 306,
+   "missing_name": 721
+  }
+ },
+ "command/script-exists": {
+  "audited": 1204,
+  "confirmed": 1204,
+  "refuted": 0,
+  "unverifiable": 2,
+  "breakdown": {
+   "misrouted": 746,
+   "dead": 458,
+   "command_not_found": 2
+  }
+ },
+ "content/broken-references": {
+  "audited": 112,
+  "confirmed": 112,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "dead": 49,
+   "runtime_output": 42,
+   "misrouted": 21
+  }
+ },
+ "cross/multi-assistant-drift": {
+  "audited": 144,
+  "confirmed": 144,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "diverged": 144
+  }
+ },
+ "hooks/pre-trust-permissions": {
+  "audited": 595,
+  "confirmed": 566,
+  "refuted": 29,
+  "unverifiable": 0,
+  "breakdown": {
+   "lifecycle_sessionstart": 149,
+   "lifecycle_stop": 104,
+   "allow_with_exec_grant": 125,
+   "allow_scoped_only": 66,
+   "lifecycle_precompact": 40,
+   "lifecycle_notification": 20,
+   "lifecycle_subagentstop": 26,
+   "lifecycle_sessionend": 36
+  }
+ },
+ "content/allowed-tools-auto-approve": {
+  "audited": 3351,
+  "confirmed": 3309,
+  "refuted": 42,
+  "unverifiable": 0,
+  "breakdown": {
+   "bash_unrestricted": 818,
+   "write_tool": 1197,
+   "bash_scoped": 1214,
+   "bash_exec_cmd": 80,
+   "entry_absent": 42
+  }
+ },
+ "command/references-nonexistent-skill": {
+  "audited": 282,
+  "confirmed": 243,
+  "refuted": 39,
+  "unverifiable": 0,
+  "breakdown": {
+   "dangling": 243,
+   "path_segment": 17,
+   "token_absent": 21,
+   "is_command": 1
+  }
+ },
+ "cross/overpermissive-grants": {
+  "audited": 284,
+  "confirmed": 284,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "arbitrary_exec": 188,
+   "bare_tool": 85,
+   "bash_star": 11
+  }
+ },
+ "hooks/command-script-exists": {
+  "audited": 12,
+  "confirmed": 12,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "misrouted": 10,
+   "dead": 2
+  }
+ },
+ "mcp/cross-assistant-divergence": {
+  "audited": 40,
+  "confirmed": 40,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {}
+ },
+ "mcp/valid-config": {
+  "audited": 73,
+  "confirmed": 73,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "empty_url_placeholder": 48,
+   "invalid_json": 18,
+   "missing_servers_key": 6,
+   "no_transport": 1
+  }
+ },
+ "mcp/no-plaintext-secrets": {
+  "audited": 12,
+  "confirmed": 11,
+  "refuted": 1,
+  "unverifiable": 0,
+  "breakdown": {
+   "high_entropy_value": 7,
+   "placeholder": 1,
+   "known_prefix": 3,
+   "sk_prefix": 1
+  }
+ },
+ "security/credential-file-present": {
+  "audited": 5,
+  "confirmed": 5,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   ".npmrc": 1,
+   "*.pem": 4
+  }
+ },
+ "claude-md/include-exists": {
+  "audited": 37,
+  "confirmed": 37,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "local_import": 3,
+   "cursor_rule_import": 2
+  }
+ },
+ "mcp/endpoint-integrity": {
+  "audited": 13,
+  "confirmed": 13,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "internal_hostname": 5,
+   "fixture_path": 7,
+   "missing_path": 1
+  }
+ },
+ "hooks/local-settings-committed": {
+  "audited": 22,
+  "confirmed": 22,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "no_grants": 3,
+   "with_grants": 19
+  }
+ },
+ "structural/symlink-escape": {
+  "audited": 6,
+  "confirmed": 6,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {}
+ },
+ "hooks/dangerous-command": {
+  "audited": 10,
+  "confirmed": 10,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "rm_rf_path": 3,
+   "git_push_force": 3,
+   "chmod_777": 1,
+   "git_reset_hard": 1,
+   "curl_pipe_to_shell": 1,
+   "wget_pipe_to_shell": 1
+  }
+ },
+ "hooks/permission-prompt-disabled": {
+  "audited": 39,
+  "confirmed": 39,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "all_mcp": 20,
+   "bypassPermissions": 9,
+   "acceptEdits": 7,
+   "dotfiles_repo": 2,
+   "skip_dangerous": 1
+  }
+ },
+ "hooks/valid-structure": {
+  "audited": 7,
+  "confirmed": 7,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "no_command_key": 7
+  }
+ },
+ "frontmatter/description-required": {
+  "audited": 63,
+  "confirmed": 63,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "missing": 63
+  }
+ },
+ "security/dangerous-permission-grant": {
+  "audited": 1,
+  "confirmed": 1,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "privilege_escalation": 1
+  }
+ },
+ "mcp/unpinned-package": {
+  "audited": 961,
+  "confirmed": 961,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "npx": 291,
+   "own_package": 550,
+   "uvx": 59,
+   "template_path": 37,
+   "fixture_path": 17,
+   "docker": 7
+  }
+ },
+ "agent/description-required": {
+  "audited": 158,
+  "confirmed": 157,
+  "refuted": 1,
+  "unverifiable": 0,
+  "breakdown": {
+   "no_frontmatter": 97,
+   "missing": 60,
+   "non_agent_file": 1
+  }
+ },
+ "mcp/auto-approve-risk": {
+  "audited": 4,
+  "confirmed": 4,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "write_or_exec_tool": 4
+  }
+ },
+ "agent/referenced-skills-exist": {
+  "audited": 85,
+  "confirmed": 85,
+  "refuted": 0,
+  "unverifiable": 0,
+  "breakdown": {
+   "missing": 85
+  }
+ }
+}

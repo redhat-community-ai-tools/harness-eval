@@ -358,6 +358,18 @@ def parse_hooks(settings_path: str) -> ParsedHooks:
     )
 
 
+def _tool_list(raw: object) -> list[str]:
+    """Normalise a frontmatter tool declaration: a comma-separated string, a
+    YAML list, a map (keys), a bare scalar, or nothing."""
+    if raw is None or raw is False:
+        return []
+    if isinstance(raw, dict):
+        return [str(k).strip() for k in raw if str(k).strip()]
+    if isinstance(raw, (list, tuple)):
+        return [str(t).strip() for t in raw if str(t).strip()]
+    return [t.strip() for t in str(raw).split(",") if t.strip()]
+
+
 def parse_agent(agent_path: str) -> ParsedAgent:
     """Parse an agent .md file into a ParsedAgent."""
     path = Path(agent_path)
@@ -388,17 +400,17 @@ def parse_agent(agent_path: str) -> ParsedAgent:
     if isinstance(referenced_skills, str):
         referenced_skills = [s.strip() for s in referenced_skills.split(",")]
 
-    disallowed_raw = fm.frontmatter.get("disallowedTools", "") or ""
-    if isinstance(disallowed_raw, list):
-        disallowed_tools = [str(t).strip() for t in disallowed_raw if str(t).strip()]
+    disallowed_tools = _tool_list(fm.frontmatter.get("disallowedTools"))
+    allowed_raw = fm.frontmatter.get("tools")
+    if isinstance(allowed_raw, dict):
+        # OpenCode-style map: ``tools: {write: true, bash: false}``. Keys set
+        # to a truthy value are allowed; keys set to false are disallowed.
+        allowed_tools = [str(k).strip() for k, v in allowed_raw.items() if v and str(k).strip()]
+        disallowed_tools += [
+            str(k).strip() for k, v in allowed_raw.items() if not v and str(k).strip()
+        ]
     else:
-        disallowed_tools = [t.strip() for t in disallowed_raw.split(",") if t.strip()]
-
-    allowed_raw = fm.frontmatter.get("tools", "") or ""
-    if isinstance(allowed_raw, list):
-        allowed_tools = [str(t).strip() for t in allowed_raw if str(t).strip()]
-    else:
-        allowed_tools = [t.strip() for t in allowed_raw.split(",") if t.strip()]
+        allowed_tools = _tool_list(allowed_raw)
 
     model = fm.frontmatter.get("model")
 

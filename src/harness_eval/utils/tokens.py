@@ -52,7 +52,7 @@ def count_tokens(text: str) -> int:
         _init_encoder()
 
     if _ENCODER is not None:
-        return len(_ENCODER.encode(text))
+        return len(_ENCODER.encode(text, disallowed_special=()))
 
     if not _WARNED:
         warnings.warn(
