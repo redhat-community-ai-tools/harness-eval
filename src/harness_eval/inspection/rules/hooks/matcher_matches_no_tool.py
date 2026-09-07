@@ -13,6 +13,8 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
+_TOOL_MATCHER_EVENTS = {"pretooluse", "posttooluse", "posttoolusefailure", "permissionrequest"}
+
 
 class HooksMatcherMatchesNoTool:
     meta = RuleMeta(
@@ -50,8 +52,21 @@ class HooksMatcherMatchesNoTool:
             if matcher is None:
                 continue
 
-            # Wildcard and empty string match everything
-            if matcher == "*" or matcher == "":
+            # Only tool events match on tool names. SessionStart, PreCompact,
+            # SessionEnd and Notification match their own vocabularies
+            # (startup|resume, manual|auto, ...) and the rest ignore matchers.
+            if str(hook.get("event", "")).lower() not in _TOOL_MATCHER_EVENTS:
+                continue
+
+            # Wildcard and empty string match everything; an mcp__ pattern
+            # targets MCP tools whose names are not known statically.
+            if matcher == "*" or matcher == "" or "mcp__" in matcher:
+                continue
+            # Cursor's hooks.json matches on its own event vocabulary, not on
+            # Claude Code tool names.
+            if "/.cursor/" in str(loc.file).replace("\\", "/") or str(loc.file).replace(
+                "\\", "/"
+            ).startswith(".cursor/"):
                 continue
 
             # Try to compile as regex

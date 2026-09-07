@@ -15,6 +15,9 @@ def parse_frontmatter(content: str) -> tuple[dict[str, object] | None, str]:
 
     Returns (frontmatter_dict, body) or (None, full_content) if no frontmatter.
     """
+    # A UTF-8 byte-order mark before the opening delimiter is invisible to
+    # the author and is not part of the frontmatter.
+    content = content.lstrip("\ufeff")
     match = _FRONTMATTER_RE.match(content)
     if not match:
         return None, content
@@ -48,6 +51,7 @@ def parse_frontmatter_rich(content: str) -> FrontmatterResult:
     Use parse_frontmatter() when you just need the dict and body.
     """
     errors: list[str] = []
+    content = content.lstrip("\ufeff")
     lines = content.split("\n")
 
     if not lines or lines[0].strip() != "---":

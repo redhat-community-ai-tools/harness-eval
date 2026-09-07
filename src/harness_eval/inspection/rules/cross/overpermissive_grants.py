@@ -78,6 +78,18 @@ _BASH_GRANT_RE = re.compile(
 )
 
 
+def classify_grant(entry: str) -> tuple[str, str] | None:
+    """(command, reason) when *entry* is a wildcard grant on a command that
+    executes arbitrary code; None for Bash(*), bare tools, and scoped grants.
+    Shared with the skill allowed-tools rule so both use one definition."""
+    m = _BASH_GRANT_RE.match(entry)
+    if not m:
+        return None
+    cmd = m.group(1).lower()
+    reason = _ARBITRARY_EXEC_COMMANDS.get(cmd)
+    return (cmd, reason) if reason is not None else None
+
+
 def _classify_entry(entry: str) -> tuple[str, Severity] | None:
     """Classify a single permissions.allow entry. Returns (reason, severity) or None.
 

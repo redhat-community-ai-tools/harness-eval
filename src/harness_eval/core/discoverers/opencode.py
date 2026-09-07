@@ -31,9 +31,11 @@ class OpenCodeDiscoverer(ToolDiscoverer):
         Claude Code, OpenCode) so it is attributed as "agents-md" rather than
         "opencode".  The .opencode/ directory is OpenCode-specific.
         """
+        # AGENTS.md alone does not identify OpenCode: it is a shared file, so
+        # only OpenCode-specific evidence detects the tool (the AGENTS.md
+        # component is still discovered below).
         return (
-            (root / "AGENTS.md").is_file()
-            or (root / ".opencode").is_dir()
+            (root / ".opencode").is_dir()
             or (root / "opencode.json").is_file()
             or (root / "opencode.jsonc").is_file()
         )

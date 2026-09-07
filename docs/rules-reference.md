@@ -81,7 +81,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `command/obfuscation` | advisory | FILE |
 | `command/references-nonexistent-skill` | advisory | PAIRWISE |
 | `command/reverse-shell` | advisory | FILE |
-| `command/script-exists` | gating | FILE_FS |
+| `command/script-exists` | advisory | FILE_FS |
 | `command/shadows-builtin` | advisory | FILE |
 | `command/skill-overlap` | advisory | PAIRWISE |
 | `content/allowed-tools-auto-approve` | advisory | FILE |

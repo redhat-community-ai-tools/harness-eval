@@ -16,6 +16,7 @@ from harness_eval.inspection.types import (
 
 _PLACEHOLDER_SUBSTRINGS = [
     "your_",
+    "your-",
     "changeme",
     "change-me",
     "xxx",

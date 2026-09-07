@@ -35,7 +35,20 @@ _GLOBS = (
     ".npmrc",
     ".pypirc",
 )
-_ALLOW = (".env.example", ".env.sample", ".env.template", "*.pub", ".env.md")
+_ALLOW = (
+    ".env.example",
+    ".env.sample",
+    ".env.template",
+    "*.pub",
+    ".env.md",
+    "*.example",
+    "*.sample",
+    "*.template",
+    "*.dist",
+    "*.example.*",
+    "*.sample.*",
+    "*.template.*",
+)
 
 
 class SecurityCredentialFilePresent:

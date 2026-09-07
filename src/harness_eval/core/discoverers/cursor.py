@@ -68,7 +68,7 @@ class CursorDiscoverer(ToolDiscoverer):
         # Cursor skills
         cursor_skills = root / ".cursor" / "skills"
         if cursor_skills.is_dir():
-            for f in sorted(cursor_skills.rglob("SKILL.md")):
+            for f in sorted(cursor_skills.glob("*/SKILL.md")):
                 paths.append(f)
         if recursive:
             for f in _recursive_glob(root, ".cursor/skills/*/SKILL.md"):
@@ -168,7 +168,7 @@ class CursorDiscoverer(ToolDiscoverer):
         seen_paths: set[str] = set()
         skills_dir = root / ".cursor" / "skills"
         if skills_dir.is_dir():
-            for skill_md in sorted(skills_dir.rglob("SKILL.md")):
+            for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
                 resolved = str(skill_md.resolve())
                 if resolved not in seen_paths:
                     seen_paths.add(resolved)

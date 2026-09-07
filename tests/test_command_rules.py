@@ -194,16 +194,34 @@ class TestCommandScriptExists:
         )
         assert len(_diags_for(result, "command/script-exists")) == 0
 
-    def test_root_bare_filename_does_not_mask_missing_relative(self, tmp_path: Path) -> None:
-        (tmp_path / "conftest.py").write_text("# pytest\n")
+    def test_root_bare_filename_resolves_from_project_root(self, tmp_path: Path) -> None:
+        # A command runs with the project root as working directory, so a
+        # bare `setup.py` that exists there is not missing.
+        (tmp_path / "setup.py").write_text("# setup\n")
         cmd_dir = tmp_path / "commands" / "run-tests"
         cmd_dir.mkdir(parents=True)
         (cmd_dir / "command.md").write_text(
-            "---\ndescription: Run pytest helpers\n---\n\nCall conftest.py then pytest.\n"
+            "---\ndescription: Run setup\n---\n\nRun python setup.py then gone.py.\n"
         )
         result = lint_command(
             str(cmd_dir),
             {"command/script-exists": "warning"},
             scan_state={"project_root": str(tmp_path)},
         )
-        assert len(_diags_for(result, "command/script-exists")) == 1
+        diags = _diags_for(result, "command/script-exists")
+        assert len(diags) == 1
+        assert "gone.py" in diags[0].message
+
+    def test_prose_mentions_are_not_script_references(self, tmp_path: Path) -> None:
+        cmd_dir = tmp_path / "commands" / "setup"
+        cmd_dir.mkdir(parents=True)
+        (cmd_dir / "command.md").write_text(
+            "---\ndescription: Setup\n---\n\n"
+            "Works with Node.js and Next.js; e.g. foo.py or path/to/script.sh.\n"
+        )
+        result = lint_command(
+            str(cmd_dir),
+            {"command/script-exists": "warning"},
+            scan_state={"project_root": str(tmp_path)},
+        )
+        assert _diags_for(result, "command/script-exists") == []

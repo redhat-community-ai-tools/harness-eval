@@ -33,7 +33,28 @@ def script_paths(command: str) -> list[str]:
         tokens = command.split()
     out = []
     for t in tokens:
-        if t.startswith("-"):
+        # A path glued to a shell separator ("script.sh;", "script.sh&&") is
+        # still that path; the separator is not part of the file name.
+        t = t.rstrip(";&|")
+        if not t or t.startswith("-") or any(ch.isspace() for ch in t):
+            continue
+        # A glob ("*.py" inside a grep), a shell substitution ("RESULT=$(x.sh"),
+        # or an assignment is not a path the repository is expected to carry.
+        if "*" in t or "$(" in t or "=" in t:
+            continue
+        # A variable anywhere in a relative path ("./$PKG/hook.sh") resolves at run time.
+        if re.search(r"\$\{?[A-Za-z_]", t) and not re.match(
+            r"^\$\{?(?:CLAUDE_PROJECT_DIR|CURSOR_PROJECT_DIR|PROJECT_DIR|PWD)\b", t
+        ):
+            continue
+        # Build and install outputs are produced, not committed.
+        if re.search(r"(^|/)(node_modules|dist|build|target|out|venv|\.venv)/", t):
+            continue
+        # Any other variable ($HOME, ~, $root, ${DIR}) is a per-machine or
+        # install-time location, not a path this repository can satisfy.
+        if t.startswith(("$", "~")) and not re.match(
+            r"^\$\{?(?:CLAUDE_PROJECT_DIR|CURSOR_PROJECT_DIR|PROJECT_DIR|PWD)\b", t
+        ):
             continue
         if t.endswith(_SCRIPT_EXT) or t.startswith(
             (
@@ -97,7 +118,10 @@ class HooksCommandScriptExists:
                     continue
                 seen.add(p)
                 candidate = Path(expand_project_vars(p, root))
+                hooks_dir = Path(hd.file_path).resolve().parent
                 if not candidate.is_absolute():
+                    if (hooks_dir / candidate).exists():
+                        continue
                     candidate = root / candidate
                 if not candidate.exists():
                     context.report(

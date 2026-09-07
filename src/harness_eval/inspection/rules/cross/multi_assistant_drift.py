@@ -52,7 +52,7 @@ class MultiAssistantDrift:
         id="cross/multi-assistant-drift",
         tier="gating",
         scope="PAIRWISE",
-        default_severity=Severity.WARNING,
+        default_severity=Severity.INFO,  # a review item: the difference is usually intended
         fixable=False,
         description=(
             "Flag diverged copies of assistant memory files (CLAUDE.md, AGENTS.md, GEMINI.md)"

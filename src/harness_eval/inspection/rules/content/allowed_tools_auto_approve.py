@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from harness_eval.inspection.rules.cross.overpermissive_grants import classify_grant
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -11,6 +12,48 @@ from harness_eval.inspection.types import (
 
 _HIGH_RISK = {"bash"}
 _MEDIUM_RISK = {"write", "edit", "notebookedit"}
+# Commands whose wildcard is equivalent to an unrestricted shell. Network and
+# build tools (curl, make, docker, ssh) are scoped grants, not shell access.
+_EXEC_CLASS = {
+    "sh",
+    "bash",
+    "zsh",
+    "dash",
+    "fish",
+    "env",
+    "eval",
+    "exec",
+    "xargs",
+    "nohup",
+    "timeout",
+    "watch",
+    "sudo",
+    "doas",
+    "python",
+    "python3",
+    "perl",
+    "ruby",
+    "node",
+    "bun",
+    "deno",
+    "php",
+    "lua",
+    "awk",
+    "gawk",
+    "mawk",
+    "nawk",
+    "sed",
+    "find",
+    "vim",
+    "vi",
+    "nvim",
+    "less",
+    "man",
+    "npx",
+    "bunx",
+    "uvx",
+    "pipx",
+}
 
 
 class AllowedToolsAutoApprove:
@@ -31,8 +74,8 @@ class AllowedToolsAutoApprove:
                 "removes the safety prompt."
             ),
             "auto_approve_medium": (
-                "allowed-tools includes '{{tool}}', which auto-approves file "
-                "writes without user confirmation."
+                "allowed-tools includes '{{tool}}', which auto-approves a scoped "
+                "shell command or file writes without user confirmation."
             ),
         },
         default_suggestion="Remove dangerous tools from the allowed-tools list.",
@@ -56,7 +99,10 @@ class AllowedToolsAutoApprove:
                 continue
             tool_lower = tool.lower().strip()
 
-            if tool_lower in _HIGH_RISK or tool_lower.startswith("bash("):
+            grant = classify_grant(tool.strip())
+            unrestricted = tool_lower in _HIGH_RISK or tool_lower in ("bash(*)", "bash(:*)")
+            arbitrary = grant is not None and grant[0] in _EXEC_CLASS
+            if unrestricted or arbitrary:
                 context.report(
                     ReportDescriptor(
                         message_id="auto_approve_high",
@@ -64,7 +110,8 @@ class AllowedToolsAutoApprove:
                         location=loc,
                     )
                 )
-            elif tool_lower in _MEDIUM_RISK:
+            elif tool_lower in _MEDIUM_RISK or tool_lower.startswith("bash("):
+                # A scoped shell grant (Bash(npm test:*)) or a file-writing tool.
                 context.report(
                     ReportDescriptor(
                         message_id="auto_approve_medium",

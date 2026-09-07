@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.rules.mcp._shared import extract_servers
+from harness_eval.inspection.rules.mcp._shared import extract_servers, has_transport, parse_config
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -12,6 +12,17 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
+
+
+def _is_registry_manifest(data: dict) -> bool:
+    """A server.json-style manifest (name, version, tools/packages) saved under
+    the .mcp.json name describes a server; it does not configure a client."""
+    keys = set(data)
+    return (
+        "name" in keys
+        and ("version" in keys or "tools" in keys or "packages" in keys)
+        and not ({"command", "url", "args"} & keys)
+    )
 
 
 class McpValidConfig:
@@ -45,21 +56,27 @@ class McpValidConfig:
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
-            context.report(
-                ReportDescriptor(
-                    message_id="invalid_json",
-                    data={"error": str(e)},
-                    location=loc,
+            data, jsonc = parse_config(raw)
+            if not jsonc:
+                context.report(
+                    ReportDescriptor(
+                        message_id="invalid_json",
+                        data={"error": str(e)},
+                        location=loc,
+                    )
                 )
-            )
-            return
+                return
 
         if not isinstance(data, dict):
             context.report(ReportDescriptor(message_id="not_object", location=loc))
             return
+        if not data:
+            return  # an empty {} placeholder declares nothing and breaks nothing
 
         servers = extract_servers(data)
         if servers is None:
+            if _is_registry_manifest(data):
+                return  # an MCP registry server manifest, not a client configuration
             context.report(ReportDescriptor(message_id="missing_servers", location=loc))
             return
 
@@ -77,9 +94,7 @@ class McpValidConfig:
             if not isinstance(server_def, dict):
                 continue
 
-            has_command = bool(server_def.get("command"))
-            has_url = bool(server_def.get("url"))
-            if not has_command and not has_url:
+            if not has_transport(server_def):
                 context.report(
                     ReportDescriptor(
                         message_id="server_no_transport",
