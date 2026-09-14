@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Scan resource limits with CLI overrides for maximum file size, total bytes,
+  file count, and directory depth.
+- A supported `harness_eval.rules` entry-point group for trusted, installed
+  Python rule providers.
+
+### Changed
+- Discovery, fingerprints, and watch mode now consume one shared setup-file
+  inventory, preventing the scan and change detector from drifting apart.
+- Inspection parses each discovered component once and shares typed,
+  scan-local artifacts across rules while preserving the legacy state API.
+- Target YAML rules are isolated in a per-scan catalog, so repeated or
+  concurrent scans cannot leak target-provided rules into one another.
+- Component-graph references from hook commands are token-bounded and carry
+  explicit evidence kind and confidence metadata.
+
+### Fixed
+- Nested projects and monorepos now prefer the nearest explicit project root
+  marker before falling back to a parent `.git` directory.
+- Oversized or unexpectedly deep trees fail with an actionable scan-limit
+  error before discovery reads their contents.
+
 ## [7.15.0] - 2026-09-07
 
 Calibration release. A corpus audit re-derived every finding of the decidable

@@ -127,6 +127,25 @@ Rules by scope:
 
 For the complete rule list with examples, detection techniques, and framework mappings (OWASP, MITRE ATLAS), see [`docs/rules-reference.md`](docs/rules-reference.md).
 
+## Scan architecture and safety
+
+Each scan builds a canonical inventory from the registered assistant
+discoverers. The same inventory drives component discovery, fingerprints, and
+watch mode, so a file cannot be linted by one path while being missed by
+another. Components are parsed once into a typed setup view, then shared scan
+artifacts—such as the component graph and component index—are passed to rules.
+
+Rules run from a scan-local catalog. Project-provided YAML rules are opt-in and
+remain declarative; they cannot import or execute Python from the scanned tree.
+Trusted Python rule providers may be installed by the application through the
+`harness_eval.rules` entry-point group. See [`CONTRIBUTING.md`](CONTRIBUTING.md)
+for the extension contract.
+
+Scans enforce resource limits before reading the tree: 10 MB per file, 250 MB
+total, 100,000 files, and depth 50 by default. Use `--max-file-bytes`,
+`--max-total-bytes`, `--max-files`, or `--max-depth` when scanning a larger
+trusted tree.
+
 ## Privacy
 
 `harness-lint` and `harness-security` (without `--review`) are fully offline. **LLM review is opt-in:**

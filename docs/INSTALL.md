@@ -38,6 +38,18 @@ harness-eval rules --target hooks           # list rules that apply to hooks
 harness-eval rules --format json            # machine-readable rule list
 ```
 
+The scanner uses the same discovered-file inventory for linting, fingerprints,
+and `--watch`, and parses each component once per scan. This keeps repeated
+scans consistent and avoids re-reading the same setup through separate code
+paths. Target YAML rules are isolated to the current scan; installed Python
+rule providers are loaded only from the trusted `harness_eval.rules` entry-point
+group.
+
+For safety, scans reject oversized trees before discovery reads their contents.
+The defaults are 10 MB per file, 250 MB total, 100,000 files, and directory
+depth 50. Override them only for trusted large trees with the `--max-file-bytes`,
+`--max-total-bytes`, `--max-files`, and `--max-depth` options.
+
 `review`, `security --review`, and `skill --rubric` require the `[llm]` extra and either `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`.
 
 Run `harness-eval doctor` to see which optional capabilities are installed and which env vars are configured.
