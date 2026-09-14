@@ -19,9 +19,10 @@ from harness_eval.inspection.parsers import (
 )
 from harness_eval.inspection.registry import (
     DEPRECATED_RULES,
-    get_all_rules,
-    suggest_rule_id,
+    RuleCatalog,
+    get_default_catalog,
 )
+from harness_eval.inspection.setup import parse_setup
 from harness_eval.inspection.suppression import is_suppressed, parse_suppressions
 from harness_eval.inspection.types import (
     Finding,
@@ -38,6 +39,7 @@ from harness_eval.inspection.types import (
     RuleCategory,
     RuleContext,
     RuleResult,
+    ScanArtifacts,
     Severity,
 )
 
@@ -178,6 +180,8 @@ def _run_rules(
     all_commands: list[ParsedCommand] | None = None,
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> tuple[list[Finding], int, list[RuleResult]]:
     """Run rules for a given target type. Returns (findings, suppression_count, rules_run)."""
     findings: list[Finding] = []
@@ -199,12 +203,9 @@ def _run_rules(
     config_rules = config_rules or {}
     scan_state = scan_state if scan_state is not None else {}
 
-    rules = get_all_rules()
+    rules = (catalog or get_default_catalog()).for_target(target_type)
 
     for rule in rules:
-        if rule.meta.target_type != target_type:
-            continue
-
         if (
             rule.meta.tools is not None
             and source_tool is not None
@@ -241,6 +242,7 @@ def _run_rules(
             all_commands=all_commands or [],
             scan_state=scan_state,
             source_tool=source_tool,
+            artifacts=artifacts,
         )
         rule.create(context)
 
@@ -288,6 +290,8 @@ def lint(
     all_commands: list[ParsedCommand] | None = None,
     source_tool: str | None = None,
     parsed: ParsedSkill | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> InspectionResult:
     """Lint a single skill directory or SKILL.md file."""
     skill = parsed if parsed is not None else parse_skill(skill_path)
@@ -307,6 +311,8 @@ def lint(
         all_skills=all_skills,
         all_commands=all_commands,
         source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
     )
     diagnostics.extend(rule_diags)
 
@@ -329,6 +335,8 @@ def lint_command(
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
     parsed: ParsedCommand | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> InspectionResult:
     """Lint a single command directory."""
     cmd = parsed if parsed is not None else parse_command(command_path)
@@ -345,6 +353,8 @@ def lint_command(
         all_commands=all_commands,
         scan_state=scan_state,
         source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
     )
     diagnostics.extend(rule_diags)
 
@@ -366,6 +376,8 @@ def lint_claude_md(
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
     parsed: ParsedClaudeMd | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> InspectionResult:
     """Lint a CLAUDE.md file."""
     claude_md = parsed if parsed is not None else parse_claude_md(file_path)
@@ -381,6 +393,8 @@ def lint_claude_md(
         all_skills=all_skills,
         scan_state=scan_state,
         source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
     )
     diagnostics.extend(rule_diags)
 
@@ -401,6 +415,8 @@ def lint_hooks(
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
     parsed: ParsedHooks | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> InspectionResult:
     """Lint hooks from settings.json."""
     hooks = parsed if parsed is not None else parse_hooks(settings_path)
@@ -415,6 +431,8 @@ def lint_hooks(
         config_rules=config_rules,
         scan_state=scan_state,
         source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
     )
     diagnostics.extend(rule_diags)
 
@@ -436,6 +454,8 @@ def lint_agent(
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
     parsed: ParsedAgent | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> InspectionResult:
     """Lint a single agent .md file."""
     agent = parsed if parsed is not None else parse_agent(agent_path)
@@ -451,6 +471,8 @@ def lint_agent(
         all_skills=all_skills,
         scan_state=scan_state,
         source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
     )
     diagnostics.extend(rule_diags)
 
@@ -471,6 +493,8 @@ def lint_mcp_config(
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
     parsed: ParsedMcpConfig | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> InspectionResult:
     """Lint an MCP configuration file."""
     mcp = parsed if parsed is not None else parse_mcp_config_file(mcp_config_path)
@@ -486,6 +510,8 @@ def lint_mcp_config(
         config_rules=config_rules,
         scan_state=scan_state,
         source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
     )
 
     return _build_result(
@@ -520,6 +546,8 @@ def lint_text_file(
     config_rules: dict[str, str | list[Any]] | None = None,
     scan_state: dict[str, Any] | None = None,
     source_tool: str | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
 ) -> InspectionResult:
     """Lint a generic text file (rule, output-style) using security-only rules."""
     path = Path(file_path)
@@ -569,6 +597,8 @@ def lint_text_file(
         config_rules=security_config,
         scan_state=scan_state,
         source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
     )
 
     return _build_result(
@@ -585,9 +615,12 @@ def lint_text_file(
 _warned_config_rules: set[str] = set()
 
 
-def _warn_unknown_config_rules(config_rules: dict[str, str | list[Any]]) -> None:
+def _warn_unknown_config_rules(
+    config_rules: dict[str, str | list[Any]], catalog: RuleCatalog | None = None
+) -> None:
     """Log warnings for rule IDs in config that don't match any registered rule."""
-    all_rule_ids = {r.meta.id for r in get_all_rules()}
+    catalog = catalog or get_default_catalog()
+    all_rule_ids = {r.meta.id for r in catalog.all()}
     for rule_id in config_rules:
         if rule_id in all_rule_ids or rule_id in _warned_config_rules:
             continue
@@ -599,7 +632,7 @@ def _warn_unknown_config_rules(config_rules: dict[str, str | list[Any]]) -> None
                 DEPRECATED_RULES[rule_id],
             )
             continue
-        suggestions = suggest_rule_id(rule_id)
+        suggestions = catalog.suggest(rule_id)
         if suggestions:
             logger.warning(
                 "Config references unknown rule '%s'. Did you mean: %s?",
@@ -615,67 +648,70 @@ def inspect_setup(
     config_rules: dict[str, str | list[Any]] | None = None,
     *,
     load_target_yaml: bool = False,
+    catalog: RuleCatalog | None = None,
 ) -> list[InspectionResult]:
     """Run inspection on all components in a setup.
 
     YAML under ``<setup>/.harness-eval/rules`` is loaded only when
-    *load_target_yaml* is true. Those rules are unregistered when this call
-    returns so they cannot leak into a later scan in the same process.
+    *load_target_yaml* is true. Target rules are loaded into a scan-local
+    catalog so they cannot leak into a later scan in the same process.
     """
-    loaded_yaml_ids: list[str] = []
+    # Every scan gets an isolated catalog.  This makes target-local YAML rules
+    # safe to load in repeated or concurrent in-process scans.
+    scan_catalog = (catalog or get_default_catalog()).copy()
     if load_target_yaml:
         from harness_eval.inspection.yaml_rules import load_yaml_rules_from_dir
 
-        before_ids = {r.meta.id for r in get_all_rules()}
-        load_yaml_rules_from_dir(Path(setup.path) / ".harness-eval" / "rules")
-        loaded_yaml_ids = list({r.meta.id for r in get_all_rules()} - before_ids)
-    try:
-        return _inspect_setup(setup, config_rules)
-    finally:
-        from harness_eval.inspection.registry import unregister_rule
-
-        for rid in loaded_yaml_ids:
-            unregister_rule(rid)
+        load_yaml_rules_from_dir(
+            Path(setup.path) / ".harness-eval" / "rules", catalog=scan_catalog
+        )
+    return _inspect_setup(setup, config_rules, catalog=scan_catalog)
 
 
 def _inspect_setup(
     setup: Any,
     config_rules: dict[str, str | list[Any]] | None = None,
+    *,
+    catalog: RuleCatalog | None = None,
 ) -> list[InspectionResult]:
     """Run inspection on all components in a setup."""
     from harness_eval.core.types import ComponentType as CT
 
     if config_rules:
-        _warn_unknown_config_rules(config_rules)
+        _warn_unknown_config_rules(config_rules, catalog)
 
-    scan_state: dict[str, Any] = {"project_root": setup.path}
+    artifacts = ScanArtifacts(project_root=Path(setup.path))
+    scan_state = artifacts.legacy_state
+    scan_state["project_root"] = setup.path
     results: list[InspectionResult] = []
 
     from harness_eval.analysis.component_graph import build_component_graph
 
     # Discoverers store file paths. Parsers accept a file or a directory, so
     # pass comp.path through — do not re-derive command.md vs flat-file here.
-    skill_comps = list(setup.by_type(CT.SKILL))
-    command_comps = list(setup.by_type(CT.COMMAND))
-    claude_comps = list(setup.by_type(CT.CLAUDE_MD))
-    hooks_comps = list(setup.by_type(CT.HOOKS))
-    agent_comps = list(setup.by_type(CT.AGENT))
-    mcp_comps = list(setup.by_type(CT.MCP_CONFIG))
+    parsed_setup = parse_setup(setup)
+    skill_comps = list(parsed_setup.core_by_type(CT.SKILL))
+    command_comps = list(parsed_setup.core_by_type(CT.COMMAND))
+    claude_comps = list(parsed_setup.core_by_type(CT.CLAUDE_MD))
+    hooks_comps = list(parsed_setup.core_by_type(CT.HOOKS))
+    agent_comps = list(parsed_setup.core_by_type(CT.AGENT))
+    mcp_comps = list(parsed_setup.core_by_type(CT.MCP_CONFIG))
 
-    all_skills = [parse_skill(c.path) for c in skill_comps]
-    all_commands = [parse_command(c.path) for c in command_comps]
-    all_claude = [parse_claude_md(c.path) for c in claude_comps]
-    all_hooks = [parse_hooks(c.path) for c in hooks_comps]
-    all_agents = [parse_agent(c.path) for c in agent_comps]
-    all_mcp = [parse_mcp_config_file(c.path) for c in mcp_comps]
+    all_skills = list(parsed_setup.parsed(CT.SKILL))
+    all_commands = list(parsed_setup.parsed(CT.COMMAND))
+    all_claude = list(parsed_setup.parsed(CT.CLAUDE_MD))
+    all_hooks = list(parsed_setup.parsed(CT.HOOKS))
+    all_agents = list(parsed_setup.parsed(CT.AGENT))
+    all_mcp = list(parsed_setup.parsed(CT.MCP_CONFIG))
 
-    scan_state["component_graph"] = build_component_graph(
+    artifacts.component_graph = build_component_graph(
         all_skills,
         all_commands,
         all_agents,
         all_hooks,
         mcp_config_paths=[c.path for c in mcp_comps],
     )
+    scan_state["component_graph"] = artifacts.component_graph
 
     lint_dispatch: dict[CT, Callable[..., InspectionResult]] = {
         CT.SKILL: lambda comp, parsed: lint(
@@ -686,6 +722,8 @@ def _inspect_setup(
             all_commands=all_commands,
             source_tool=comp.source_tool,
             parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
         ),
         CT.COMMAND: lambda comp, parsed: lint_command(
             parsed.command_md_path,
@@ -695,6 +733,8 @@ def _inspect_setup(
             scan_state=scan_state,
             source_tool=comp.source_tool,
             parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
         ),
         CT.CLAUDE_MD: lambda comp, parsed: lint_claude_md(
             parsed.file_path,
@@ -703,6 +743,8 @@ def _inspect_setup(
             scan_state=scan_state,
             source_tool=comp.source_tool,
             parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
         ),
         CT.HOOKS: lambda comp, parsed: lint_hooks(
             parsed.file_path,
@@ -710,6 +752,8 @@ def _inspect_setup(
             scan_state=scan_state,
             source_tool=comp.source_tool,
             parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
         ),
         CT.AGENT: lambda comp, parsed: lint_agent(
             parsed.agent_md_path,
@@ -718,6 +762,8 @@ def _inspect_setup(
             scan_state=scan_state,
             source_tool=comp.source_tool,
             parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
         ),
         CT.MCP_CONFIG: lambda comp, parsed: lint_mcp_config(
             parsed.file_path,
@@ -725,6 +771,8 @@ def _inspect_setup(
             scan_state=scan_state,
             source_tool=comp.source_tool,
             parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
         ),
     }
 
@@ -750,6 +798,8 @@ def _inspect_setup(
                     config_rules,
                     scan_state=scan_state,
                     source_tool=comp.source_tool,
+                    catalog=catalog,
+                    artifacts=artifacts,
                 )
             )
 

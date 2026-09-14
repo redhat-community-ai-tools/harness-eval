@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from harness_eval.inspection.registry import register_rule
+from harness_eval.inspection.registry import RuleCatalog, register_rule
 
 
-def register_all_rules() -> None:
+def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     """Import and register all built-in rules."""
+    target = catalog
     # Skill rules
     from harness_eval.inspection.rules.agents.constraint_body_match import ConstraintBodyMatch
     from harness_eval.inspection.rules.agents.data_exfiltration import AgentDataExfiltration
@@ -297,7 +298,7 @@ def register_all_rules() -> None:
         ScopeGrabDescription,
         FileCompleteness,
     ]:
-        register_rule(rule_cls())
+        (target.register if target is not None else register_rule)(rule_cls())
 
     from harness_eval.inspection.rules.claude_md.missing_boundary_policy import (
         ClaudeMdMissingBoundaryPolicy,
@@ -314,8 +315,16 @@ def register_all_rules() -> None:
         HooksNoAuditTrail,
         ClaudeMdMissingBoundaryPolicy,
     ]:
-        register_rule(rule_cls())
+        (target.register if target is not None else register_rule)(rule_cls())
 
     from harness_eval.inspection.yaml_rules import load_yaml_rules
 
-    load_yaml_rules()
+    load_yaml_rules(catalog=target)
+    if target is not None:
+        target.load_entry_points()
+        return target
+    from harness_eval.inspection.registry import get_default_catalog
+
+    default_catalog = get_default_catalog()
+    default_catalog.load_entry_points()
+    return default_catalog

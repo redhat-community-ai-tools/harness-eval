@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.registry import get_rule, register_rule
+from harness_eval.inspection.registry import RuleCatalog, get_default_catalog
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -169,8 +169,9 @@ def _parse_yaml_rule(data: dict[str, Any], source_file: str) -> YamlRule | None:
     return YamlRule(meta=meta, patterns=compiled, message_template=message_template)
 
 
-def load_yaml_rules_from_dir(rules_dir: Path) -> int:
+def load_yaml_rules_from_dir(rules_dir: Path, catalog: RuleCatalog | None = None) -> int:
     """Load all .yaml/.yml rule files from a directory. Returns count loaded."""
+    catalog = catalog or get_default_catalog()
     try:
         import yaml
     except ImportError:
@@ -194,14 +195,18 @@ def load_yaml_rules_from_dir(rules_dir: Path) -> int:
             if not isinstance(doc, dict):
                 continue
             rule = _parse_yaml_rule(doc, str(rule_file))
-            if rule and get_rule(rule.meta.id) is None:
-                register_rule(rule)
+            if rule and catalog.get(rule.meta.id) is None:
+                catalog.register(rule)
                 count += 1
 
     return count
 
 
-def load_yaml_rules(search_paths: list[Path] | None = None) -> int:
+def load_yaml_rules(
+    search_paths: list[Path] | None = None,
+    *,
+    catalog: RuleCatalog | None = None,
+) -> int:
     """Load YAML rules from standard locations. Returns total count loaded."""
     paths = search_paths or []
 
@@ -215,5 +220,5 @@ def load_yaml_rules(search_paths: list[Path] | None = None) -> int:
 
     total = 0
     for p in paths:
-        total += load_yaml_rules_from_dir(p)
+        total += load_yaml_rules_from_dir(p, catalog=catalog)
     return total

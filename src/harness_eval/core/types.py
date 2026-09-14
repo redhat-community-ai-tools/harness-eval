@@ -24,6 +24,20 @@ class ComponentScope(StrEnum):
     USER_PROJECT = "user_project"
 
 
+class ScanLimitExceeded(ValueError):
+    """Raised when a setup exceeds configured resource limits."""
+
+
+@dataclass(frozen=True)
+class ScanLimits:
+    """Resource limits for scanning untrusted or unexpectedly large trees."""
+
+    max_file_bytes: int = 10_000_000
+    max_total_bytes: int = 250_000_000
+    max_files: int = 100_000
+    max_depth: int = 50
+
+
 @dataclass(frozen=True)
 class ParsedComponent:
     """A parsed component with its raw content and metadata."""
@@ -36,6 +50,10 @@ class ParsedComponent:
     token_count: int = 0
     scope: ComponentScope = ComponentScope.PROJECT
     source_tool: str | None = None
+    # Type-specific parsed payload populated by the inspection layer. Keeping
+    # it on the canonical component prevents discovery and inspection from
+    # maintaining separate component identities.
+    parsed: object | None = None
 
 
 @dataclass(frozen=True)

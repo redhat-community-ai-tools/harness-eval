@@ -23,6 +23,9 @@ harness-eval harness-lint . --fail-on-error         # exit code 1 on errors (CI 
 harness-eval harness-lint . --fail-on-warning       # exit code 1 on any finding (strict)
 harness-eval harness-lint . --format sarif          # SARIF output for GitHub code scanning
 harness-eval harness-lint . --format json           # JSON output for scripts
+
+# Resource limits for untrusted or very large trees
+harness-eval harness-lint . --max-total-bytes 500000000 --max-files 200000
 harness-eval harness-gate .                         # gating-tier rules only; exits 1 on any finding, no LLM
 harness-eval harness-review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
 harness-eval harness-security .                     # deterministic security scan

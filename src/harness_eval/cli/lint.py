@@ -11,6 +11,7 @@ import click
 from harness_eval.cli import cli
 from harness_eval.cli._helpers import emit_output
 from harness_eval.core.setup import discover_setup
+from harness_eval.core.types import ScanLimits, ScanLimitExceeded
 from harness_eval.output.metadata import EvalMetadata
 
 
@@ -83,6 +84,10 @@ from harness_eval.output.metadata import EvalMetadata
     multiple=True,
     help="Glob patterns for files/dirs to exclude from scanning (repeatable).",
 )
+@click.option("--max-file-bytes", type=int, default=ScanLimits.max_file_bytes, show_default=True)
+@click.option("--max-total-bytes", type=int, default=ScanLimits.max_total_bytes, show_default=True)
+@click.option("--max-files", type=int, default=ScanLimits.max_files, show_default=True)
+@click.option("--max-depth", type=int, default=ScanLimits.max_depth, show_default=True)
 @click.option(
     "--rules-from-target",
     is_flag=True,
@@ -106,6 +111,10 @@ def eval_setup_lint(
     report_card_path: str | None,
     baseline_path: str | None,
     exclude: tuple[str, ...],
+    max_file_bytes: int,
+    max_total_bytes: int,
+    max_files: int,
+    max_depth: int,
     rules_from_target: bool,
 ) -> None:
     """Lint: deterministic rules + system analysis. No LLM, fast."""
@@ -123,7 +132,7 @@ def eval_setup_lint(
             click.echo("Warning: --fail-on-error is ignored in watch mode.", err=True)
         if fail_on_warning:
             click.echo("Warning: --fail-on-warning is ignored in watch mode.", err=True)
-        run_watch(
+        watch_kwargs = dict(
             path=path,
             preset=preset,
             fmt=fmt,
@@ -131,6 +140,10 @@ def eval_setup_lint(
             recursive=recursive,
             load_target_yaml=rules_from_target,
         )
+        limits = ScanLimits(max_file_bytes, max_total_bytes, max_files, max_depth)
+        if limits != ScanLimits():
+            watch_kwargs["limits"] = limits
+        run_watch(**watch_kwargs)
         return
 
     t0 = time.monotonic()
@@ -142,15 +155,20 @@ def eval_setup_lint(
 
     config_rules = PRESETS.get(preset, {})
     target = Path(path)
+    limits = ScanLimits(max_file_bytes, max_total_bytes, max_files, max_depth)
 
     if target.is_dir():
-        setup = discover_setup(
-            name=target.name,
-            path=path,
-            user_config_dir=user_config,
-            recursive=recursive,
-            exclude=exclude,
-        )
+        try:
+            setup = discover_setup(
+                name=target.name,
+                path=path,
+                user_config_dir=user_config,
+                recursive=recursive,
+                exclude=exclude,
+                limits=limits,
+            )
+        except ScanLimitExceeded as err:
+            raise click.ClickException(str(err)) from err
         results = inspect_setup(setup, config_rules, load_target_yaml=rules_from_target)
 
         if baseline_path:

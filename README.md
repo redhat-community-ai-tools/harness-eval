@@ -159,7 +159,11 @@ message: "Found '{{label}}' on line {{line}}"
 
 YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under every preset. Remove the rule file to disable it.
 
-`harness-lint` loads YAML from the scanned tree only with `--rules-from-target`. `harness-gate` and `harness-security` never load them: regexes from an audited tree run in-process. Loaded YAML rules are unregistered when the scan returns. Regexes longer than 256 characters or with nested unbounded quantifiers are skipped.
+`harness-lint` loads YAML from the scanned tree only with `--rules-from-target`. `harness-gate` and `harness-security` never load them: regexes from an audited tree run in-process. Target YAML rules are held in a scan-local catalog and cannot leak into another scan. Regexes longer than 256 characters or with nested unbounded quantifiers are skipped.
+
+Scans enforce resource limits by default (`10 MB` per file, `250 MB` total, `100,000` files,
+and depth `50`). CI jobs scanning unusually large trees can adjust these with
+`--max-file-bytes`, `--max-total-bytes`, `--max-files`, and `--max-depth`.
 
 For complex logic (AST analysis, cross-component checks), use Python rules instead.
 

@@ -55,13 +55,14 @@ class CrossComponentFlow:
     )
 
     def create(self, context: RuleContext) -> None:
-        if context.scan_state.get("cross_component_flow_checked"):
+        if context.artifacts and not context.artifacts.mark_once("cross_component_flow_checked"):
             return
-        context.scan_state["cross_component_flow_checked"] = True
 
         from harness_eval.analysis.component_graph import ComponentGraph  # noqa: F401
 
-        graph: ComponentGraph | None = context.scan_state.get("component_graph")
+        graph: ComponentGraph | None = (
+            context.artifacts.component_graph if context.artifacts else None
+        )
         if not graph or len(graph.nodes) < 2:
             return
 

@@ -136,7 +136,12 @@ Update the rule count in all files that reference it:
 
 ## Custom YAML rules
 
-Drop `.yaml` files in `.harness-eval/rules/` of a project. `harness-lint` loads them only with `--rules-from-target`. `harness-gate` and `harness-security` never load target YAML (regexes from an audited tree run in-process). Loaded rules are unregistered when the scan returns. Nested-quantifier and overlong regexes are skipped. For AST or cross-component checks, write a Python rule instead.
+Drop `.yaml` files in `.harness-eval/rules/` of a project. `harness-lint` loads them only with `--rules-from-target`. `harness-gate` and `harness-security` never load target YAML (regexes from an audited tree run in-process). Target rules are loaded into a scan-local catalog. Nested-quantifier and overlong regexes are skipped. For AST or cross-component checks, write a Python rule instead.
+
+Installed Python packages can provide trusted third-party rules through the
+`harness_eval.rules` entry-point group. The entry point may reference a Rule
+class/instance or a callable that accepts a `RuleCatalog`; target repositories
+must use YAML and are never imported as Python code.
 
 ### 5. Add tests
 
@@ -146,15 +151,15 @@ At minimum, add to `tests/`:
 
 ### 6. Cross-component state
 
-If your rule needs to compare across components (like duplicate detection compares all skills to each other), use `context.scan_state` instead of module-level variables:
+If your rule needs to compare across components (like duplicate detection compares all skills to each other), use `context.artifacts.rule_state` instead of module-level variables:
 
 ```python
 STATE_KEY = "my-rule/state"
 
 def create(self, context: RuleContext) -> None:
-    if STATE_KEY not in context.scan_state:
-        context.scan_state[STATE_KEY] = {"seen": {}}
-    state = context.scan_state[STATE_KEY]
+    if STATE_KEY not in context.artifacts.rule_state:
+        context.artifacts.rule_state[STATE_KEY] = {"seen": {}}
+    state = context.artifacts.rule_state[STATE_KEY]
     # use state instead of module-level dicts
 ```
 
@@ -177,9 +182,11 @@ Use `parse_file()` from `base.py` to create components. Map files to existing `C
 
 Add your class to `src/harness_eval/core/discoverers/registry.py` in the `DISCOVERERS` list.
 
-### 3. Add fingerprint patterns
+### 3. Add discovery paths
 
-Add the tool's file patterns to `RELEVANT_PATTERNS` in `src/harness_eval/core/fingerprint.py`.
+Add the tool's paths to its `discover()` and `collect_paths()` methods. Fingerprints, watch mode,
+and scans all consume the shared inventory in `src/harness_eval/core/inventory.py`; there is no
+separate fingerprint pattern list to maintain.
 
 ### 4. Add test fixtures
 

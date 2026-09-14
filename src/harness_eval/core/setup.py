@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import os
 from fnmatch import fnmatch
 from pathlib import Path
 
 from harness_eval.core.discoverers import get_all_discoverers
 from harness_eval.core.discoverers.base import parse_file as _parse_file
 from harness_eval.core.fingerprint import fingerprint_setup
+from harness_eval.core.inventory import collect_setup_file_paths as _collect_setup_file_paths
 from harness_eval.core.types import (
     ComponentType,
     ParsedComponent,
+    ScanLimitExceeded,
+    ScanLimits,
     Setup,
 )
 
@@ -52,6 +56,54 @@ def _matches_exclude(component_path: str, root: Path, patterns: tuple[str, ...])
     return False
 
 
+def _enforce_scan_limits(root: Path, limits: ScanLimits, patterns: tuple[str, ...]) -> None:
+    """Fail before discoverers read a hostile or oversized tree."""
+    total_bytes = 0
+    file_count = 0
+    root_resolved = root.resolve()
+    excluded_dirs = {".git", "__pycache__", "node_modules", ".venv", "vendor", "worktrees"}
+
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        current = Path(dirpath)
+        try:
+            depth = len(current.resolve().relative_to(root_resolved).parts)
+        except ValueError:
+            dirnames[:] = []
+            continue
+        if depth >= limits.max_depth:
+            dirnames[:] = []
+        dirnames[:] = [d for d in dirnames if d not in excluded_dirs]
+
+        for filename in filenames:
+            path = current / filename
+            if _matches_exclude(str(path), root, patterns):
+                continue
+            try:
+                resolved = path.resolve()
+                if not resolved.is_relative_to(root_resolved):
+                    continue
+                size = path.stat().st_size
+            except OSError:
+                continue
+            file_count += 1
+            if file_count > limits.max_files:
+                raise ScanLimitExceeded(
+                    f"scan exceeds max_files={limits.max_files}; "
+                    "narrow the target or raise the limit"
+                )
+            if size > limits.max_file_bytes:
+                raise ScanLimitExceeded(
+                    f"file {path} is {size} bytes, exceeding "
+                    f"max_file_bytes={limits.max_file_bytes}"
+                )
+            total_bytes += size
+            if total_bytes > limits.max_total_bytes:
+                raise ScanLimitExceeded(
+                    f"scan exceeds max_total_bytes={limits.max_total_bytes}; "
+                    "narrow the target or raise the limit"
+                )
+
+
 def discover_setup(
     name: str,
     path: str,
@@ -59,6 +111,7 @@ def discover_setup(
     *,
     recursive: bool = False,
     exclude: tuple[str, ...] = (),
+    limits: ScanLimits | None = None,
 ) -> Setup:
     """Walk a directory and discover all agent-relevant components."""
     root = Path(path)
@@ -67,6 +120,7 @@ def discover_setup(
 
     user_dir = Path(user_config_dir) if user_config_dir else None
     exclude = merge_scan_excludes(exclude)
+    _enforce_scan_limits(root, limits or ScanLimits(), exclude)
 
     components: list[ParsedComponent] = []
 
@@ -89,7 +143,7 @@ def discover_setup(
         components = [c for c in components if not _matches_exclude(c.path, root, exclude)]
 
     detected = _detect_tools(root)
-    fp = fingerprint_setup(path, user_config_dir=user_config_dir)
+    fp = fingerprint_setup(path, user_config_dir=user_config_dir, recursive=recursive)
     total = sum(c.token_count for c in components)
 
     return Setup(
@@ -108,29 +162,8 @@ def collect_setup_file_paths(
     *,
     recursive: bool = False,
 ) -> list[Path]:
-    """Return deduplicated file paths that ``discover_setup`` would scan.
-
-    This is the single source of truth for which files constitute an agent
-    setup.  Both ``discover_setup`` (for parsing) and watch mode (for
-    monitoring) consume this list so they stay in sync automatically.
-    """
-    paths: list[Path] = []
-
-    for discoverer in get_all_discoverers():
-        paths.extend(
-            discoverer.collect_paths(root, user_config_dir=user_config_dir, recursive=recursive)
-        )
-
-    # Deduplicate while preserving order
-    seen: set[str] = set()
-    unique: list[Path] = []
-    for p in paths:
-        resolved = str(p.resolve())
-        if resolved not in seen:
-            seen.add(resolved)
-            unique.append(p)
-
-    return unique
+    """Compatibility wrapper around the shared setup inventory."""
+    return _collect_setup_file_paths(root, user_config_dir=user_config_dir, recursive=recursive)
 
 
 def _detect_tools(root: Path) -> tuple[str, ...]:

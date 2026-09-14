@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import click
 
 from harness_eval.core.setup import collect_setup_file_paths
+from harness_eval.core.types import ScanLimitExceeded, ScanLimits
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -52,6 +53,7 @@ def run_watch(
     debounce_ms: int = DEBOUNCE_MS,
     recursive: bool = False,
     load_target_yaml: bool = False,
+    limits: ScanLimits | None = None,
 ) -> None:
     """Run lint in watch mode, re-running on file changes.
 
@@ -94,9 +96,16 @@ def run_watch(
 
     def _run_lint() -> None:
         """Run lint and display results."""
-        setup = discover_setup(
-            name=root.name, path=path, user_config_dir=user_config, recursive=recursive
-        )
+        try:
+            setup = discover_setup(
+                name=root.name,
+                path=path,
+                user_config_dir=user_config,
+                recursive=recursive,
+                limits=limits,
+            )
+        except ScanLimitExceeded as err:
+            raise click.ClickException(str(err)) from err
         results = inspect_setup(setup, config_rules, load_target_yaml=load_target_yaml)
         system = analyze_system(setup)
 

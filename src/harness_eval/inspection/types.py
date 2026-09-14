@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Any, Literal, Protocol
 
 from harness_eval.core.types import ComponentType
@@ -186,6 +187,46 @@ ParsedFile = (
 
 
 @dataclass
+class ScanArtifacts:
+    """Typed, scan-local artifacts shared by rules.
+
+    ``legacy_state`` remains available for third-party rules written against
+    older harness-eval releases. Built-in rules should use the named fields or
+    ``rule_state`` for rule-private scratch data.
+    """
+
+    project_root: Path | None = None
+    component_graph: Any | None = None
+    component_index: dict[str, set[str]] | None = None
+    mcp_config_path: str | None = None
+    flags: set[str] = field(default_factory=set)
+    rule_state: dict[str, object] = field(default_factory=dict)
+    legacy_state: dict[str, Any] = field(default_factory=dict)
+
+    def mark_once(self, key: str) -> bool:
+        """Return true the first time a setup-wide rule claims ``key``."""
+        if key in self.flags or self.legacy_state.get(key):
+            return False
+        self.flags.add(key)
+        self.legacy_state[key] = True
+        return True
+
+    @classmethod
+    def from_legacy(cls, state: dict[str, Any] | None) -> "ScanArtifacts":
+        if state is None:
+            state = {}
+        root = state.get("project_root")
+        return cls(
+            project_root=Path(root) if root else None,
+            component_graph=state.get("component_graph"),
+            component_index=state.get("component_index"),
+            mcp_config_path=state.get("mcp_config_path"),
+            flags={key for key, value in state.items() if value is True},
+            legacy_state=state,
+        )
+
+
+@dataclass
 class RuleContext:
     report: Callable[[ReportDescriptor], None]
     severity: Severity
@@ -196,6 +237,14 @@ class RuleContext:
     all_commands: list[ParsedCommand] = field(default_factory=list)
     scan_state: dict[str, Any] = field(default_factory=dict)
     source_tool: str | None = None
+    artifacts: ScanArtifacts | None = None
+
+    def __post_init__(self) -> None:
+        if self.artifacts is None:
+            self.artifacts = ScanArtifacts.from_legacy(self.scan_state)
+        elif self.scan_state and self.artifacts.legacy_state is not self.scan_state:
+            self.artifacts.legacy_state.update(self.scan_state)
+        self.scan_state = self.artifacts.legacy_state
 
     def source_text(self) -> tuple[str, str]:
         """Raw content and file path for the component being linted."""

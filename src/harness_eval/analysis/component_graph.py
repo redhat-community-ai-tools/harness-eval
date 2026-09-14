@@ -37,6 +37,10 @@ class GraphEdge:
     target: str
     edge_type: str
     evidence: str = ""
+    # Explicit references are parser-backed. Inferred references are useful
+    # for reachability but should not be treated as equally strong evidence.
+    confidence: float = 1.0
+    evidence_kind: str = "explicit"
 
 
 @dataclass
@@ -92,6 +96,11 @@ def _detect_capabilities_for_dir(skill_dir: Path) -> dict[str, list[str]]:
 
 
 _MCP_TOOL_PATTERN = re.compile(r"mcp__(\w+)__(\w+)")
+
+
+def _mentions_component(command: str, name: str) -> bool:
+    """Match a component name as a token, not as an arbitrary substring."""
+    return re.search(rf"(?<![\w-]){re.escape(name)}(?![\w-])", command) is not None
 
 
 def _extract_mcp_tool_calls(body: str) -> list[tuple[str, str]]:
@@ -246,13 +255,15 @@ def build_component_graph(
             if not isinstance(cmd, str):
                 continue
             for skill_name in skill_names:
-                if skill_name in cmd:
+                if _mentions_component(cmd, skill_name):
                     graph.edges.append(
                         GraphEdge(
                             source=node_key,
                             target=skill_name,
                             edge_type="references",
                             evidence=f"hook command mentions {skill_name}",
+                            confidence=0.35,
+                            evidence_kind="inferred",
                         )
                     )
 
