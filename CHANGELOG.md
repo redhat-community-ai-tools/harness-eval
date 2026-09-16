@@ -35,8 +35,10 @@ All notable changes to this project will be documented in this file.
   serializes it), so this affects only library callers that persist and compare
   `Setup.fingerprint` across versions. Values are stable within a version.
 - `--exclude` is applied to the setup inventory once, so an excluded file is
-  not measured against scan limits, not fingerprinted, and not parsed. It
-  previously affected limits and components but not the fingerprint.
+  not measured against scan limits, not fingerprinted, and not parsed. Watch
+  mode forwards the same patterns into the watched file set and each re-scan.
+  It previously affected limits and components but not the fingerprint, and
+  discoverers still opened excluded files.
 
 ### Fixed
 - Oversized or unexpectedly deep agent-setup files fail with an actionable

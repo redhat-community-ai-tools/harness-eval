@@ -81,6 +81,28 @@ BINARY_SUFFIXES = frozenset(
 )
 
 
+_BUNDLE_SKIP_PARTS = frozenset({".git", "__pycache__", "node_modules", ".venv", "vendor", ".tox"})
+
+
+def skill_bundle_files(skill_md: Path) -> list[Path]:
+    """Return every file in the skill directory that contains *skill_md*.
+
+    Includes binaries. The YARA rule reads this tree with ``read_bytes()``, so
+    the inventory has to measure it or an oversized asset bypasses scan limits.
+    """
+    skill_dir = skill_md.parent
+    extras: list[Path] = []
+    if not skill_dir.is_dir():
+        return extras
+    for f in sorted(skill_dir.rglob("*")):
+        if not f.is_file():
+            continue
+        if any(part in _BUNDLE_SKIP_PARTS for part in f.parts):
+            continue
+        extras.append(f)
+    return extras
+
+
 def uncategorized_candidate_paths(root: Path) -> list[Path]:
     """Return every readable file under the agent-config directories.
 
@@ -139,6 +161,17 @@ def collect_setup_file_paths(
         if resolved not in seen:
             seen.add(resolved)
             unique.append(path)
+
+    # YARA reads every file in a skill directory, including binaries the
+    # uncategorized sweep skips. Those assets must count against scan limits.
+    for path in list(unique):
+        if path.name != "SKILL.md":
+            continue
+        for extra in skill_bundle_files(path):
+            resolved = str(extra.resolve())
+            if resolved not in seen:
+                seen.add(resolved)
+                unique.append(extra)
     return unique
 
 
@@ -146,5 +179,6 @@ __all__ = [
     "BINARY_SUFFIXES",
     "UNCATEGORIZED_SCAN_DIRS",
     "collect_setup_file_paths",
+    "skill_bundle_files",
     "uncategorized_candidate_paths",
 ]

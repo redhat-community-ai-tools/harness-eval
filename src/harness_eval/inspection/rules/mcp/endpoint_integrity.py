@@ -69,7 +69,7 @@ class McpEndpointIntegrity:
         servers = extract_servers(data)
         if not isinstance(servers, dict):
             return
-        root = project_root(Path(path))
+        root = project_root(Path(path), ceiling=context.artifacts.project_root)
         loc = Location(file=path)
         for name, sd in servers.items():
             if not isinstance(sd, dict):

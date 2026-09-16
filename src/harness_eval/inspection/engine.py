@@ -679,6 +679,10 @@ def _inspect_setup(
         _warn_unknown_config_rules(config_rules, catalog)
 
     artifacts = ScanArtifacts(project_root=setup.path)
+    if getattr(setup, "limits", None) is not None:
+        artifacts.scan_limits = setup.limits
+    if getattr(setup, "inventory_paths", None) is not None:
+        artifacts.allowed_paths = frozenset(setup.inventory_paths)
     scan_state = artifacts.state
     results: list[InspectionResult] = []
 

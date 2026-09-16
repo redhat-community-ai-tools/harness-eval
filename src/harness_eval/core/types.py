@@ -36,9 +36,10 @@ class ScanLimitExceeded(ValueError):
 class ScanLimits:
     """Resource limits applied to the files a scan will read.
 
-    Only files in the discoverer inventory (instruction files, skills,
-    commands, hooks, agents, MCP configs) count toward these limits; unrelated
-    repository content such as build outputs or datasets never does.
+    Only files in the discoverer inventory count toward these limits —
+    instruction files, skills (including files bundled in a skill directory),
+    commands, hooks, agents, and MCP configs. Unrelated repository content
+    such as build outputs or datasets never does.
     """
 
     max_file_bytes: int = 10_000_000
@@ -75,6 +76,11 @@ class Setup:
     components: list[ParsedComponent] = field(default_factory=list)
     total_tokens: int = 0
     detected_tools: tuple[str, ...] = ()
+    limits: ScanLimits | None = None
+    # Resolved paths the scan measured. None means the caller built Setup
+    # without going through discover_setup; inspection then does not restrict
+    # YARA to that set.
+    inventory_paths: tuple[str, ...] | None = None
 
     def by_type(self, component_type: ComponentType) -> list[ParsedComponent]:
         return [c for c in self.components if c.component_type == component_type]

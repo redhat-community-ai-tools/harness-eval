@@ -54,6 +54,7 @@ def run_watch(
     recursive: bool = False,
     load_target_yaml: bool = False,
     limits: ScanLimits | None = None,
+    exclude: tuple[str, ...] = (),
 ) -> None:
     """Run lint in watch mode, re-running on file changes.
 
@@ -66,6 +67,7 @@ def run_watch(
         recursive: Search for agent configs in nested directories.
         load_target_yaml: Load YAML rules from the scanned tree.
         limits: Resource limits for the files a scan reads; defaults apply when None.
+        exclude: Glob patterns forwarded to each re-scan (plus default credential excludes).
     """
     root = Path(path)
     if not root.is_dir():
@@ -81,16 +83,22 @@ def run_watch(
 
     from harness_eval.analysis.system import analyze_system
     from harness_eval.config.presets import PRESETS
-    from harness_eval.core.setup import discover_setup
+    from harness_eval.core.setup import discover_setup, matches_exclude, merge_scan_excludes
     from harness_eval.inspection.engine import inspect_setup
     from harness_eval.output.report import format_json, format_terminal
 
     config_rules = PRESETS.get(preset, {})
 
     user_config_path = Path(user_config) if user_config else None
-    watch_paths = collect_setup_file_paths(
-        root, user_config_dir=user_config_path, recursive=recursive
-    )
+    patterns = merge_scan_excludes(exclude)
+    root_resolved = root.resolve()
+    watch_paths = [
+        p
+        for p in collect_setup_file_paths(
+            root, user_config_dir=user_config_path, recursive=recursive
+        )
+        if not matches_exclude(str(p), root_resolved, patterns)
+    ]
     watch_dirs = _get_watch_directories(watch_paths)
 
     if not watch_dirs:
@@ -103,6 +111,7 @@ def run_watch(
             path=path,
             user_config_dir=user_config,
             recursive=recursive,
+            exclude=exclude,
             limits=limits,
         )
         results = inspect_setup(setup, config_rules, load_target_yaml=load_target_yaml)

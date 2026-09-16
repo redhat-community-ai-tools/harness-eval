@@ -242,6 +242,28 @@ class TestCLIWatchFlag:
                     recursive=False,
                     load_target_yaml=False,
                     limits=ScanLimits(),
+                    exclude=(),
+                )
+
+    def test_watch_flag_forwards_exclude(self) -> None:
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            Path("CLAUDE.md").write_text("# Test")
+            with patch("harness_eval.watch.run_watch") as mock_watch:
+                result = runner.invoke(
+                    cli,
+                    ["harness-lint", ".", "--watch", "--exclude", "**/secret.json"],
+                )
+                assert result.exit_code == 0
+                mock_watch.assert_called_once_with(
+                    path=".",
+                    preset="recommended",
+                    fmt="terminal",
+                    user_config=None,
+                    recursive=False,
+                    load_target_yaml=False,
+                    limits=ScanLimits(),
+                    exclude=("**/secret.json",),
                 )
 
 

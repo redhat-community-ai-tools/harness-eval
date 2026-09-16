@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -16,6 +19,12 @@ from harness_eval.core.types import (
     ScanLimitExceeded,
     ScanLimits,
     Setup,
+)
+
+# Active --exclude patterns for this scan. Discoverer reads (parse_file,
+# is_agent_file, JSON key peeks) consult it so an excluded file is never opened.
+_scan_exclude: ContextVar[tuple[Path, tuple[str, ...]] | None] = ContextVar(
+    "harness_eval_scan_exclude", default=None
 )
 
 # ponytail: default excludes keep credential files out of scan copies (HE-3).
@@ -41,7 +50,7 @@ def merge_scan_excludes(user_excludes: tuple[str, ...] = ()) -> tuple[str, ...]:
     return tuple(merged)
 
 
-def _matches_exclude(component_path: str, root_resolved: Path, patterns: tuple[str, ...]) -> bool:
+def matches_exclude(component_path: str, root_resolved: Path, patterns: tuple[str, ...]) -> bool:
     """Check if a component path matches any exclude pattern.
 
     *root_resolved* is resolved by the caller: ``resolve()`` is a realpath
@@ -64,6 +73,25 @@ def _matches_exclude(component_path: str, root_resolved: Path, patterns: tuple[s
         if fnmatch(rel_path, pattern) or fnmatch(filename, pattern) or fnmatch(abs_path, pattern):
             return True
     return False
+
+
+@contextmanager
+def scanning_with_excludes(root: Path, patterns: tuple[str, ...]) -> Iterator[None]:
+    """Bound discoverer file reads to the same exclude set as the inventory."""
+    token = _scan_exclude.set((root.resolve(), patterns))
+    try:
+        yield
+    finally:
+        _scan_exclude.reset(token)
+
+
+def is_excluded_during_scan(path: Path) -> bool:
+    """True when a discoverer is running under ``scanning_with_excludes`` and *path* matches."""
+    ctx = _scan_exclude.get()
+    if ctx is None:
+        return False
+    root_resolved, patterns = ctx
+    return matches_exclude(str(path), root_resolved, patterns)
 
 
 def _enforce_scan_limits(root: Path, paths: list[Path], limits: ScanLimits) -> None:
@@ -135,29 +163,37 @@ def discover_setup(
         for p in _collect_setup_file_paths(
             root, user_config_dir=user_dir, recursive=recursive, uncategorized=uncategorized
         )
-        if not _matches_exclude(str(p), root_resolved, exclude)
+        if not matches_exclude(str(p), root_resolved, exclude)
     ]
-    _enforce_scan_limits(root, inventory, limits or ScanLimits())
+    applied_limits = limits or ScanLimits()
+    _enforce_scan_limits(root, inventory, applied_limits)
 
     components: list[ParsedComponent] = []
 
-    for discoverer in get_all_discoverers():
-        components.extend(discoverer.discover(root, user_config_dir=user_dir, recursive=recursive))
+    # Discoverers still glob the tree; scanning_with_excludes stops them from
+    # reading excluded files. The post-filter drops dummy components.
+    with scanning_with_excludes(root, exclude):
+        for discoverer in get_all_discoverers():
+            components.extend(
+                discoverer.discover(root, user_config_dir=user_dir, recursive=recursive)
+            )
 
-    components = _deduplicate_components(components)
-    components.extend(_discover_uncategorized(root, components, uncategorized))
+        components = _deduplicate_components(components)
+        components.extend(_discover_uncategorized(root, components, uncategorized))
 
-    if not components and (root / "SKILL.md").exists():
-        comp = _parse_file(
-            root / "SKILL.md",
-            ComponentType.SKILL,
-            name=root.name,
-            source_tool="unknown",
-        )
-        components.append(comp)
+        if not components and (root / "SKILL.md").exists():
+            skill_md = root / "SKILL.md"
+            if not is_excluded_during_scan(skill_md):
+                components.append(
+                    _parse_file(
+                        skill_md,
+                        ComponentType.SKILL,
+                        name=root.name,
+                        source_tool="unknown",
+                    )
+                )
 
-    if exclude:
-        components = [c for c in components if not _matches_exclude(c.path, root_resolved, exclude)]
+    components = [c for c in components if not matches_exclude(c.path, root_resolved, exclude)]
 
     detected = _detect_tools(root)
     fp = fingerprint_setup(path, user_config_dir=user_config_dir, paths=inventory)
@@ -170,6 +206,8 @@ def discover_setup(
         components=list(components),
         total_tokens=total,
         detected_tools=detected,
+        limits=applied_limits,
+        inventory_paths=tuple(str(p.resolve()) for p in inventory),
     )
 
 

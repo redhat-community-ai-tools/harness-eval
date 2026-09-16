@@ -95,11 +95,26 @@ def test_target_yaml_rules_are_isolated_to_a_catalog(tmp_path: Path) -> None:
 
 
 def test_rule_catalog_copy_has_independent_storage() -> None:
+    class _CopiedRule:
+        meta = RuleMeta(
+            id="copy/example",
+            default_severity=Severity.WARNING,
+            fixable=False,
+            description="Rule used to prove catalog.copy is independent",
+            category=RuleCategory.CONTENT,
+            messages={"hit": "hit"},
+        )
+
+        def create(self, context: RuleContext) -> None:
+            return None
+
     catalog = RuleCatalog()
+    catalog.register(_CopiedRule())
     copied = catalog.copy()
     assert catalog is not copied
     catalog.clear()
-    assert copied.all() == []
+    assert copied.get("copy/example") is not None
+    assert catalog.all() == []
 
 
 class _PluginRule:
@@ -341,6 +356,14 @@ def test_project_root_is_the_git_repository_in_a_monorepo(tmp_path: Path) -> Non
     assert project_root(command_md) == tmp_path.resolve()
 
 
+def test_project_root_ceiling_stops_above_scan_root(tmp_path: Path) -> None:
+    (tmp_path / ".git").mkdir()
+    nested = tmp_path / "sandbox"
+    nested.mkdir()
+    (nested / "CLAUDE.md").write_text("# nested\n")
+    assert project_root(nested / "CLAUDE.md", ceiling=nested) == nested.resolve()
+
+
 # --- inventory / component agreement -----------------------------------------------
 
 
@@ -425,6 +448,56 @@ def test_excluded_files_are_neither_measured_nor_fingerprinted(tmp_path: Path) -
     assert before == after
     # ... and an excluded file cannot trip a limit it is not measured against.
     discover_setup("t", str(tmp_path), exclude=exclude, limits=ScanLimits(max_file_bytes=4000))
+
+
+def test_excluded_files_are_never_parsed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _setup_tree(tmp_path)
+    secret = tmp_path / ".claude" / "secret.json"
+    secret.write_text('{"hooks": {"PreToolUse": []}}')
+    skill_md = tmp_path / "skills" / "demo" / "SKILL.md"
+    secret_resolved = str(secret.resolve())
+    skill_resolved = str(skill_md.resolve())
+
+    read_paths: list[str] = []
+    orig_text = Path.read_text
+
+    def tracking_text(self: Path, *args: object, **kwargs: object) -> str:
+        try:
+            read_paths.append(str(self.resolve()))
+        except OSError:
+            read_paths.append(str(self))
+        return orig_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", tracking_text)
+
+    setup = discover_setup(
+        "t", str(tmp_path), exclude=("**/secret.json", "**/skills/demo/SKILL.md")
+    )
+    component_paths = {str(Path(c.path).resolve()) for c in setup.components}
+    assert secret_resolved not in component_paths
+    assert skill_resolved not in component_paths
+    assert secret_resolved not in read_paths
+    assert skill_resolved not in read_paths
+
+
+def test_skill_bundle_asset_counts_against_scan_limits(tmp_path: Path) -> None:
+    skill_md = _write_setup(tmp_path)
+    payload = skill_md.parent / "payload.bin"
+    payload.write_bytes(b"x" * 2048)
+
+    with pytest.raises(ScanLimitExceeded, match="payload.bin"):
+        discover_setup("test", str(tmp_path), limits=ScanLimits(max_file_bytes=1024))
+
+
+def test_excluded_skill_asset_does_not_trip_limits(tmp_path: Path) -> None:
+    skill_md = _write_setup(tmp_path)
+    (skill_md.parent / "payload.bin").write_bytes(b"x" * 2048)
+    discover_setup(
+        "test",
+        str(tmp_path),
+        exclude=("**/*.bin",),
+        limits=ScanLimits(max_file_bytes=1024),
+    )
 
 
 # --- reachability evidence reaches the finding --------------------------------------

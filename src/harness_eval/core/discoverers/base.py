@@ -66,6 +66,13 @@ def _recursive_glob(root: Path, pattern: str) -> list[Path]:
     return results
 
 
+def _is_excluded_from_scan(filepath: Path) -> bool:
+    """Lazy import: setup.py imports parse_file, so this cannot be a top-level cycle."""
+    from harness_eval.core.setup import is_excluded_during_scan
+
+    return is_excluded_during_scan(filepath)
+
+
 def _json_top_level_keys(filepath: Path) -> set[str]:
     """Return the set of top-level keys in a JSON file, or empty on any error.
 
@@ -73,6 +80,8 @@ def _json_top_level_keys(filepath: Path) -> set[str]:
     Gemini settings.json with only editor prefs) are not treated as MCP
     configs and flagged by MCP rules.
     """
+    if _is_excluded_from_scan(filepath):
+        return set()
     try:
         data = json.loads(filepath.read_text(encoding="utf-8", errors="replace"))
     except (json.JSONDecodeError, ValueError, OSError):
@@ -88,6 +97,16 @@ def parse_file(
     source_tool: str | None = None,
 ) -> ParsedComponent:
     """Parse a single file into a ParsedComponent."""
+    if _is_excluded_from_scan(filepath):
+        return ParsedComponent(
+            component_type=component_type,
+            name=name or filepath.stem,
+            path=str(filepath),
+            content="",
+            token_count=0,
+            scope=scope,
+            source_tool=source_tool,
+        )
     content = filepath.read_text(encoding="utf-8", errors="replace")
     frontmatter, _ = parse_frontmatter(content)
     return ParsedComponent(
@@ -165,6 +184,8 @@ def is_agent_file(path: Path, *, strict: bool = False) -> bool:
     # ALL-CAPS names (README, CUSTOMIZATION_NOTES, WORKFLOW_EXAMPLES, ATTRIBUTION)
     # follow the documentation convention, not the agent one.
     if stem.upper() == stem and any(ch.isalpha() for ch in stem) and len(stem) > 2:
+        return False
+    if _is_excluded_from_scan(path):
         return False
     try:
         head = path.read_text(encoding="utf-8", errors="replace")[:2048].lstrip("\ufeff")

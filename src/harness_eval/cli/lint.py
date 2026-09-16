@@ -136,6 +136,7 @@ def eval_setup_lint(
             recursive=recursive,
             load_target_yaml=rules_from_target,
             limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+            exclude=exclude,
         )
         return
 

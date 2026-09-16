@@ -98,7 +98,11 @@ class ClaudeMdIncludeExists:
         # with @path relative to the project root, not to the rule file.
         norm = cmd.file_path.replace("\\", "/")
         cursor_rule = "/.cursor/rules/" in norm or norm.endswith((".mdc", ".cursorrules"))
-        root = project_root(Path(cmd.file_path)) if cursor_rule else None
+        root = (
+            project_root(Path(cmd.file_path), ceiling=context.artifacts.project_root)
+            if cursor_rule
+            else None
+        )
         for ref in imports_in(cmd.raw_content):
             target = Path(ref).expanduser() if ref.startswith("~") else (base / ref)
             if ref.startswith("~"):

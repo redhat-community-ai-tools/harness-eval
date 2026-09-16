@@ -133,10 +133,26 @@ class YaraScan:
             )
             return
 
+        allowed = context.artifacts.allowed_paths
+        max_file_bytes = (
+            context.artifacts.scan_limits.max_file_bytes
+            if context.artifacts.scan_limits is not None
+            else None
+        )
+
         for file_path in sorted(skill_dir.rglob("*")):
             if not file_path.is_file():
                 continue
             if ".git" in file_path.parts or "__pycache__" in file_path.parts:
+                continue
+            try:
+                resolved = str(file_path.resolve())
+                size = file_path.stat().st_size
+            except OSError:
+                continue
+            if allowed is not None and resolved not in allowed:
+                continue
+            if max_file_bytes is not None and size > max_file_bytes:
                 continue
 
             try:

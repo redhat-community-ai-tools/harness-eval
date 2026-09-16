@@ -110,7 +110,7 @@ class HooksCommandScriptExists:
         hd = context.hooks
         if hd is None:
             return
-        root = project_root(Path(hd.file_path))
+        root = project_root(Path(hd.file_path), ceiling=context.artifacts.project_root)
         seen: set[str] = set()
         for cmd in _iter_commands(hd.hooks):
             for p in script_paths(cmd):

@@ -42,7 +42,7 @@ class StructuralSymlinkEscape:
         if skill is None:
             return
         skill_dir = Path(skill.skill_md_path).parent
-        root = project_root(skill_dir)
+        root = project_root(skill_dir, ceiling=context.artifacts.project_root)
         for p in skill_dir.rglob("*"):
             if p.is_symlink():
                 target = p.resolve()

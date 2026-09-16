@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
-from harness_eval.core.types import ComponentType
+from harness_eval.core.types import ComponentType, ScanLimits
 
 if TYPE_CHECKING:
     from harness_eval.analysis.component_graph import ComponentGraph
@@ -265,6 +265,30 @@ class ScanArtifacts:
             return False
         self.state[key] = True
         return True
+
+    @property
+    def scan_limits(self) -> ScanLimits | None:
+        limits: ScanLimits | None = self.state.get("scan_limits")
+        return limits
+
+    @scan_limits.setter
+    def scan_limits(self, value: ScanLimits | None) -> None:
+        if value is None:
+            self.state.pop("scan_limits", None)
+        else:
+            self.state["scan_limits"] = value
+
+    @property
+    def allowed_paths(self) -> frozenset[str] | None:
+        paths = self.state.get("allowed_paths")
+        return frozenset(paths) if paths is not None else None
+
+    @allowed_paths.setter
+    def allowed_paths(self, value: frozenset[str] | set[str] | None) -> None:
+        if value is None:
+            self.state.pop("allowed_paths", None)
+        else:
+            self.state["allowed_paths"] = frozenset(value)
 
 
 @dataclass
