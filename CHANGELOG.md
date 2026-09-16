@@ -29,10 +29,11 @@ All notable changes to this project will be documented in this file.
   reachability and graph traversal accept a `min_confidence` threshold.
   Findings carry the evidence kind and trigger breadth, emitted in SARIF as
   the `reachabilityEvidence` and `triggerBreadth` properties.
-- **Fingerprint values change for every setup.** Fingerprints now hash the
-  shared setup inventory instead of a hardcoded pattern list, so a stored
-  baseline from 7.15.0 or earlier reports a spurious change on first run after
-  upgrading. Re-record baselines once; values are stable afterwards.
+- **`Setup.fingerprint` values change for every setup.** Fingerprints now hash
+  the shared setup inventory instead of a hardcoded pattern list. No CLI
+  behaviour depends on the value (baselines key on findings, and no report
+  serializes it), so this affects only library callers that persist and compare
+  `Setup.fingerprint` across versions. Values are stable within a version.
 - `--exclude` is applied to the setup inventory once, so an excluded file is
   not measured against scan limits, not fingerprinted, and not parsed. It
   previously affected limits and components but not the fingerprint.
@@ -46,6 +47,11 @@ All notable changes to this project will be documented in this file.
   `.github/CODEOWNERS`). Those files were read and linted but escaped the scan
   limits, and editing one did not change the fingerprint. A regression test
   asserts the inventory is a superset of the discovered components.
+- Files bundled inside a skill directory count against the scan limits. The
+  YARA rule reads every file in a skill bundle with `read_bytes()` and no size
+  filter, so a large bundled asset was previously read in full with no limit
+  applied. A skill shipping an asset over `--max-file-bytes` now reports a
+  scan-limit error instead.
 
 ## [7.15.0] - 2026-09-07
 
