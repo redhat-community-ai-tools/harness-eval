@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.16.0] - 2026-09-16
+
 ### Added
 - Scan resource limits on the agent-setup files a scan reads (per-file size,
   total bytes, file count, directory depth). Unrelated repository content never
