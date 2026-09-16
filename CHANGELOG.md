@@ -25,12 +25,27 @@ All notable changes to this project will be documented in this file.
   concurrent scans cannot leak target-provided rules into one another.
 - Component-graph references from hook commands are token-bounded and carry
   evidence kind and confidence metadata. Reachability reports the evidence
-  kind, treats inferred-only references as unknown trigger breadth, and graph
-  traversal accepts a `min_confidence` threshold.
+  kind, treats inferred-only references as unknown trigger breadth, and both
+  reachability and graph traversal accept a `min_confidence` threshold.
+  Findings carry the evidence kind and trigger breadth, emitted in SARIF as
+  the `reachabilityEvidence` and `triggerBreadth` properties.
+- **Fingerprint values change for every setup.** Fingerprints now hash the
+  shared setup inventory instead of a hardcoded pattern list, so a stored
+  baseline from 7.15.0 or earlier reports a spurious change on first run after
+  upgrading. Re-record baselines once; values are stable afterwards.
+- `--exclude` is applied to the setup inventory once, so an excluded file is
+  not measured against scan limits, not fingerprinted, and not parsed. It
+  previously affected limits and components but not the fingerprint.
 
 ### Fixed
 - Oversized or unexpectedly deep agent-setup files fail with an actionable
   scan-limit error before discovery reads their contents.
+- The setup inventory covers every file discovery turns into a component,
+  including files under the config directories that no tool-specific
+  discoverer claims (`.claude/settings.local.json`, `.github/workflows/*`,
+  `.github/CODEOWNERS`). Those files were read and linted but escaped the scan
+  limits, and editing one did not change the fingerprint. A regression test
+  asserts the inventory is a superset of the discovered components.
 
 ## [7.15.0] - 2026-09-07
 

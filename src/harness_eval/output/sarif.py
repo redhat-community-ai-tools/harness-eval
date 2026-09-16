@@ -71,6 +71,10 @@ def _build_result(finding: Finding, rule_index: dict[str, int], scan_root: str) 
         ]
     if finding.reachability:
         result.setdefault("properties", {})["reachability"] = finding.reachability
+    if finding.reachability_evidence:
+        result.setdefault("properties", {})["reachabilityEvidence"] = finding.reachability_evidence
+    if finding.trigger_breadth:
+        result.setdefault("properties", {})["triggerBreadth"] = finding.trigger_breadth
     return result
 
 

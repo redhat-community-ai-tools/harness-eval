@@ -81,6 +81,7 @@ def test_script_paths():
 def test_command_script_exists(tmp_path: Path):
     d = tmp_path / ".claude"
     d.mkdir()
+    (tmp_path / ".git").mkdir()  # anchor the project root inside tmp_path
     (tmp_path / "scripts").mkdir()
     (tmp_path / "scripts" / "ok.sh").write_text("#!/bin/sh")
     p = d / "settings.json"
@@ -174,4 +175,6 @@ def test_project_root_skips_config_dir(tmp_path: Path):
     d.mkdir()
     (d / "CLAUDE.md").write_text("# nested")
     (tmp_path / "CLAUDE.md").write_text("# root")
-    assert project_root(d / "settings.json") == tmp_path.resolve()
+    # ceiling keeps the walk inside tmp_path; without it a .git anywhere above
+    # the pytest temp directory would answer before the marker pass runs.
+    assert project_root(d / "settings.json", ceiling=tmp_path) == tmp_path.resolve()

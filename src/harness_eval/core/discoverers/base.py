@@ -129,7 +129,14 @@ class ToolDiscoverer(ABC):
     def collect_paths(
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[Path]:
-        """Return file paths this discoverer would scan (for watch mode)."""
+        """Return every file path this discoverer would read.
+
+        This feeds the shared setup inventory, which bounds scan limits, seeds
+        the fingerprint, and drives watch mode. It must be a superset of the
+        paths ``discover`` returns components for: anything missing here is read
+        without being measured, and editing it does not change the fingerprint.
+        ``test_inventory_covers_every_component`` enforces that.
+        """
 
 
 # Files that live in an agents directory but are not agent definitions: the

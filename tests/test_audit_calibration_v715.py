@@ -141,6 +141,7 @@ class TestHookMatcherEvents:
 
 class TestHookScriptPaths:
     def test_default_value_expansion_and_args(self, tmp_path: Path) -> None:
+        (tmp_path / ".git").mkdir()  # anchor the project root inside tmp_path
         (tmp_path / ".claude" / "hooks").mkdir(parents=True)
         (tmp_path / ".claude" / "hooks" / "check.py").write_text("")
         (tmp_path / "scripts").mkdir()
@@ -277,6 +278,7 @@ class TestSecondRound:
     def test_cursor_rule_imports_resolve_from_project_root(self, tmp_path: Path) -> None:
         from harness_eval.inspection.engine import lint_claude_md
 
+        (tmp_path / ".git").mkdir()  # anchor the project root inside tmp_path
         (tmp_path / "docs").mkdir()
         (tmp_path / "docs" / "guide.md").write_text("# guide\n")
         rules = tmp_path / ".cursor" / "rules"

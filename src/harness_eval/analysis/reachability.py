@@ -40,8 +40,15 @@ def compute_reachability(
     graph: ComponentGraph,
     file_path: str,
     all_skill_descriptions: dict[str, str] | None = None,
+    *,
+    min_confidence: float = 0.0,
 ) -> ReachabilityResult:
-    """Determine if the component at file_path is reachable from any trigger."""
+    """Determine if the component at file_path is reachable from any trigger.
+
+    Edges below *min_confidence* are not counted as evidence, so a caller that
+    only trusts parser-backed references can pass a threshold above the
+    confidence of inferred free-text edges.
+    """
     file_stem = Path(file_path).stem
     file_parent = Path(file_path).parent.name
 
@@ -65,7 +72,7 @@ def compute_reachability(
     elif target_node.component_type == ComponentType.MCP_CONFIG:
         node_key = f"mcp:{target_node.name}"
 
-    incoming = graph.edges_to(node_key)
+    incoming = graph.edges_to(node_key, min_confidence=min_confidence)
     if incoming:
         if all(edge.evidence_kind == "inferred" for edge in incoming):
             # Only free-text mentions point here: reachable, but the breadth of
@@ -84,7 +91,7 @@ def compute_reachability(
             )
 
     for other_key in graph.nodes:
-        reachable_set = graph.reachable_from(other_key)
+        reachable_set = graph.reachable_from(other_key, min_confidence=min_confidence)
         if node_key in reachable_set:
             return ReachabilityResult(
                 reachable=True, trigger_breadth="unknown", evidence_kind="transitive"

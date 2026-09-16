@@ -48,6 +48,13 @@ class Finding:
     category: RuleCategory
     fix: FixSuggestion | None = None
     reachability: str | None = None
+    # What supports the reachability verdict ("explicit", "inferred",
+    # "description", "transitive", "none") and how broadly the component is
+    # triggered ("broad", "narrow", "unknown"). A finding on a component that is
+    # only reachable through an inferred edge is weaker evidence than one on a
+    # component wired up explicitly.
+    reachability_evidence: str | None = None
+    trigger_breadth: str | None = None
     suggestion: str | None = None
 
 

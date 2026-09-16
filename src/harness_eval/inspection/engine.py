@@ -824,6 +824,8 @@ def _inspect_setup(
                             category=d.category,
                             fix=d.fix,
                             reachability="reachable" if reach.reachable else "unreachable",
+                            reachability_evidence=reach.evidence_kind,
+                            trigger_breadth=reach.trigger_breadth,
                             suggestion=d.suggestion,
                         )
                     )

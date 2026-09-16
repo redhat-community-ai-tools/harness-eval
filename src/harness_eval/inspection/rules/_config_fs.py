@@ -24,19 +24,24 @@ _CONFIG_DIRS = {
 }
 
 
-def project_root(start: Path) -> Path:
+def project_root(start: Path, ceiling: Path | None = None) -> Path:
     """Walk up from a component path to the repository root.
 
     A `.git` directory wins. Otherwise the first ancestor carrying a root
     marker, skipping ancestors that are themselves assistant config
     directories (a `.claude/CLAUDE.md` does not make `.claude/` a root).
+
+    *ceiling* bounds the walk: no directory above it is considered. Callers
+    that know the directory they were asked to scan should pass it so an
+    unrelated `.git` further up the filesystem cannot win.
     """
     origin = start.resolve()
     cur = origin.parent if origin.is_file() else origin
+    stop = ceiling.resolve() if ceiling is not None else None
     ancestors = []
     for _ in range(12):
         ancestors.append(cur)
-        if cur.parent == cur:
+        if cur.parent == cur or cur == stop:
             break
         cur = cur.parent
     for a in ancestors:

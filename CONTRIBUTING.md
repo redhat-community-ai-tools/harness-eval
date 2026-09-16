@@ -177,7 +177,7 @@ Create `src/harness_eval/core/discoverers/my_tool.py` that subclasses `ToolDisco
 - `source_tool` (short identifier for `ParsedComponent.source_tool`, e.g., "mytool")
 - `detect(root)` (return True if the tool's files exist)
 - `discover(root)` (return list of `ParsedComponent` objects)
-- `collect_paths(root)` (return list of file paths for watch mode)
+- `collect_paths(root)` (return every file path the discoverer reads)
 
 Use `parse_file()` from `base.py` to create components. Map files to existing `ComponentType` values (SKILL, COMMAND, AGENT, CLAUDE_MD, HOOKS, MCP_CONFIG).
 
@@ -188,8 +188,13 @@ Add your class to `src/harness_eval/core/discoverers/registry.py` in the `DISCOV
 ### 3. Add discovery paths
 
 Add the tool's paths to its `discover()` and `collect_paths()` methods. Fingerprints, watch mode,
-and scans all consume the shared inventory in `src/harness_eval/core/inventory.py`; there is no
-separate fingerprint pattern list to maintain.
+and scan limits all consume the shared inventory in `src/harness_eval/core/inventory.py`; there is
+no separate fingerprint pattern list to maintain.
+
+`collect_paths()` must be a **superset** of the files `discover()` returns components for. A file
+that discovery reads but the inventory omits is read without counting against the scan limits, and
+editing it does not change the setup fingerprint. `test_inventory_covers_every_component` fails if
+the two drift apart.
 
 ### 4. Add test fixtures
 
