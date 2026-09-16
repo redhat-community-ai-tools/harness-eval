@@ -9,6 +9,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
+from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.config.presets import SECURITY
 from harness_eval.output.metadata import EvalMetadata
 
@@ -18,7 +19,17 @@ from harness_eval.output.metadata import EvalMetadata
 @click.option("--format", "fmt", type=click.Choice(["terminal", "json"]), default="terminal")
 @click.option("--fail-on-error", is_flag=True, help="Exit code 1 if any errors are found.")
 @click.option("--fail-on-warning", is_flag=True, help="Exit code 1 if any findings are found.")
-def scan_skill(path: str, fmt: str, fail_on_error: bool, fail_on_warning: bool) -> None:
+@scan_limit_options
+def scan_skill(
+    path: str,
+    fmt: str,
+    fail_on_error: bool,
+    fail_on_warning: bool,
+    max_file_bytes: int,
+    max_total_bytes: int,
+    max_files: int,
+    max_depth: int,
+) -> None:
     """Scan a skill or setup for security and quality issues before installing.
 
     Run this on a downloaded or cloned skill directory before adding it to
@@ -31,7 +42,11 @@ def scan_skill(path: str, fmt: str, fail_on_error: bool, fail_on_warning: bool) 
 
     target = Path(path).resolve()
 
-    setup = discover_setup(name=target.name, path=str(target))
+    setup = discover_setup(
+        name=target.name,
+        path=str(target),
+        limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+    )
 
     if not setup.components:
         click.echo(f"No agent components found in {path}.", err=True)

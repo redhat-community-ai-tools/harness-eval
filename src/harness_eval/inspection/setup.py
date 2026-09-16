@@ -9,6 +9,7 @@ from independently reparsing the same setup in different layers.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+
 from harness_eval.core.types import ComponentType, ParsedComponent, Setup
 from harness_eval.inspection.parsers import (
     parse_agent,
@@ -18,54 +19,92 @@ from harness_eval.inspection.parsers import (
     parse_mcp_config_file,
     parse_skill,
 )
-from harness_eval.inspection.types import ParsedFile
+from harness_eval.inspection.types import (
+    ParsedAgent,
+    ParsedClaudeMd,
+    ParsedCommand,
+    ParsedFile,
+    ParsedHooks,
+    ParsedMcpConfig,
+    ParsedSkill,
+)
 
 
 @dataclass(frozen=True)
 class ParsedSetup:
-    """A discovered setup plus its single, typed parse pass."""
+    """A discovered setup plus its single, typed parse pass.
+
+    Each per-type tuple is in discovery order and lines up index-for-index
+    with ``core_by_type`` for the same component type.
+    """
 
     setup: Setup
     components: tuple[ParsedComponent, ...]
-    parsed_by_type: dict[ComponentType, tuple[ParsedFile, ...]]
+    skills: tuple[ParsedSkill, ...] = ()
+    commands: tuple[ParsedCommand, ...] = ()
+    claude_mds: tuple[ParsedClaudeMd, ...] = ()
+    hooks: tuple[ParsedHooks, ...] = ()
+    agents: tuple[ParsedAgent, ...] = ()
+    mcp_configs: tuple[ParsedMcpConfig, ...] = ()
 
     def core_by_type(self, component_type: ComponentType) -> tuple[ParsedComponent, ...]:
         return tuple(c for c in self.components if c.component_type == component_type)
 
     def parsed(self, component_type: ComponentType) -> tuple[ParsedFile, ...]:
-        return self.parsed_by_type.get(component_type, ())
-
-
-def _parse_component(component: ParsedComponent) -> ParsedFile | None:
-    """Parse one component using the canonical discovered path."""
-    parsers = {
-        ComponentType.SKILL: lambda: parse_skill(component.path),
-        ComponentType.COMMAND: lambda: parse_command(component.path),
-        ComponentType.CLAUDE_MD: lambda: parse_claude_md(component.path),
-        ComponentType.HOOKS: lambda: parse_hooks(component.path),
-        ComponentType.AGENT: lambda: parse_agent(component.path),
-        ComponentType.MCP_CONFIG: lambda: parse_mcp_config_file(component.path),
-    }
-    parser = parsers.get(component.component_type)
-    return parser() if parser else None
+        """Parsed payloads for *component_type*; empty for types no rule parses."""
+        by_type: dict[ComponentType, tuple[ParsedFile, ...]] = {
+            ComponentType.SKILL: self.skills,
+            ComponentType.COMMAND: self.commands,
+            ComponentType.CLAUDE_MD: self.claude_mds,
+            ComponentType.HOOKS: self.hooks,
+            ComponentType.AGENT: self.agents,
+            ComponentType.MCP_CONFIG: self.mcp_configs,
+        }
+        return by_type.get(component_type, ())
 
 
 def parse_setup(setup: Setup) -> ParsedSetup:
     """Parse every lintable component once and attach its typed payload."""
     components: list[ParsedComponent] = []
-    parsed_by_type: dict[ComponentType, list[ParsedFile]] = {}
+    skills: list[ParsedSkill] = []
+    commands: list[ParsedCommand] = []
+    claude_mds: list[ParsedClaudeMd] = []
+    hooks: list[ParsedHooks] = []
+    agents: list[ParsedAgent] = []
+    mcp_configs: list[ParsedMcpConfig] = []
 
     for component in setup.components:
-        parsed = _parse_component(component)
-        enriched = replace(component, parsed=parsed) if parsed is not None else component
-        components.append(enriched)
-        if parsed is not None:
-            parsed_by_type.setdefault(component.component_type, []).append(parsed)
+        parsed: ParsedFile | None = None
+        ctype = component.component_type
+        if ctype is ComponentType.SKILL:
+            parsed = parse_skill(component.path)
+            skills.append(parsed)
+        elif ctype is ComponentType.COMMAND:
+            parsed = parse_command(component.path)
+            commands.append(parsed)
+        elif ctype is ComponentType.CLAUDE_MD:
+            parsed = parse_claude_md(component.path)
+            claude_mds.append(parsed)
+        elif ctype is ComponentType.HOOKS:
+            parsed = parse_hooks(component.path)
+            hooks.append(parsed)
+        elif ctype is ComponentType.AGENT:
+            parsed = parse_agent(component.path)
+            agents.append(parsed)
+        elif ctype is ComponentType.MCP_CONFIG:
+            parsed = parse_mcp_config_file(component.path)
+            mcp_configs.append(parsed)
+        components.append(replace(component, parsed=parsed) if parsed is not None else component)
 
     return ParsedSetup(
         setup=setup,
         components=tuple(components),
-        parsed_by_type={key: tuple(value) for key, value in parsed_by_type.items()},
+        skills=tuple(skills),
+        commands=tuple(commands),
+        claude_mds=tuple(claude_mds),
+        hooks=tuple(hooks),
+        agents=tuple(agents),
+        mcp_configs=tuple(mcp_configs),
     )
 
 

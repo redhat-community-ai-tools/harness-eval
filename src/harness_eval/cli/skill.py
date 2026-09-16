@@ -5,12 +5,14 @@ from __future__ import annotations
 import json as json_mod
 import time
 from pathlib import Path
+from typing import Any
 
 import click
 
 from harness_eval.cli import cli
+from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
-from harness_eval.core.types import ComponentType
+from harness_eval.core.types import ComponentType, ScanLimits
 from harness_eval.output.metadata import EvalMetadata
 from harness_eval.utils.redact import redact_secrets
 
@@ -41,6 +43,7 @@ from harness_eval.utils.redact import redact_secrets
     default=None,
     help="Path to ~/.claude directory for user-level CLAUDE.md discovery.",
 )
+@scan_limit_options
 def eval_skill(
     skill_path: str,
     context_path: str | None,
@@ -50,6 +53,10 @@ def eval_skill(
     provider: str,
     model: str | None,
     user_config: str | None,
+    max_file_bytes: int,
+    max_total_bytes: int,
+    max_files: int,
+    max_depth: int,
 ) -> None:
     """Deep-evaluate a single skill, individually and in context of the setup."""
     t0 = time.monotonic()
@@ -58,6 +65,7 @@ def eval_skill(
     from harness_eval.inspection.parsers import parse_skill
 
     config_rules = PRESETS.get(preset, {})
+    limits = scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth)
     target = Path(skill_path)
     if target.is_file() and target.name.lower() == "skill.md":
         target = target.parent
@@ -67,7 +75,9 @@ def eval_skill(
 
     context_findings: list[str] = []
     if context_path:
-        context_findings = _contextual_skill_analysis(str(target), context_path, config_rules)
+        context_findings = _contextual_skill_analysis(
+            str(target), context_path, config_rules, limits
+        )
 
     rubric_result = None
     if run_rubric:
@@ -87,7 +97,7 @@ def eval_skill(
         context_text = None
         if context_path:
             ctx_setup = discover_setup(
-                name="context", path=context_path, user_config_dir=user_config
+                name="context", path=context_path, user_config_dir=user_config, limits=limits
             )
             parts = [
                 f"[{c.component_type.value}] {c.name}: {redact_secrets(c.content)[:200]}"
@@ -202,7 +212,9 @@ def eval_skill(
         click.echo("")
 
 
-def _contextual_skill_analysis(skill_path, context_path, config_rules):
+def _contextual_skill_analysis(
+    skill_path: str, context_path: str, config_rules: dict[str, Any], limits: ScanLimits
+) -> list[str]:
     """Analyze a skill in context of its parent setup."""
     from harness_eval.analysis.triggers import analyze_triggers
     from harness_eval.inspection.parsers import parse_skill
@@ -210,7 +222,7 @@ def _contextual_skill_analysis(skill_path, context_path, config_rules):
 
     findings = []
     skill = parse_skill(skill_path)
-    setup = discover_setup(name="context", path=context_path)
+    setup = discover_setup(name="context", path=context_path, limits=limits)
 
     for comp in setup.by_type(ComponentType.SKILL):
         if comp.name == skill.dir_name:

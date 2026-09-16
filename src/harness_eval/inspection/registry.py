@@ -1,22 +1,37 @@
 from __future__ import annotations
 
 import logging
-from difflib import get_close_matches
 from dataclasses import dataclass, field
+from difflib import get_close_matches
 from importlib.metadata import entry_points
+from typing import cast
 
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.types import Rule, RuleCategory
+from harness_eval.inspection.types import Rule, RuleCategory, RuleMeta
 
 logger = logging.getLogger(__name__)
+
+# Installed Python packages may contribute rules through this entry-point group.
+# Installed packages already run code in this interpreter, so they are trusted;
+# scanned repositories never are and may only contribute declarative YAML rules.
+ENTRY_POINT_GROUP = "harness_eval.rules"
+
+
+def _as_rule(obj: object) -> Rule | None:
+    """Return *obj* as a Rule if it satisfies the protocol, else None."""
+    if isinstance(getattr(obj, "meta", None), RuleMeta) and callable(getattr(obj, "create", None)):
+        return cast(Rule, obj)
+    return None
+
 
 @dataclass
 class RuleCatalog:
     """An isolated collection of rules for one application or scan.
 
-    The old module-level functions remain as compatibility helpers, but new
-    code should pass a catalog explicitly.  Keeping scan-local catalogs avoids
-    target-provided YAML rules leaking across concurrent or repeated scans.
+    The module-level functions below operate on the process default catalog
+    and remain as compatibility helpers; new code should pass a catalog
+    explicitly.  Scan-local catalogs keep target-provided YAML rules from
+    leaking across concurrent or repeated scans.
     """
 
     _rules: dict[str, Rule] = field(default_factory=dict)
@@ -54,7 +69,7 @@ class RuleCatalog:
     def suggest(self, rule_id: str) -> list[str]:
         return get_close_matches(rule_id, self._rules.keys(), n=3, cutoff=0.6)
 
-    def copy(self) -> "RuleCatalog":
+    def copy(self) -> RuleCatalog:
         """Return a catalog with the same rule instances and independent storage."""
         return RuleCatalog(dict(self._rules))
 
@@ -62,30 +77,35 @@ class RuleCatalog:
         self._rules.clear()
         self._target_index.clear()
 
-    def load_entry_points(self, group: str = "harness_eval.rules") -> int:
-        """Load installed third-party rule providers into this catalog.
+    def register_provider(self, provider: object) -> int:
+        """Register what a plugin exposes and return how many rules it added.
 
-        Providers may expose a Rule instance/class or a callable accepting the
-        catalog. Installed Python packages are trusted application extensions;
-        target repositories still only contribute declarative YAML rules.
+        A provider is a Rule instance, a Rule class (instantiated with no
+        arguments), or a callable that receives this catalog and registers
+        rules itself.  Anything else is rejected.
         """
+        candidate = provider() if isinstance(provider, type) else provider
+        rule = _as_rule(candidate)
+        if rule is not None:
+            self.register(rule)
+            return 1
+        if callable(provider) and not isinstance(provider, type):
+            before = len(self._rules)
+            provider(self)
+            return len(self._rules) - before
+        raise TypeError(
+            "rule plugin must expose a Rule, a Rule class, or a callable accepting a "
+            f"RuleCatalog, got {type(provider).__name__}"
+        )
+
+    def load_entry_points(self, group: str = ENTRY_POINT_GROUP) -> int:
+        """Load installed third-party rule providers; a broken plugin is logged and skipped."""
         loaded = 0
         for entry_point in entry_points().select(group=group):
             try:
-                provider = entry_point.load()
-                if callable(provider) and not hasattr(provider, "meta"):
-                    result = provider(self)
-                    if isinstance(result, RuleCatalog):
-                        loaded += len(result.all())
-                    elif result is not None:
-                        loaded += 1
-                else:
-                    rule = provider() if isinstance(provider, type) else provider
-                    if hasattr(rule, "meta"):
-                        self.register(rule)
-                        loaded += 1
-            except Exception:  # pragma: no cover - provider failures are isolated
-                logger.exception("Failed to load harness-eval rule plugin %s", entry_point.name)
+                loaded += self.register_provider(entry_point.load())
+            except Exception:
+                logger.exception("Failed to load harness-eval rule plugin %r", entry_point.name)
         return loaded
 
 
@@ -93,8 +113,9 @@ _registry = RuleCatalog()
 
 
 def get_default_catalog() -> RuleCatalog:
-    """Return the process default catalog used by legacy convenience APIs."""
+    """Return the process default catalog used by the legacy convenience APIs."""
     return _registry
+
 
 # Rule IDs that have been removed. A config or suppression that still references
 # one gets a deprecation warning (pointing at the replacement) instead of the

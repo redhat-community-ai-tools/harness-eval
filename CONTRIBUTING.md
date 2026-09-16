@@ -140,8 +140,11 @@ Drop `.yaml` files in `.harness-eval/rules/` of a project. `harness-lint` loads 
 
 Installed Python packages can provide trusted third-party rules through the
 `harness_eval.rules` entry-point group. The entry point may reference a Rule
-class/instance or a callable that accepts a `RuleCatalog`; target repositories
-must use YAML and are never imported as Python code.
+instance, a Rule class (instantiated with no arguments), or a callable that
+accepts a `RuleCatalog`. Anything else is rejected, and a plugin that raises
+while loading is logged and skipped. Installed packages already run code in
+the interpreter, which is why they are trusted; target repositories must use
+YAML and are never imported as Python code.
 
 ### 5. Add tests
 
@@ -157,11 +160,11 @@ If your rule needs to compare across components (like duplicate detection compar
 STATE_KEY = "my-rule/state"
 
 def create(self, context: RuleContext) -> None:
-    if STATE_KEY not in context.artifacts.rule_state:
-        context.artifacts.rule_state[STATE_KEY] = {"seen": {}}
-    state = context.artifacts.rule_state[STATE_KEY]
+    state = context.artifacts.rule_state.setdefault(STATE_KEY, {"seen": {}})
     # use state instead of module-level dicts
 ```
+
+`context.artifacts` is a typed view over `context.scan_state` (the same dict): `project_root`, `component_graph`, and `component_index` are typed accessors, and `mark_once(key)` is the idiom for a setup-wide rule that must run once per scan. Rules that read `scan_state` directly keep working.
 
 ## Adding support for a new AI assistant
 

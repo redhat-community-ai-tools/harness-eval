@@ -35,9 +35,7 @@ class TotalDescriptionBudget:
     )
 
     def create(self, context: RuleContext) -> None:
-        if context.artifacts and not context.artifacts.mark_once(
-            "total_description_budget_checked"
-        ):
+        if not context.artifacts.mark_once("total_description_budget_checked"):
             return
 
         all_skills = context.all_skills

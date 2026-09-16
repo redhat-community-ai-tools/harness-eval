@@ -13,6 +13,10 @@ from harness_eval.core.types import ComponentType
 class ReachabilityResult:
     reachable: bool
     trigger_breadth: str  # "broad", "narrow", "unknown"
+    # What supports the verdict: "explicit" (parser-backed edge), "inferred"
+    # (only free-text mentions), "description" (skill trigger text),
+    # "transitive" (reachable through other components) or "none".
+    evidence_kind: str = "none"
 
 
 _USE_WHEN_PHRASES = frozenset(
@@ -63,17 +67,27 @@ def compute_reachability(
 
     incoming = graph.edges_to(node_key)
     if incoming:
-        return ReachabilityResult(reachable=True, trigger_breadth="broad")
+        if all(edge.evidence_kind == "inferred" for edge in incoming):
+            # Only free-text mentions point here: reachable, but the breadth of
+            # the trigger cannot be read off an inferred edge.
+            return ReachabilityResult(
+                reachable=True, trigger_breadth="unknown", evidence_kind="inferred"
+            )
+        return ReachabilityResult(reachable=True, trigger_breadth="broad", evidence_kind="explicit")
 
     if target_node.component_type == ComponentType.SKILL:
         desc = (all_skill_descriptions or {}).get(target_node.name, "")
         if desc:
             breadth = "narrow" if _is_narrow_trigger(desc) else "broad"
-            return ReachabilityResult(reachable=True, trigger_breadth=breadth)
+            return ReachabilityResult(
+                reachable=True, trigger_breadth=breadth, evidence_kind="description"
+            )
 
     for other_key in graph.nodes:
         reachable_set = graph.reachable_from(other_key)
         if node_key in reachable_set:
-            return ReachabilityResult(reachable=True, trigger_breadth="unknown")
+            return ReachabilityResult(
+                reachable=True, trigger_breadth="unknown", evidence_kind="transitive"
+            )
 
     return ReachabilityResult(reachable=False, trigger_breadth="unknown")

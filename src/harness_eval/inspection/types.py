@@ -4,9 +4,12 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from harness_eval.core.types import ComponentType
+
+if TYPE_CHECKING:
+    from harness_eval.analysis.component_graph import ComponentGraph
 
 
 class Severity(str, Enum):
@@ -186,44 +189,75 @@ ParsedFile = (
 )
 
 
-@dataclass
 class ScanArtifacts:
-    """Typed, scan-local artifacts shared by rules.
+    """Typed view over the state dict shared by every rule in one scan.
 
-    ``legacy_state`` remains available for third-party rules written against
-    older harness-eval releases. Built-in rules should use the named fields or
-    ``rule_state`` for rule-private scratch data.
+    ``state`` is the very dict rules see as ``context.scan_state``.  The typed
+    accessors read and write well-known keys in it, so there is exactly one
+    store: built-in rules use the accessors, and third-party rules written
+    against ``scan_state`` keep working unchanged.
     """
 
-    project_root: Path | None = None
-    component_graph: Any | None = None
-    component_index: dict[str, set[str]] | None = None
-    mcp_config_path: str | None = None
-    flags: set[str] = field(default_factory=set)
-    rule_state: dict[str, object] = field(default_factory=dict)
-    legacy_state: dict[str, Any] = field(default_factory=dict)
+    __slots__ = ("state",)
+
+    def __init__(
+        self, state: dict[str, Any] | None = None, *, project_root: Path | str | None = None
+    ) -> None:
+        self.state: dict[str, Any] = state if state is not None else {}
+        if project_root is not None:
+            self.project_root = Path(project_root)
+
+    @property
+    def project_root(self) -> Path | None:
+        root = self.state.get("project_root")
+        return Path(root) if root else None
+
+    @project_root.setter
+    def project_root(self, value: Path | None) -> None:
+        if value is None:
+            self.state.pop("project_root", None)
+        else:
+            self.state["project_root"] = str(value)
+
+    @property
+    def component_graph(self) -> ComponentGraph | None:
+        graph: ComponentGraph | None = self.state.get("component_graph")
+        return graph
+
+    @component_graph.setter
+    def component_graph(self, value: ComponentGraph | None) -> None:
+        self.state["component_graph"] = value
+
+    @property
+    def component_index(self) -> dict[str, set[str]] | None:
+        index: dict[str, set[str]] | None = self.state.get("component_index")
+        return index
+
+    @component_index.setter
+    def component_index(self, value: dict[str, set[str]] | None) -> None:
+        self.state["component_index"] = value
+
+    @property
+    def mcp_config_path(self) -> str | None:
+        path: str | None = self.state.get("mcp_config_path")
+        return path
+
+    @mcp_config_path.setter
+    def mcp_config_path(self, value: str | None) -> None:
+        self.state["mcp_config_path"] = value
+
+    @property
+    def rule_state(self) -> dict[str, Any]:
+        """Scratch space for rule-private cross-component data, keyed by rule id."""
+        scratch: dict[str, Any] = self.state.setdefault("_rule_state", {})
+        return scratch
 
     def mark_once(self, key: str) -> bool:
-        """Return true the first time a setup-wide rule claims ``key``."""
-        if key in self.flags or self.legacy_state.get(key):
+        """Return true the first time a setup-wide rule claims ``key`` in this scan."""
+        if self.state.get(key):
             return False
-        self.flags.add(key)
-        self.legacy_state[key] = True
+        self.state[key] = True
         return True
-
-    @classmethod
-    def from_legacy(cls, state: dict[str, Any] | None) -> "ScanArtifacts":
-        if state is None:
-            state = {}
-        root = state.get("project_root")
-        return cls(
-            project_root=Path(root) if root else None,
-            component_graph=state.get("component_graph"),
-            component_index=state.get("component_index"),
-            mcp_config_path=state.get("mcp_config_path"),
-            flags={key for key, value in state.items() if value is True},
-            legacy_state=state,
-        )
 
 
 @dataclass
@@ -237,14 +271,17 @@ class RuleContext:
     all_commands: list[ParsedCommand] = field(default_factory=list)
     scan_state: dict[str, Any] = field(default_factory=dict)
     source_tool: str | None = None
-    artifacts: ScanArtifacts | None = None
+    artifacts: ScanArtifacts = field(default_factory=ScanArtifacts)
 
     def __post_init__(self) -> None:
-        if self.artifacts is None:
-            self.artifacts = ScanArtifacts.from_legacy(self.scan_state)
-        elif self.scan_state and self.artifacts.legacy_state is not self.scan_state:
-            self.artifacts.legacy_state.update(self.scan_state)
-        self.scan_state = self.artifacts.legacy_state
+        # ``scan_state`` and ``artifacts.state`` must be the same dict so that a
+        # rule using either API sees what every other rule wrote.
+        if self.scan_state is not self.artifacts.state:
+            if self.artifacts.state:
+                self.artifacts.state.update(self.scan_state)
+            else:
+                self.artifacts.state = self.scan_state
+        self.scan_state = self.artifacts.state
 
     def source_text(self) -> tuple[str, str]:
         """Raw content and file path for the component being linted."""

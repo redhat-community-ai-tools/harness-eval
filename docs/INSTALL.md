@@ -24,7 +24,7 @@ harness-eval harness-lint . --fail-on-warning       # exit code 1 on any finding
 harness-eval harness-lint . --format sarif          # SARIF output for GitHub code scanning
 harness-eval harness-lint . --format json           # JSON output for scripts
 
-# Resource limits for untrusted or very large trees
+# Resource limits on the agent-setup files a scan reads (all scanning commands)
 harness-eval harness-lint . --max-total-bytes 500000000 --max-files 200000
 harness-eval harness-gate .                         # gating-tier rules only; exits 1 on any finding, no LLM
 harness-eval harness-review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
@@ -45,10 +45,12 @@ paths. Target YAML rules are isolated to the current scan; installed Python
 rule providers are loaded only from the trusted `harness_eval.rules` entry-point
 group.
 
-For safety, scans reject oversized trees before discovery reads their contents.
-The defaults are 10 MB per file, 250 MB total, 100,000 files, and directory
-depth 50. Override them only for trusted large trees with the `--max-file-bytes`,
-`--max-total-bytes`, `--max-files`, and `--max-depth` options.
+For safety, scans reject oversized agent-setup files before discovery reads
+them; unrelated repository content (build outputs, datasets, vendored code)
+never counts. The defaults are 10 MB per file, 250 MB total, 100,000 files, and
+directory depth 50. `harness-lint`, `harness-gate`, `harness-security`,
+`harness-review`, `skill-verify`, `skill-review`, and `baseline` all accept
+`--max-file-bytes`, `--max-total-bytes`, `--max-files`, and `--max-depth`.
 
 `review`, `security --review`, and `skill --rubric` require the `[llm]` extra and either `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`.
 

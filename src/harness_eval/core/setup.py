@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -56,52 +55,48 @@ def _matches_exclude(component_path: str, root: Path, patterns: tuple[str, ...])
     return False
 
 
-def _enforce_scan_limits(root: Path, limits: ScanLimits, patterns: tuple[str, ...]) -> None:
-    """Fail before discoverers read a hostile or oversized tree."""
+def _enforce_scan_limits(
+    root: Path, paths: list[Path], limits: ScanLimits, patterns: tuple[str, ...]
+) -> None:
+    """Reject a setup whose discovered files exceed *limits* before any is read.
+
+    Only the discoverer inventory is measured, so the check costs one ``stat``
+    per setup file and unrelated repository content never trips a limit.
+    """
+    root_resolved = root.resolve()
     total_bytes = 0
     file_count = 0
-    root_resolved = root.resolve()
-    excluded_dirs = {".git", "__pycache__", "node_modules", ".venv", "vendor", "worktrees"}
 
-    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
-        current = Path(dirpath)
-        try:
-            depth = len(current.resolve().relative_to(root_resolved).parts)
-        except ValueError:
-            dirnames[:] = []
+    for path in paths:
+        if _matches_exclude(str(path), root, patterns):
             continue
-        if depth >= limits.max_depth:
-            dirnames[:] = []
-        dirnames[:] = [d for d in dirnames if d not in excluded_dirs]
-
-        for filename in filenames:
-            path = current / filename
-            if _matches_exclude(str(path), root, patterns):
-                continue
-            try:
-                resolved = path.resolve()
-                if not resolved.is_relative_to(root_resolved):
-                    continue
-                size = path.stat().st_size
-            except OSError:
-                continue
-            file_count += 1
-            if file_count > limits.max_files:
-                raise ScanLimitExceeded(
-                    f"scan exceeds max_files={limits.max_files}; "
-                    "narrow the target or raise the limit"
-                )
-            if size > limits.max_file_bytes:
-                raise ScanLimitExceeded(
-                    f"file {path} is {size} bytes, exceeding "
-                    f"max_file_bytes={limits.max_file_bytes}"
-                )
-            total_bytes += size
-            if total_bytes > limits.max_total_bytes:
-                raise ScanLimitExceeded(
-                    f"scan exceeds max_total_bytes={limits.max_total_bytes}; "
-                    "narrow the target or raise the limit"
-                )
+        try:
+            size = path.stat().st_size
+            resolved = path.resolve()
+        except OSError:
+            continue
+        try:
+            depth = len(resolved.relative_to(root_resolved).parts) - 1
+        except ValueError:
+            depth = 0  # user-config files live outside the scanned tree
+        if depth > limits.max_depth:
+            raise ScanLimitExceeded(
+                f"{path} is nested {depth} directories deep, exceeding max_depth={limits.max_depth}"
+            )
+        file_count += 1
+        if file_count > limits.max_files:
+            raise ScanLimitExceeded(
+                f"setup has more than max_files={limits.max_files} agent-setup files"
+            )
+        if size > limits.max_file_bytes:
+            raise ScanLimitExceeded(
+                f"{path} is {size} bytes, exceeding max_file_bytes={limits.max_file_bytes}"
+            )
+        total_bytes += size
+        if total_bytes > limits.max_total_bytes:
+            raise ScanLimitExceeded(
+                f"agent-setup files exceed max_total_bytes={limits.max_total_bytes}"
+            )
 
 
 def discover_setup(
@@ -120,7 +115,8 @@ def discover_setup(
 
     user_dir = Path(user_config_dir) if user_config_dir else None
     exclude = merge_scan_excludes(exclude)
-    _enforce_scan_limits(root, limits or ScanLimits(), exclude)
+    inventory = _collect_setup_file_paths(root, user_config_dir=user_dir, recursive=recursive)
+    _enforce_scan_limits(root, inventory, limits or ScanLimits(), exclude)
 
     components: list[ParsedComponent] = []
 
@@ -143,7 +139,7 @@ def discover_setup(
         components = [c for c in components if not _matches_exclude(c.path, root, exclude)]
 
     detected = _detect_tools(root)
-    fp = fingerprint_setup(path, user_config_dir=user_config_dir, recursive=recursive)
+    fp = fingerprint_setup(path, user_config_dir=user_config_dir, paths=inventory)
     total = sum(c.token_count for c in components)
 
     return Setup(

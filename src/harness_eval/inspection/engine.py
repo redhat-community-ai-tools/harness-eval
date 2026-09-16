@@ -242,7 +242,7 @@ def _run_rules(
             all_commands=all_commands or [],
             scan_state=scan_state,
             source_tool=source_tool,
-            artifacts=artifacts,
+            artifacts=artifacts if artifacts is not None else ScanArtifacts(scan_state),
         )
         rule.create(context)
 
@@ -662,9 +662,7 @@ def inspect_setup(
     if load_target_yaml:
         from harness_eval.inspection.yaml_rules import load_yaml_rules_from_dir
 
-        load_yaml_rules_from_dir(
-            Path(setup.path) / ".harness-eval" / "rules", catalog=scan_catalog
-        )
+        load_yaml_rules_from_dir(Path(setup.path) / ".harness-eval" / "rules", catalog=scan_catalog)
     return _inspect_setup(setup, config_rules, catalog=scan_catalog)
 
 
@@ -680,9 +678,8 @@ def _inspect_setup(
     if config_rules:
         _warn_unknown_config_rules(config_rules, catalog)
 
-    artifacts = ScanArtifacts(project_root=Path(setup.path))
-    scan_state = artifacts.legacy_state
-    scan_state["project_root"] = setup.path
+    artifacts = ScanArtifacts(project_root=setup.path)
+    scan_state = artifacts.state
     results: list[InspectionResult] = []
 
     from harness_eval.analysis.component_graph import build_component_graph
@@ -697,12 +694,12 @@ def _inspect_setup(
     agent_comps = list(parsed_setup.core_by_type(CT.AGENT))
     mcp_comps = list(parsed_setup.core_by_type(CT.MCP_CONFIG))
 
-    all_skills = list(parsed_setup.parsed(CT.SKILL))
-    all_commands = list(parsed_setup.parsed(CT.COMMAND))
-    all_claude = list(parsed_setup.parsed(CT.CLAUDE_MD))
-    all_hooks = list(parsed_setup.parsed(CT.HOOKS))
-    all_agents = list(parsed_setup.parsed(CT.AGENT))
-    all_mcp = list(parsed_setup.parsed(CT.MCP_CONFIG))
+    all_skills = list(parsed_setup.skills)
+    all_commands = list(parsed_setup.commands)
+    all_claude = list(parsed_setup.claude_mds)
+    all_hooks = list(parsed_setup.hooks)
+    all_agents = list(parsed_setup.agents)
+    all_mcp = list(parsed_setup.mcp_configs)
 
     artifacts.component_graph = build_component_graph(
         all_skills,
@@ -711,7 +708,6 @@ def _inspect_setup(
         all_hooks,
         mcp_config_paths=[c.path for c in mcp_comps],
     )
-    scan_state["component_graph"] = artifacts.component_graph
 
     lint_dispatch: dict[CT, Callable[..., InspectionResult]] = {
         CT.SKILL: lambda comp, parsed: lint(
@@ -803,7 +799,7 @@ def _inspect_setup(
                 )
             )
 
-    graph = scan_state.get("component_graph")
+    graph = artifacts.component_graph
     if graph:
         from harness_eval.analysis.reachability import compute_reachability
 

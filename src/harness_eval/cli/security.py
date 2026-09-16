@@ -10,7 +10,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import emit_output
+from harness_eval.cli._helpers import emit_output, scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ParsedComponent
 from harness_eval.inspection.types import AdjudicatedFinding, Finding, InspectionResult, Severity
@@ -384,6 +384,7 @@ def _format_terminal_security(report: _SecurityReport) -> None:
     multiple=True,
     help="Glob patterns for files/dirs to exclude from scanning (repeatable).",
 )
+@scan_limit_options
 def eval_setup_security(
     path: str,
     fmt: str,
@@ -398,6 +399,10 @@ def eval_setup_security(
     enforce: str | None,
     baseline_path: str | None,
     exclude: tuple[str, ...],
+    max_file_bytes: int,
+    max_total_bytes: int,
+    max_files: int,
+    max_depth: int,
 ) -> None:
     """Deep security audit: all deterministic security rules + optional LLM review."""
     if enforce and (fail_on_error or fail_on_warning):
@@ -416,6 +421,7 @@ def eval_setup_security(
         user_config_dir=user_config,
         recursive=recursive,
         exclude=exclude,
+        limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
     results = inspect_setup(setup, SECURITY)
 

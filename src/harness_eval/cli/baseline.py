@@ -8,6 +8,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
+from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 
 
 @cli.command("baseline")
@@ -35,12 +36,17 @@ from harness_eval.cli import cli
     is_flag=True,
     help="Recursively search for agent configs in all subdirectories.",
 )
+@scan_limit_options
 def create_baseline_cmd(
     path: str,
     output: str,
     preset: str,
     user_config: str | None,
     recursive: bool,
+    max_file_bytes: int,
+    max_total_bytes: int,
+    max_files: int,
+    max_depth: int,
 ) -> None:
     """Create a baseline snapshot of current findings for incremental adoption."""
     from harness_eval.baseline import create_baseline
@@ -51,7 +57,11 @@ def create_baseline_cmd(
     target = Path(path)
     config_rules = PRESETS.get(preset, {})
     setup = discover_setup(
-        name=target.name, path=path, user_config_dir=user_config, recursive=recursive
+        name=target.name,
+        path=path,
+        user_config_dir=user_config,
+        recursive=recursive,
+        limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
     results = inspect_setup(setup, config_rules)
     baseline = create_baseline(results)

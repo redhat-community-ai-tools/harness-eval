@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import emit_output
+from harness_eval.cli._helpers import emit_output, scan_limit_options, scan_limits_from
 
 
 @cli.command("harness-gate")
@@ -44,6 +44,7 @@ from harness_eval.cli._helpers import emit_output
     is_flag=True,
     help="Recursively search subdirectories for agent configs.",
 )
+@scan_limit_options
 def harness_gate(
     path: str,
     fmt: str | None,
@@ -51,6 +52,10 @@ def harness_gate(
     include_provisional: bool,
     output_path: str | None,
     recursive: bool,
+    max_file_bytes: int,
+    max_total_bytes: int,
+    max_files: int,
+    max_depth: int,
 ) -> None:
     """Gate on validated rules only. Runs tier=gating rules (add --include-provisional
     for the provisional tier), exits 1 on any finding, and never loads LLM extras."""
@@ -62,7 +67,12 @@ def harness_gate(
     target = Path(path)
 
     if target.is_dir():
-        setup = discover_setup(name=target.name, path=path, recursive=recursive)
+        setup = discover_setup(
+            name=target.name,
+            path=path,
+            recursive=recursive,
+            limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+        )
         results = inspect_setup(setup, config_rules)
     else:
         from harness_eval.cli.lint import _inspect_single_file

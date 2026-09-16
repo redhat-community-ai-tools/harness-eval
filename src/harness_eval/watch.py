@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import click
 
 from harness_eval.core.setup import collect_setup_file_paths
-from harness_eval.core.types import ScanLimitExceeded, ScanLimits
+from harness_eval.core.types import ScanLimits
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -64,6 +64,8 @@ def run_watch(
         user_config: Optional user config directory.
         debounce_ms: Debounce window in milliseconds.
         recursive: Search for agent configs in nested directories.
+        load_target_yaml: Load YAML rules from the scanned tree.
+        limits: Resource limits for the files a scan reads; defaults apply when None.
     """
     root = Path(path)
     if not root.is_dir():
@@ -96,16 +98,13 @@ def run_watch(
 
     def _run_lint() -> None:
         """Run lint and display results."""
-        try:
-            setup = discover_setup(
-                name=root.name,
-                path=path,
-                user_config_dir=user_config,
-                recursive=recursive,
-                limits=limits,
-            )
-        except ScanLimitExceeded as err:
-            raise click.ClickException(str(err)) from err
+        setup = discover_setup(
+            name=root.name,
+            path=path,
+            user_config_dir=user_config,
+            recursive=recursive,
+            limits=limits,
+        )
         results = inspect_setup(setup, config_rules, load_target_yaml=load_target_yaml)
         system = analyze_system(setup)
 

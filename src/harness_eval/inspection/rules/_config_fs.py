@@ -27,9 +27,9 @@ _CONFIG_DIRS = {
 def project_root(start: Path) -> Path:
     """Walk up from a component path to the repository root.
 
-    The nearest explicit root marker wins over a parent repository. This keeps
-    temporary nested projects and monorepo packages self-contained. If no
-    marker is present, the nearest `.git` directory is used.
+    A `.git` directory wins. Otherwise the first ancestor carrying a root
+    marker, skipping ancestors that are themselves assistant config
+    directories (a `.claude/CLAUDE.md` does not make `.claude/` a root).
     """
     origin = start.resolve()
     cur = origin.parent if origin.is_file() else origin
@@ -40,12 +40,12 @@ def project_root(start: Path) -> Path:
             break
         cur = cur.parent
     for a in ancestors:
+        if (a / ".git").exists():
+            return a
+    for a in ancestors:
         if a.name in _CONFIG_DIRS:
             continue
         if any((a / m).exists() for m in _ROOT_MARKERS):
-            return a
-    for a in ancestors:
-        if (a / ".git").exists():
             return a
     return origin.parent if origin.is_file() else origin
 

@@ -75,7 +75,7 @@ BUILTIN_SLASH = frozenset(
 
 
 def _root(context: RuleContext) -> Path | None:
-    return context.artifacts.project_root if context.artifacts else None
+    return context.artifacts.project_root
 
 
 def _frontmatter_name(skill_md: Path) -> str | None:
@@ -98,7 +98,7 @@ def _frontmatter_name(skill_md: Path) -> str | None:
 
 def component_index(context: RuleContext) -> dict[str, set[str]]:
     """{"skills", "commands", "agents", "plugins"}: names present in the tree."""
-    cached = context.artifacts.component_index if context.artifacts else None
+    cached = context.artifacts.component_index
     if cached is not None:
         return cached
     idx: dict[str, set[str]] = {
@@ -163,9 +163,7 @@ def component_index(context: RuleContext) -> dict[str, set[str]]:
                             idx["plugins"].add(entry["name"])
                 except (OSError, ValueError, AttributeError):
                     pass
-    if context.artifacts is not None:
-        context.artifacts.component_index = idx
-        context.artifacts.legacy_state["component_index"] = idx
+    context.artifacts.component_index = idx
     return idx
 
 

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from harness_eval.inspection.registry import RuleCatalog, register_rule
+from harness_eval.inspection.registry import RuleCatalog, get_default_catalog
+from harness_eval.inspection.types import Rule
 
 
 def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
-    """Import and register all built-in rules."""
-    target = catalog
+    """Import and register all built-in rules into *catalog* (default: the process catalog).
+
+    Returns the catalog that received the rules.
+    """
+    target = catalog if catalog is not None else get_default_catalog()
     # Skill rules
     from harness_eval.inspection.rules.agents.constraint_body_match import ConstraintBodyMatch
     from harness_eval.inspection.rules.agents.data_exfiltration import AgentDataExfiltration
@@ -192,7 +196,7 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.structural.symlink_escape import StructuralSymlinkEscape
     from harness_eval.inspection.rules.submission.file_completeness import FileCompleteness
 
-    for rule_cls in [
+    builtin_rules: list[type[Rule]] = [
         SkillMdExists,
         DescriptionRequired,
         DescriptionQuality,
@@ -297,8 +301,9 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         TotalDescriptionBudget,
         ScopeGrabDescription,
         FileCompleteness,
-    ]:
-        (target.register if target is not None else register_rule)(rule_cls())
+    ]
+    for rule_cls in builtin_rules:
+        target.register(rule_cls())
 
     from harness_eval.inspection.rules.claude_md.missing_boundary_policy import (
         ClaudeMdMissingBoundaryPolicy,
@@ -309,22 +314,17 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.hooks.no_audit_trail import HooksNoAuditTrail
     from harness_eval.inspection.rules.hooks.no_commit_guard import HooksNoCommitGuard
 
-    for rule_cls in [
+    gap_rules: list[type[Rule]] = [
         HooksNoCommitGuard,
         HooksDangerousPermissionGrant,
         HooksNoAuditTrail,
         ClaudeMdMissingBoundaryPolicy,
-    ]:
-        (target.register if target is not None else register_rule)(rule_cls())
+    ]
+    for rule_cls in gap_rules:
+        target.register(rule_cls())
 
     from harness_eval.inspection.yaml_rules import load_yaml_rules
 
     load_yaml_rules(catalog=target)
-    if target is not None:
-        target.load_entry_points()
-        return target
-    from harness_eval.inspection.registry import get_default_catalog
-
-    default_catalog = get_default_catalog()
-    default_catalog.load_entry_points()
-    return default_catalog
+    target.load_entry_points()
+    return target

@@ -10,6 +10,7 @@ from click.testing import CliRunner
 
 from harness_eval.cli import cli
 from harness_eval.core.setup import collect_setup_file_paths
+from harness_eval.core.types import ScanLimits
 from harness_eval.watch import (
     _build_filter,
     _get_watch_directories,
@@ -240,6 +241,7 @@ class TestCLIWatchFlag:
                     user_config=None,
                     recursive=False,
                     load_target_yaml=False,
+                    limits=ScanLimits(),
                 )
 
 

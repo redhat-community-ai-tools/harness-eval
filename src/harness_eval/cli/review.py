@@ -9,6 +9,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
+from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
@@ -32,8 +33,18 @@ from harness_eval.utils.redact import redact_secrets
     is_flag=True,
     help="Recursively search for agent configs in all subdirectories.",
 )
+@scan_limit_options
 def eval_setup_review(
-    path: str, fmt: str, provider: str, model: str | None, user_config: str | None, recursive: bool
+    path: str,
+    fmt: str,
+    provider: str,
+    model: str | None,
+    user_config: str | None,
+    recursive: bool,
+    max_file_bytes: int,
+    max_total_bytes: int,
+    max_files: int,
+    max_depth: int,
 ) -> None:
     """Review: LLM rubric scoring per component. Requires API key in environment."""
     t0 = time.monotonic()
@@ -41,7 +52,11 @@ def eval_setup_review(
     from harness_eval.utils.llm import create_client
 
     setup = discover_setup(
-        name=Path(path).name, path=path, user_config_dir=user_config, recursive=recursive
+        name=Path(path).name,
+        path=path,
+        user_config_dir=user_config,
+        recursive=recursive,
+        limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
 
     client = create_client(provider, model)

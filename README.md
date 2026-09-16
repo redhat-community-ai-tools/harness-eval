@@ -141,10 +141,11 @@ Trusted Python rule providers may be installed by the application through the
 `harness_eval.rules` entry-point group. See [`CONTRIBUTING.md`](CONTRIBUTING.md)
 for the extension contract.
 
-Scans enforce resource limits before reading the tree: 10 MB per file, 250 MB
-total, 100,000 files, and depth 50 by default. Use `--max-file-bytes`,
-`--max-total-bytes`, `--max-files`, or `--max-depth` when scanning a larger
-trusted tree.
+Scans enforce resource limits on the agent-setup files they read (never on
+unrelated repository content): 10 MB per file, 250 MB total, 100,000 files,
+and depth 50 by default. Every command that discovers a setup accepts
+`--max-file-bytes`, `--max-total-bytes`, `--max-files`, and `--max-depth`;
+an exceeded limit is reported as a one-line error.
 
 ## Privacy
 
@@ -180,9 +181,9 @@ YAML rules support regex pattern matching on component content. Patterns are cas
 
 `harness-lint` loads YAML from the scanned tree only with `--rules-from-target`. `harness-gate` and `harness-security` never load them: regexes from an audited tree run in-process. Target YAML rules are held in a scan-local catalog and cannot leak into another scan. Regexes longer than 256 characters or with nested unbounded quantifiers are skipped.
 
-Scans enforce resource limits by default (`10 MB` per file, `250 MB` total, `100,000` files,
-and depth `50`). CI jobs scanning unusually large trees can adjust these with
-`--max-file-bytes`, `--max-total-bytes`, `--max-files`, and `--max-depth`.
+Scans enforce resource limits on the agent-setup files they read (`10 MB` per file,
+`250 MB` total, `100,000` files, depth `50`). CI jobs with unusually large setups can
+adjust these with `--max-file-bytes`, `--max-total-bytes`, `--max-files`, and `--max-depth`.
 
 For complex logic (AST analysis, cross-component checks), use Python rules instead.
 

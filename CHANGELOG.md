@@ -5,26 +5,32 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- Scan resource limits with CLI overrides for maximum file size, total bytes,
-  file count, and directory depth.
+- Scan resource limits on the agent-setup files a scan reads (per-file size,
+  total bytes, file count, directory depth). Unrelated repository content never
+  counts. Every command that discovers a setup accepts `--max-file-bytes`,
+  `--max-total-bytes`, `--max-files`, and `--max-depth`, and reports an
+  exceeded limit as a one-line error instead of a traceback.
 - A supported `harness_eval.rules` entry-point group for trusted, installed
-  Python rule providers.
+  Python rule providers. Providers are validated against the `Rule` protocol;
+  a broken plugin is logged and skipped rather than aborting the scan.
 
 ### Changed
 - Discovery, fingerprints, and watch mode now consume one shared setup-file
   inventory, preventing the scan and change detector from drifting apart.
-- Inspection parses each discovered component once and shares typed,
-  scan-local artifacts across rules while preserving the legacy state API.
+- Inspection parses each discovered component once into a typed setup view
+  and exposes scan-wide artifacts (project root, component graph, component
+  index) through typed accessors over the same `scan_state` dict rules
+  already use, so there is one store and existing rules keep working.
 - Target YAML rules are isolated in a per-scan catalog, so repeated or
   concurrent scans cannot leak target-provided rules into one another.
 - Component-graph references from hook commands are token-bounded and carry
-  explicit evidence kind and confidence metadata.
+  evidence kind and confidence metadata. Reachability reports the evidence
+  kind, treats inferred-only references as unknown trigger breadth, and graph
+  traversal accepts a `min_confidence` threshold.
 
 ### Fixed
-- Nested projects and monorepos now prefer the nearest explicit project root
-  marker before falling back to a parent `.git` directory.
-- Oversized or unexpectedly deep trees fail with an actionable scan-limit
-  error before discovery reads their contents.
+- Oversized or unexpectedly deep agent-setup files fail with an actionable
+  scan-limit error before discovery reads their contents.
 
 ## [7.15.0] - 2026-09-07
 

@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from harness_eval.inspection.types import ParsedFile
 
 
 class ComponentType(StrEnum):
@@ -30,7 +34,12 @@ class ScanLimitExceeded(ValueError):
 
 @dataclass(frozen=True)
 class ScanLimits:
-    """Resource limits for scanning untrusted or unexpectedly large trees."""
+    """Resource limits applied to the files a scan will read.
+
+    Only files in the discoverer inventory (instruction files, skills,
+    commands, hooks, agents, MCP configs) count toward these limits; unrelated
+    repository content such as build outputs or datasets never does.
+    """
 
     max_file_bytes: int = 10_000_000
     max_total_bytes: int = 250_000_000
@@ -50,10 +59,10 @@ class ParsedComponent:
     token_count: int = 0
     scope: ComponentScope = ComponentScope.PROJECT
     source_tool: str | None = None
-    # Type-specific parsed payload populated by the inspection layer. Keeping
-    # it on the canonical component prevents discovery and inspection from
-    # maintaining separate component identities.
-    parsed: object | None = None
+    # Type-specific parsed payload attached by ``inspection.setup.parse_setup``.
+    # Discovery never sets it; keeping it on the canonical component means
+    # discovery and inspection share one component identity.
+    parsed: ParsedFile | None = None
 
 
 @dataclass(frozen=True)

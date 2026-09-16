@@ -37,8 +37,9 @@ class GraphEdge:
     target: str
     edge_type: str
     evidence: str = ""
-    # Explicit references are parser-backed. Inferred references are useful
-    # for reachability but should not be treated as equally strong evidence.
+    # Explicit references are parser-backed (frontmatter, tool lists, includes).
+    # Inferred references come from free-text mentions; reachability reports
+    # them as weaker evidence and callers can exclude them via min_confidence.
     confidence: float = 1.0
     evidence_kind: str = "explicit"
 
@@ -48,13 +49,14 @@ class ComponentGraph:
     nodes: dict[str, GraphNode] = field(default_factory=dict)
     edges: list[GraphEdge] = field(default_factory=list)
 
-    def edges_from(self, node_name: str) -> list[GraphEdge]:
-        return [e for e in self.edges if e.source == node_name]
+    def edges_from(self, node_name: str, *, min_confidence: float = 0.0) -> list[GraphEdge]:
+        return [e for e in self.edges if e.source == node_name and e.confidence >= min_confidence]
 
-    def edges_to(self, node_name: str) -> list[GraphEdge]:
-        return [e for e in self.edges if e.target == node_name]
+    def edges_to(self, node_name: str, *, min_confidence: float = 0.0) -> list[GraphEdge]:
+        return [e for e in self.edges if e.target == node_name and e.confidence >= min_confidence]
 
-    def reachable_from(self, node_name: str) -> set[str]:
+    def reachable_from(self, node_name: str, *, min_confidence: float = 0.0) -> set[str]:
+        """Nodes reachable from *node_name*; edges below *min_confidence* are not followed."""
         visited: set[str] = set()
         stack = [node_name]
         while stack:
@@ -62,7 +64,7 @@ class ComponentGraph:
             if current in visited:
                 continue
             visited.add(current)
-            for edge in self.edges_from(current):
+            for edge in self.edges_from(current, min_confidence=min_confidence):
                 if edge.target not in visited:
                     stack.append(edge.target)
         visited.discard(node_name)
