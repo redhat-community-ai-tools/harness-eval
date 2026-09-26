@@ -13,6 +13,7 @@ from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
+from harness_eval.rubric.output import rubric_issue_to_dict
 from harness_eval.rubric.types import RubricResult
 from harness_eval.utils.redact import redact_secrets
 
@@ -159,16 +160,7 @@ def eval_setup_review(
                 {
                     "component": rr.component_name,
                     "type": rr.component_type,
-                    "issues": [
-                        {
-                            "category": i.category,
-                            "description": i.description,
-                            "evidence": i.evidence,
-                            "suggestion": i.suggestion,
-                            "impact": i.impact,
-                        }
-                        for i in rr.issues
-                    ],
+                    "issues": [rubric_issue_to_dict(i) for i in rr.issues],
                     "summary": rr.summary,
                     "verdict": rr.verdict,
                 }

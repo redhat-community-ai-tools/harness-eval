@@ -15,6 +15,7 @@ from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ParsedComponent
 from harness_eval.inspection.types import AdjudicatedFinding, Finding, InspectionResult, Severity
 from harness_eval.output.metadata import EvalMetadata
+from harness_eval.rubric.output import rubric_issue_to_dict
 from harness_eval.utils.redact import redact_secrets
 
 
@@ -225,16 +226,7 @@ def _format_json_security(report: _SecurityReport) -> str:
             {
                 "component": rr.component_name,
                 "type": rr.component_type,
-                "issues": [
-                    {
-                        "category": i.category,
-                        "description": i.description,
-                        "evidence": i.evidence,
-                        "suggestion": i.suggestion,
-                        "impact": i.impact,
-                    }
-                    for i in rr.issues
-                ],
+                "issues": [rubric_issue_to_dict(i) for i in rr.issues],
             }
             for rr in report.rubric_results
         ]

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Preserve rubric issue severity in JSON review and security output.
+
 ## [7.16.0] - 2026-09-16
 
 ### Added
