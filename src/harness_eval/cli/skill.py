@@ -14,6 +14,7 @@ from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType, ScanLimits
 from harness_eval.output.metadata import EvalMetadata
+from harness_eval.rubric.output import format_rubric_issue_lines, rubric_issue_to_dict
 from harness_eval.utils.redact import redact_secrets
 
 
@@ -141,17 +142,7 @@ def eval_skill(
             output["context_findings"] = context_findings
         if rubric_result:
             output["rubric"] = {
-                "issues": [
-                    {
-                        "category": i.category,
-                        "description": i.description,
-                        "evidence": i.evidence,
-                        "suggestion": i.suggestion,
-                        "severity": i.severity,
-                        "impact": i.impact,
-                    }
-                    for i in rubric_result.issues
-                ],
+                "issues": [rubric_issue_to_dict(issue) for issue in rubric_result.issues],
                 "summary": rubric_result.summary,
                 "verdict": rubric_result.verdict,
             }
@@ -198,11 +189,8 @@ def eval_skill(
             if rubric_result.issues:
                 click.echo(format_section(f"Rubric Issues ({len(rubric_result.issues)} found)"))
                 for issue in rubric_result.issues:
-                    click.echo(f"  [{issue.category}] {issue.description}")
-                    click.echo(f"    Evidence: {issue.evidence}")
-                    click.echo(f"    Fix: {issue.suggestion}")
-                    if issue.impact:
-                        click.echo(f"    Impact: {issue.impact}")
+                    for line in format_rubric_issue_lines(issue, indent="  "):
+                        click.echo(line)
             else:
                 click.echo("\nRubric: No issues found.")
             if rubric_result.summary:

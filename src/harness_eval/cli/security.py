@@ -15,7 +15,7 @@ from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ParsedComponent
 from harness_eval.inspection.types import AdjudicatedFinding, Finding, InspectionResult, Severity
 from harness_eval.output.metadata import EvalMetadata
-from harness_eval.rubric.output import rubric_issue_to_dict
+from harness_eval.rubric.output import format_rubric_issue_lines, rubric_issue_to_dict
 from harness_eval.utils.redact import redact_secrets
 
 
@@ -300,11 +300,8 @@ def _format_terminal_security(report: _SecurityReport) -> None:
         for rr in report.rubric_results:
             click.echo(f"  {rr.component_type}/{rr.component_name}:")
             for issue in rr.issues:
-                click.echo(f"    [{issue.category}] {issue.description}")
-                click.echo(f"      Evidence: {issue.evidence}")
-                click.echo(f"      Fix: {issue.suggestion}")
-                if issue.impact:
-                    click.echo(f"      Impact: {issue.impact}")
+                for line in format_rubric_issue_lines(issue, indent="    "):
+                    click.echo(line)
         click.echo("")
 
     if report.skip_notices:

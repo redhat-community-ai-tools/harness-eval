@@ -13,9 +13,33 @@ from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
-from harness_eval.rubric.output import rubric_issue_to_dict
+from harness_eval.rubric.output import format_rubric_issue_lines, rubric_issue_to_dict
 from harness_eval.rubric.types import RubricResult
 from harness_eval.utils.redact import redact_secrets
+
+
+def _format_json_review(
+    setup_name: str,
+    component_count: int,
+    rubric_results: list[RubricResult],
+    metadata: EvalMetadata,
+) -> str:
+    output = {
+        "setup": setup_name,
+        "component_count": component_count,
+        "rubric": [
+            {
+                "component": rr.component_name,
+                "type": rr.component_type,
+                "issues": [rubric_issue_to_dict(issue) for issue in rr.issues],
+                "summary": rr.summary,
+                "verdict": rr.verdict,
+            }
+            for rr in rubric_results
+        ],
+        "metadata": metadata.to_dict(),
+    }
+    return json_mod.dumps(output, indent=2)
 
 
 @cli.command("harness-review")
@@ -153,22 +177,7 @@ def eval_setup_review(
     )
 
     if fmt == "json":
-        output = {
-            "setup": setup.name,
-            "component_count": len(setup.components),
-            "rubric": [
-                {
-                    "component": rr.component_name,
-                    "type": rr.component_type,
-                    "issues": [rubric_issue_to_dict(i) for i in rr.issues],
-                    "summary": rr.summary,
-                    "verdict": rr.verdict,
-                }
-                for rr in rubric_results
-            ],
-            "metadata": metadata.to_dict(),
-        }
-        click.echo(json_mod.dumps(output, indent=2))
+        click.echo(_format_json_review(setup.name, len(setup.components), rubric_results, metadata))
     else:
         from harness_eval.output.report import format_header
 
@@ -185,11 +194,8 @@ def eval_setup_review(
             if rr.issues:
                 click.echo(f"  {rr.component_type}/{rr.component_name}:")
                 for issue in rr.issues:
-                    click.echo(f"    [{issue.category}] {issue.description}")
-                    click.echo(f"      Evidence: {issue.evidence}")
-                    click.echo(f"      Fix: {issue.suggestion}")
-                    if issue.impact:
-                        click.echo(f"      Impact: {issue.impact}")
+                    for line in format_rubric_issue_lines(issue, indent="    "):
+                        click.echo(line)
             else:
                 click.echo(f"  {rr.component_type}/{rr.component_name}: no issues")
             if rr.summary:

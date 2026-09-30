@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
-- Preserve rubric issue severity in JSON review and security output.
+- Preserve rubric issue severity in review and security JSON, and show it in
+  terminal rubric output for review, security, and skill-review.
 
 ## [7.16.0] - 2026-09-16
 
