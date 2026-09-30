@@ -11,6 +11,7 @@ import click
 from harness_eval.cli import cli
 from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.config.presets import SECURITY
+from harness_eval.inspection.types import finding_data_field
 from harness_eval.output.metadata import EvalMetadata
 
 
@@ -120,6 +121,7 @@ def scan_skill(
                             "severity": d.severity.value,
                             "message": d.message,
                             **({"suggestion": d.suggestion} if d.suggestion else {}),
+                            **finding_data_field(d),
                         }
                         for d in r.diagnostics
                     ],

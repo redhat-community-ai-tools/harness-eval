@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Inspection findings keep the structured fields a rule already computed
+  (host, path, server, permission grant, and the rest) on `Finding.data`.
+  JSON and SARIF output include that object. The message text is unchanged.
+
 ### Fixed
 - Preserve rubric issue severity in review and security JSON, and show it in
   terminal rubric output for review, security, and skill-review.

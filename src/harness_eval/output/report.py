@@ -6,7 +6,7 @@ import json
 from collections import defaultdict
 
 from harness_eval.analysis.system import SystemReport
-from harness_eval.inspection.types import InspectionResult
+from harness_eval.inspection.types import InspectionResult, finding_data_field
 
 
 def _get_type_display(detected_tools: tuple[str, ...] = ()) -> dict[str, str]:
@@ -332,6 +332,7 @@ def _build_json_inspection(inspection_results: list[InspectionResult]) -> dict:
                         "file": d.location.file,
                         **({"line": d.location.start_line} if d.location.start_line else {}),
                         **({"suggestion": d.suggestion} if d.suggestion else {}),
+                        **finding_data_field(d),
                     }
                     for d in r.diagnostics
                 ],

@@ -13,7 +13,13 @@ from harness_eval.cli import cli
 from harness_eval.cli._helpers import emit_output, scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ParsedComponent
-from harness_eval.inspection.types import AdjudicatedFinding, Finding, InspectionResult, Severity
+from harness_eval.inspection.types import (
+    AdjudicatedFinding,
+    Finding,
+    InspectionResult,
+    Severity,
+    finding_data_field,
+)
 from harness_eval.output.metadata import EvalMetadata
 from harness_eval.rubric.output import format_rubric_issue_lines, rubric_issue_to_dict
 from harness_eval.utils.redact import redact_secrets
@@ -204,10 +210,11 @@ def _format_json_security(report: _SecurityReport) -> str:
         adj_by_msg = {af.finding.message: af for af in adj_for_comp}
         details = []
         for d in r.diagnostics:
-            detail: dict[str, str] = {
+            detail: dict[str, object] = {
                 "rule": d.rule_id,
                 "severity": d.severity.value,
                 "message": d.message,
+                **finding_data_field(d),
             }
             af = adj_by_msg.get(d.message)
             if af:

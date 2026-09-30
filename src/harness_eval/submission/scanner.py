@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.types import Finding, InspectionResult, Severity
+from harness_eval.inspection.types import Finding, InspectionResult, Severity, finding_data_field
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +81,7 @@ def _to_pipeline_finding(finding: Finding, submission_dir: Path) -> dict:
         "file_path": file_path,
         "category": _pipeline_category(finding.rule_id),
         "line": line,
+        **finding_data_field(finding),
     }
 
 

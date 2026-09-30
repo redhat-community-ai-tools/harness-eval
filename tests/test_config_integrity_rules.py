@@ -133,6 +133,11 @@ def test_endpoint_integrity(tmp_path: Path):
         and "creds" in msgs
         and "'loop'" not in msgs
     )
+    by_server = {x.data["server"]: x.data for x in d if x.data and "server" in x.data}
+    assert by_server["local"]["field"] == "command"
+    assert by_server["local"]["path"] == "./server.py"
+    assert by_server["remote"]["host"] == "evil.example"
+    assert "host" not in by_server["creds"]
 
 
 def _skill(tmp_path: Path) -> Path:

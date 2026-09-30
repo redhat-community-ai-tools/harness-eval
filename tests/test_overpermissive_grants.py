@@ -101,6 +101,8 @@ class TestOverpermissiveGrants:
         diags = _lint(p)
         assert len(diags) == 1
         assert "unrestricted shell" in diags[0].message
+        assert diags[0].data is not None
+        assert diags[0].data["entry"] == "Bash(*)"
 
     def test_flags_bare_bash(self, tmp_path: Path) -> None:
         assert len(_lint(_make_settings(tmp_path, ["Bash"]))) == 1
