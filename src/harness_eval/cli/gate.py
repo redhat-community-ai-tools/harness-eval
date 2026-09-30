@@ -9,6 +9,7 @@ import click
 
 from harness_eval.cli import cli
 from harness_eval.cli._helpers import emit_output, scan_limit_options, scan_limits_from
+from harness_eval.inspection.types import finding_data_field
 
 
 @cli.command("harness-gate")
@@ -107,6 +108,7 @@ def harness_gate(
                 "file": d.location.file,
                 "severity": d.severity.value,
                 "message": d.message,
+                **finding_data_field(d),
             }
             for d in findings
         ]

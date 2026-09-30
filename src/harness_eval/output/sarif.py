@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from harness_eval.inspection.types import Finding, InspectionResult, Severity
+from harness_eval.inspection.types import Finding, InspectionResult, Severity, finding_data_field
 from harness_eval.output.metadata import EvalMetadata
 
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
@@ -75,6 +75,9 @@ def _build_result(finding: Finding, rule_index: dict[str, int], scan_root: str) 
         result.setdefault("properties", {})["reachabilityEvidence"] = finding.reachability_evidence
     if finding.trigger_breadth:
         result.setdefault("properties", {})["triggerBreadth"] = finding.trigger_breadth
+    evidence = finding_data_field(finding)
+    if evidence:
+        result.setdefault("properties", {}).update(evidence)
     return result
 
 

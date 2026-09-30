@@ -56,6 +56,17 @@ class Finding:
     reachability_evidence: str | None = None
     trigger_breadth: str | None = None
     suggestion: str | None = None
+    # Structured fields the rule already computed (host, path, server, grant
+    # text, and so on). The message is the sentence; this is the same evidence
+    # in a form a caller can use without parsing that sentence.
+    data: dict[str, str | int] | None = None
+
+
+def finding_data_field(finding: Finding) -> dict[str, dict[str, str | int]]:
+    """JSON object to merge into a serialized finding. Empty when there is no data."""
+    if not finding.data:
+        return {}
+    return {"data": dict(finding.data)}
 
 
 @dataclass(frozen=True)

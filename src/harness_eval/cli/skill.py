@@ -13,6 +13,7 @@ from harness_eval.cli import cli
 from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType, ScanLimits
+from harness_eval.inspection.types import finding_data_field
 from harness_eval.output.metadata import EvalMetadata
 from harness_eval.utils.redact import redact_secrets
 
@@ -132,7 +133,12 @@ def eval_skill(
             "errors": result.error_count,
             "warnings": result.warning_count,
             "findings": [
-                {"rule": d.rule_id, "severity": d.severity.value, "message": d.message}
+                {
+                    "rule": d.rule_id,
+                    "severity": d.severity.value,
+                    "message": d.message,
+                    **finding_data_field(d),
+                }
                 for d in result.diagnostics
             ],
         }

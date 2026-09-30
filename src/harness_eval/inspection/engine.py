@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -145,6 +146,7 @@ def _make_report_fn(
                 category=category,
                 fix=descriptor.fix if fixable else None,
                 suggestion=descriptor.suggestion or default_suggestion,
+                data=dict(descriptor.data) if descriptor.data else None,
             )
         )
 
@@ -820,17 +822,11 @@ def _inspect_setup(
                 if d.category in (RuleCategory.SECURITY, RuleCategory.CROSS_COMPONENT):
                     reach = compute_reachability(graph, d.location.file, skill_descriptions)
                     new_diags.append(
-                        Finding(
-                            rule_id=d.rule_id,
-                            severity=d.severity,
-                            message=d.message,
-                            location=d.location,
-                            category=d.category,
-                            fix=d.fix,
+                        replace(
+                            d,
                             reachability="reachable" if reach.reachable else "unreachable",
                             reachability_evidence=reach.evidence_kind,
                             trigger_breadth=reach.trigger_breadth,
-                            suggestion=d.suggestion,
                         )
                     )
                 else:

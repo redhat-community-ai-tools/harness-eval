@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Inspection findings keep the structured fields a rule already computed
+  (host, path, server, permission grant, and the rest) on `Finding.data`.
+  JSON and SARIF output include that object. The message text is unchanged.
+
 ## [7.16.0] - 2026-09-16
 
 ### Added

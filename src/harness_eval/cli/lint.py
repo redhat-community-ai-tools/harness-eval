@@ -11,6 +11,7 @@ import click
 from harness_eval.cli import cli
 from harness_eval.cli._helpers import emit_output, scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
+from harness_eval.inspection.types import finding_data_field
 from harness_eval.output.metadata import EvalMetadata
 
 
@@ -218,7 +219,12 @@ def eval_setup_lint(
                         "errors": r.error_count,
                         "warnings": r.warning_count,
                         "findings": [
-                            {"rule": d.rule_id, "severity": d.severity.value, "message": d.message}
+                            {
+                                "rule": d.rule_id,
+                                "severity": d.severity.value,
+                                "message": d.message,
+                                **finding_data_field(d),
+                            }
                             for d in r.diagnostics
                         ],
                     }
