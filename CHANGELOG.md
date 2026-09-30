@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.16.1] - 2026-09-30
+
 ### Added
 - Inspection findings keep the structured fields a rule already computed
   (host, path, server, permission grant, and the rest) on `Finding.data`.
