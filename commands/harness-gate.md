@@ -1,5 +1,5 @@
 ---
-description: "Gate the agent setup on corpus-validated rules (gating tier). Fast, no LLM, exits nonzero on any finding. Suitable for CI and pre-commit"
+description: "Gate the agent setup on corpus-validated rules (gating tier). Fast, no LLM, exits nonzero on errors and warnings. Info does not fail. Suitable for CI and pre-commit"
 ---
 
 # Harness Gate

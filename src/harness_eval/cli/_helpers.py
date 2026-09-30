@@ -20,6 +20,15 @@ _LIMIT_OPTIONS: tuple[tuple[str, int, str], ...] = (
 )
 
 
+def exclude_option(func: _F) -> _F:
+    """Attach ``--exclude``, shared by every command that discovers a setup."""
+    return click.option(
+        "--exclude",
+        multiple=True,
+        help="Glob patterns for files/dirs to exclude from scanning (repeatable).",
+    )(func)
+
+
 def scan_limit_options(func: _F) -> _F:
     """Attach the scan-limit options shared by every command that discovers a setup.
 

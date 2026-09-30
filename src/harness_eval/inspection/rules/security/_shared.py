@@ -158,6 +158,7 @@ def scan_lines_for_patterns(
                         data={"label": label, "line": str(i + 1)},
                         location=Location(file=file_path, start_line=i + 1),
                         severity_override=severity_override,
+                        contextual_downgrade=severity_override is not None,
                     )
                 )
                 break
@@ -179,6 +180,8 @@ def scan_lines_for_credential_patterns(
 
     When code_block_msg is provided, lines inside code fences are skipped.
     When suggestion is provided, it is attached to every reported finding.
+    Every pattern that matches is reported. A negation word before a match
+    ("never", "do not") lowers that match to a warning.
     """
     lines = content.split("\n")
     in_code_fence = False
@@ -200,14 +203,15 @@ def scan_lines_for_credential_patterns(
                 else:
                     pattern = item
                     label = None
-                match = pattern.search(line)
-                if match:
+                for match in pattern.finditer(line):
+                    negated = _NEGATION_RE.search(line[: match.start()]) is not None
                     context.report(
                         ReportDescriptor(
                             message_id=message_id,
                             data={"match": label or match.group(0), "line": str(i + 1)},
                             location=Location(file=file_path, start_line=i + 1),
                             suggestion=suggestion,
+                            severity_override=Severity.WARNING if negated else None,
+                            contextual_downgrade=negated,
                         )
                     )
-                    break

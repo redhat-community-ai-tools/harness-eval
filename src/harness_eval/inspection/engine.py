@@ -133,10 +133,17 @@ def _make_report_fn(
         template = meta_messages.get(descriptor.message_id, descriptor.message_id)
         message = _interpolate(template, descriptor.data)
         override = descriptor.severity_override
-        if explicitly_configured and override and override != Severity.INFO:
-            effective_severity = severity
-        else:
-            effective_severity = override or severity
+        # A preset can raise a finding's own severity. It cannot raise a
+        # contextual downgrade: "never read ~/.ssh" stays a warning when the
+        # preset sets the rule to error. Info (a code fence, an example) already
+        # stays info.
+        config_can_raise = (
+            explicitly_configured
+            and override is not None
+            and override != Severity.INFO
+            and not descriptor.contextual_downgrade
+        )
+        effective_severity = severity if config_can_raise or override is None else override
         findings.append(
             Finding(
                 rule_id=rule_id,
