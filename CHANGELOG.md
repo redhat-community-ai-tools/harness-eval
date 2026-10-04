@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.17.0] - 2026-10-04
+
 ### Added
 - Current Codex, Copilot, Gemini CLI, OpenCode (V1 and V2), Windsurf/Devin, Cline,
   Cursor, Agent Skills, MCP, JSONC, and TOML discovery/configuration support.
