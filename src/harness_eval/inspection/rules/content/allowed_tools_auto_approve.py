@@ -85,10 +85,19 @@ class AllowedToolsAutoApprove:
         skill = context.skill
         if skill is None:
             return
+        # Auto-approval is a Claude Code interpretation of this experimental
+        # portability field; other clients use different permission models.
+        if context.source_tool not in {
+            None,
+            "claude",
+        } and "/.claude/skills/" not in skill.skill_md_path.replace("\\", "/"):
+            return
         if not skill.frontmatter:
             return
 
         allowed = skill.frontmatter.get("allowed-tools")
+        if isinstance(allowed, str):
+            allowed = [part for part in allowed.replace(",", " ").split() if part]
         if not allowed or not isinstance(allowed, list):
             return
 
