@@ -1,6 +1,6 @@
 # Harness Gate
 
-Gate the agent setup on corpus-validated rules (gating tier). Fast, no LLM, exits nonzero on any finding. Suitable for CI and pre-commit.
+Gate the agent setup on corpus-validated rules (gating tier). Fast, no LLM, exits nonzero on errors and warnings. Info does not fail. Suitable for CI and pre-commit.
 
 ## Instructions
 
@@ -10,7 +10,7 @@ Gate the agent setup on corpus-validated rules (gating tier). Fast, no LLM, exit
 uvx --from harness-eval harness-eval harness-gate .
 ```
 
-This runs only the gating-tier rules (validated at >=97% precision on re-derived corpus findings) and exits 1 on any finding.
+This runs only the gating-tier rules (validated at >=97% precision on re-derived corpus findings) and exits 1 on any error or warning. Info findings are printed and do not fail.
 
 Useful flags:
 - `--include-provisional` — also run provisional-tier rules.
