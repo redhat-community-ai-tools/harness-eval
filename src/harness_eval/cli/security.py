@@ -339,6 +339,12 @@ def _format_terminal_security(report: _SecurityReport) -> None:
     is_flag=True,
     help="Also run LLM-based semantic security review (requires API key).",
 )
+@click.option(
+    "--cve",
+    "cve_lookup",
+    is_flag=True,
+    help="Query OSV.dev for dependency vulnerabilities (requires network access).",
+)
 @click.option("--provider", type=click.Choice(["gemini", "anthropic"]), default="gemini")
 @click.option("--model", default=None, help="LLM model for semantic security review.")
 @click.option(
@@ -386,6 +392,7 @@ def eval_setup_security(
     fmt: str,
     output_path: str | None,
     review: bool,
+    cve_lookup: bool,
     provider: str,
     model: str | None,
     fail_on_error: bool,
@@ -419,7 +426,10 @@ def eval_setup_security(
         exclude=exclude,
         limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
-    results = inspect_setup(setup, SECURITY)
+    security_rules = dict(SECURITY)
+    if cve_lookup:
+        security_rules["security/cve-lookup"] = "warning"
+    results = inspect_setup(setup, security_rules)
 
     if baseline_path:
         import json as _json_bl

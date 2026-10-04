@@ -99,6 +99,8 @@ def eval_setup_review(
         ComponentType.CLAUDE_MD: "claude_md",
         ComponentType.HOOKS: "hooks",
         ComponentType.AGENT: "agent",
+        ComponentType.MCP_CONFIG: "mcp_config",
+        ComponentType.CONFIG: "config",
     }
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -120,8 +122,11 @@ def eval_setup_review(
             large.append(item)
 
     batches: list[list[tuple[str, str, str]]] = []
-    for i in range(0, len(small), 3):
-        batches.append(small[i : i + 3])
+    # Rubrics are component-type-specific, so never mix types in one prompt.
+    for component_type in dict.fromkeys(item[0] for item in small):
+        typed = [item for item in small if item[0] == component_type]
+        for i in range(0, len(typed), 3):
+            batches.append(typed[i : i + 3])
     for item in large:
         batches.append([item])
 
