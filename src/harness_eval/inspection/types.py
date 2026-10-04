@@ -202,8 +202,22 @@ class ParsedMcpConfig:
     tokens: int = 0
 
 
+@dataclass
+class ParsedConfig:
+    file_path: str
+    raw_content: str
+    parse_errors: list[str] = field(default_factory=list)
+    tokens: int = 0
+
+
 ParsedFile = (
-    ParsedSkill | ParsedCommand | ParsedClaudeMd | ParsedHooks | ParsedAgent | ParsedMcpConfig
+    ParsedSkill
+    | ParsedCommand
+    | ParsedClaudeMd
+    | ParsedHooks
+    | ParsedAgent
+    | ParsedMcpConfig
+    | ParsedConfig
 )
 
 
@@ -334,7 +348,7 @@ class RuleContext:
             return t.raw_content, t.command_md_path
         if isinstance(t, ParsedAgent):
             return t.raw_content, t.agent_md_path
-        if isinstance(t, (ParsedClaudeMd, ParsedHooks, ParsedMcpConfig)):
+        if isinstance(t, (ParsedClaudeMd, ParsedHooks, ParsedMcpConfig, ParsedConfig)):
             return t.raw_content, t.file_path
         if self.skill is not None:
             return self.skill.raw_content, self.skill.skill_md_path
@@ -359,6 +373,10 @@ class RuleContext:
     @property
     def mcp_config(self) -> ParsedMcpConfig | None:
         return self.target if isinstance(self.target, ParsedMcpConfig) else None
+
+    @property
+    def config(self) -> ParsedConfig | None:
+        return self.target if isinstance(self.target, ParsedConfig) else None
 
 
 @dataclass

@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from harness_eval.core.types import ComponentType
-from harness_eval.data import load_capabilities
 from harness_eval.inspection.rules.security._shared import strip_code_blocks
 
 if TYPE_CHECKING:
@@ -25,24 +24,19 @@ class CrossComponentFlow:
     meta = RuleMeta(
         id="security/cross-component-flow",
         scope="SETUP",
-        default_severity=Severity.ERROR,
+        default_severity=Severity.WARNING,
         fixable=False,
         description="Detect security issues that span component boundaries",
         category=RuleCategory.CROSS_COMPONENT,
         messages={
             "xc_exfiltration": (
                 "Cross-component exfiltration: '{{source}}' has credential/env access"
-                " and delegates to '{{target}}' which has network capability."
-                " Sensitive data may flow across this boundary."
-            ),
-            "xc_confused_deputy": (
-                "Confused deputy: agent '{{agent}}' disallows '{{tool}}'"
-                " but references skill '{{skill}}' which uses {{capability}}"
-                " capability (in {{files}})"
+                " and explicitly reaches '{{target}}', which can transmit data."
+                " Review whether sensitive values can cross this boundary."
             ),
             "xc_mcp_phantom": (
                 "Skill '{{skill}}' calls MCP tool '{{tool_call}}'"
-                " but server '{{server}}' is not configured in .mcp.json"
+                " but server '{{server}}' is not configured in any discovered MCP configuration"
             ),
         },
         target_type=ComponentType.SKILL,
@@ -65,7 +59,6 @@ class CrossComponentFlow:
             return
 
         self._check_exfiltration(context, graph)
-        self._check_confused_deputy(context, graph)
         self._check_mcp_phantom(context, graph)
 
     def _check_exfiltration(self, context: RuleContext, graph: ComponentGraph) -> None:
@@ -81,13 +74,18 @@ class CrossComponentFlow:
             if not has_creds:
                 continue
 
-            reachable = graph.reachable_from(node.name)
+            # Only parser-backed references are strong enough for a security
+            # finding. Free-text mention edges are intentionally excluded.
+            reachable = graph.reachable_from(node.name, min_confidence=1.0)
             for target_name in reachable:
                 target = graph.nodes.get(target_name)
-                if not target or target.component_type != ComponentType.SKILL:
+                if not target:
                     continue
                 target_caps = set(target.detected_capabilities.keys())
-                if target_caps & network_caps:
+                can_transmit = bool(target_caps & network_caps) or (
+                    target.component_type == ComponentType.MCP_CONFIG
+                )
+                if can_transmit:
                     context.report(
                         ReportDescriptor(
                             message_id="xc_exfiltration",
@@ -102,62 +100,12 @@ class CrossComponentFlow:
                         )
                     )
 
-    def _check_confused_deputy(self, context: RuleContext, graph: ComponentGraph) -> None:
-        caps = load_capabilities()
-        tool_to_cap = caps.tool_to_capability()
-
-        for node in graph.nodes.values():
-            if node.component_type != ComponentType.AGENT:
-                continue
-            if not node.disallowed_tools:
-                continue
-
-            disallowed_caps: dict[str, str] = {}
-            for tool in node.disallowed_tools:
-                tool_lower = tool.lower().strip()
-                for cap in tool_to_cap.get(tool_lower, set()):
-                    disallowed_caps[cap] = tool
-
-            if not disallowed_caps:
-                continue
-
-            agent_key = f"agent:{node.name}"
-            for edge in graph.edges_from(agent_key):
-                target = graph.nodes.get(edge.target)
-                if not target or target.component_type != ComponentType.SKILL:
-                    continue
-
-                target_caps = target.detected_capabilities
-                for cap, tool_name in disallowed_caps.items():
-                    if cap in target_caps:
-                        files = ", ".join(sorted(set(target_caps[cap]))[:3])
-                        context.report(
-                            ReportDescriptor(
-                                message_id="xc_confused_deputy",
-                                data={
-                                    "agent": node.name,
-                                    "tool": tool_name,
-                                    "skill": target.name,
-                                    "capability": cap,
-                                    "files": files,
-                                },
-                                location=Location(file=node.file_path, start_line=1),
-                                suggestion=(
-                                    "Remove the capability from the referenced skill,"
-                                    " or adjust the agent's disallowed tools."
-                                ),
-                            )
-                        )
-
     def _check_mcp_phantom(self, context: RuleContext, graph: ComponentGraph) -> None:
         configured_servers = {
             node.name
             for node in graph.nodes.values()
             if node.component_type == ComponentType.MCP_CONFIG
         }
-
-        if not configured_servers and not any(e.edge_type == "uses_mcp" for e in graph.edges):
-            return
 
         for skill in context.all_skills:
             if not skill.body:
