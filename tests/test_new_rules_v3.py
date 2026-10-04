@@ -21,6 +21,7 @@ class TestDeprecatedRules:
             _warn_unknown_config_rules({"mcp/duplicate-server": "warning"})
         assert "mcp/duplicate-server" in caplog.text
         assert "mcp/json-duplicate-keys" in caplog.text
+        assert "now covered by" not in caplog.text
 
 
 class TestMcpSuspiciousEndpoint:

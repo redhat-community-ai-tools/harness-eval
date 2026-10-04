@@ -118,10 +118,10 @@ def get_default_catalog() -> RuleCatalog:
 
 
 # Rule IDs that have been removed. A config or suppression that still references
-# one gets a deprecation warning (pointing at the replacement) instead of the
-# generic "unknown rule" warning, and never an error.
+# one gets a deprecation warning explaining the migration instead of the generic
+# "unknown rule" warning, and never an error.
 DEPRECATED_RULES: dict[str, str] = {
-    "mcp/duplicate-server": "mcp/json-duplicate-keys",
+    "mcp/duplicate-server": "use 'mcp/json-duplicate-keys' instead",
     "agent/model-specified": "Agents inherit a model when the field is omitted.",
     "claude-md/exists": "Discovery cannot lint a file that does not exist.",
     "content/mcp-skill-alignment": "MCP tools need not be referenced by a skill.",
@@ -136,8 +136,8 @@ DEPRECATED_RULES: dict[str, str] = {
     "security/mcp-least-privilege": (
         "Agent Skills allowed-tools is client-specific and cannot be inferred from script imports."
     ),
-    "quality/scope-overreach": "quality/scope-grab-description",
-    "quality/trigger-manipulation": "quality/scope-grab-description",
+    "quality/scope-overreach": "use 'quality/scope-grab-description' instead",
+    "quality/trigger-manipulation": "use 'quality/scope-grab-description' instead",
 }
 
 

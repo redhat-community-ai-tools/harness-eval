@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Current Codex, Copilot, Gemini CLI, OpenCode V2, Windsurf/Devin, Cline,
   Cursor, Agent Skills, MCP, JSONC, and TOML discovery/configuration support.
-- Five high-precision rules for client settings, dangerous autonomy,
+- Five deterministic rules for client settings, dangerous autonomy,
   instruction activation, disabled components, and duplicate skill IDs.
 
 ### Changed
@@ -16,9 +16,18 @@ All notable changes to this project will be documented in this file.
   registry now contains 99 rules.
 - LLM review is client-neutral, reviews settings and MCP configurations,
   isolates untrusted component text, uses type-specific batches, validates
-  model output, and avoids duplicating deterministic checks.
+  model output (including common severity aliases), escapes prompt delimiters
+  in untrusted values, and avoids duplicating deterministic checks.
 - OSV CVE lookup is networked and opt-in through `harness-security --cve`;
-  default deterministic scans remain offline.
+  default deterministic scans remain offline. When enabled, CVE findings keep
+  error-level security-gate semantics for `--fail-on-error`.
+- `security/cross-component-flow` is advisory after its precision calibration,
+  and `cross/multi-assistant-drift` remains advisory because it is a similarity
+  heuristic. Three new intent-dependent rules (`config/dangerous-autonomy`,
+  `cross/config-component-conflict`, and `cross/duplicate-skill-id`) are also
+  advisory rather than build-gating until corpus precision evidence exists.
+- Deprecated-rule messages now provide an accurate migration explanation rather
+  than always claiming a removed rule has a successor rule ID.
 
 ## [7.16.1] - 2026-09-30
 

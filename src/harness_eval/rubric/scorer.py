@@ -24,6 +24,14 @@ _SUMMARY_RE = re.compile(r"SUMMARY:\s*(.+)")
 _VERDICT_RE = re.compile(r"VERDICT:\s*(\S+)")
 
 _JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n\s*```", re.DOTALL)
+_SEVERITY_ALIASES = {
+    "critical": "error",
+    "high": "error",
+    "medium": "warning",
+    "moderate": "warning",
+    "low": "info",
+    "minor": "info",
+}
 
 
 class RubricChecker:
@@ -158,12 +166,17 @@ class RubricChecker:
         )
 
     @staticmethod
+    def _normalise_severity(value: object) -> str:
+        severity = str(value).lower().strip()
+        return _SEVERITY_ALIASES.get(severity, severity)
+
+    @staticmethod
     def _validated_json_issue(item: object, categories: list[IssueCategory]) -> RubricIssue | None:
         if not isinstance(item, dict):
             return None
         allowed = {category.name for category in categories}
         category = str(item.get("category", ""))
-        severity = str(item.get("severity", "warning")).lower()
+        severity = RubricChecker._normalise_severity(item.get("severity", "warning"))
         description = str(item.get("description", "")).strip()
         evidence = str(item.get("evidence", "")).strip()
         if category not in allowed or severity not in {"error", "warning", "info"}:
@@ -260,7 +273,7 @@ class RubricChecker:
                     RubricIssue(
                         description=impact_match.group(1).strip(),
                         category=impact_match.group(2).strip(),
-                        severity=impact_match.group(3).strip().lower(),
+                        severity=self._normalise_severity(impact_match.group(3)),
                         evidence=impact_match.group(4).strip(),
                         suggestion=impact_match.group(5).strip(),
                         impact=impact_match.group(6).strip(),
@@ -274,7 +287,7 @@ class RubricChecker:
                     RubricIssue(
                         description=issue_match.group(1).strip(),
                         category=issue_match.group(2).strip(),
-                        severity=issue_match.group(3).strip().lower(),
+                        severity=self._normalise_severity(issue_match.group(3)),
                         evidence=issue_match.group(4).strip(),
                         suggestion=issue_match.group(5).strip(),
                     )

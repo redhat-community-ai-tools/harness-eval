@@ -21,9 +21,9 @@ if TYPE_CHECKING:
 class DuplicateSkillId:
     meta = RuleMeta(
         id="cross/duplicate-skill-id",
-        tier="gating",
+        tier="advisory",
         scope="SETUP",
-        default_severity=Severity.ERROR,
+        default_severity=Severity.WARNING,
         fixable=False,
         description="Detect ambiguous duplicate skill IDs across supported discovery roots",
         category=RuleCategory.CROSS_COMPONENT,

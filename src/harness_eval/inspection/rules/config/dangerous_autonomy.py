@@ -15,9 +15,9 @@ from harness_eval.inspection.types import (
 class ConfigDangerousAutonomy:
     meta = RuleMeta(
         id="config/dangerous-autonomy",
-        tier="gating",
+        tier="advisory",
         scope="FILE",
-        default_severity=Severity.ERROR,
+        default_severity=Severity.WARNING,
         fixable=False,
         description="Detect explicit project settings that remove approval and containment together",
         category=RuleCategory.SECURITY,

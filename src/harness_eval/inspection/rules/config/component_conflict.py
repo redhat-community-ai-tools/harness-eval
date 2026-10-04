@@ -47,9 +47,9 @@ def _last_opencode_effect(rules: list[Any], action: str, resource: str) -> str |
 class ConfigComponentConflict:
     meta = RuleMeta(
         id="cross/config-component-conflict",
-        tier="gating",
+        tier="advisory",
         scope="SETUP",
-        default_severity=Severity.ERROR,
+        default_severity=Severity.WARNING,
         fixable=False,
         description="Detect configured components made unreachable by settings in the same setup",
         category=RuleCategory.CROSS_COMPONENT,

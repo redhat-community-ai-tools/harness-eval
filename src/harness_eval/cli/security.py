@@ -428,7 +428,9 @@ def eval_setup_security(
     )
     security_rules = dict(SECURITY)
     if cve_lookup:
-        security_rules["security/cve-lookup"] = "warning"
+        # Opting into the networked OSV check must preserve security-gate
+        # semantics: actionable CVE findings participate in --fail-on-error.
+        security_rules["security/cve-lookup"] = "error"
     results = inspect_setup(setup, security_rules)
 
     if baseline_path:

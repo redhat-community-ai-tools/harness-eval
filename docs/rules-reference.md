@@ -81,7 +81,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `command/script-exists` | advisory | FILE_FS |
 | `command/shadows-builtin` | advisory | FILE |
 | `command/skill-overlap` | advisory | PAIRWISE |
-| `config/dangerous-autonomy` | gating | FILE |
+| `config/dangerous-autonomy` | advisory | FILE |
 | `config/valid-structure` | gating | FILE |
 | `content/activation-valid` | gating | FILE |
 | `content/allowed-tools-auto-approve` | advisory | FILE |
@@ -92,9 +92,9 @@ and verified against the registry in CI. Do not edit it by hand.
 | `content/hardcoded-machine-path` | gating | FILE |
 | `content/token-budget` | advisory | FILE |
 | `content/total-description-budget` | advisory | SETUP |
-| `cross/config-component-conflict` | gating | SETUP |
+| `cross/config-component-conflict` | advisory | SETUP |
 | `cross/config-instruction-conflict` | advisory | PAIRWISE |
-| `cross/duplicate-skill-id` | gating | SETUP |
+| `cross/duplicate-skill-id` | advisory | SETUP |
 | `cross/multi-assistant-drift` | advisory | PAIRWISE |
 | `cross/overpermissive-grants` | gating | FILE |
 | `frontmatter/description-quality` | advisory | FILE |

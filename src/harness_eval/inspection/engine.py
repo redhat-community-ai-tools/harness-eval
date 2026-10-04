@@ -671,7 +671,7 @@ def _warn_unknown_config_rules(
         _warned_config_rules.add(rule_id)
         if rule_id in DEPRECATED_RULES:
             logger.warning(
-                "Config references removed rule '%s'; it is now covered by '%s'.",
+                "Config references removed rule '%s': %s.",
                 rule_id,
                 DEPRECATED_RULES[rule_id],
             )
