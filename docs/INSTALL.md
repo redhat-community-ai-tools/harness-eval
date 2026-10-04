@@ -16,7 +16,7 @@ pip install harness-eval[llm,tiktoken]  # everything
 Run:
 
 ```bash
-harness-eval harness-lint .                         # deterministic lint (108 rules)
+harness-eval harness-lint .                         # deterministic lint (99 rules)
 harness-eval harness-lint . --rules-from-target     # also load YAML from <path>/.harness-eval/rules
 harness-eval harness-lint . --watch                 # re-run automatically on file changes
 harness-eval harness-lint . --fail-on-error         # exit code 1 on errors (CI gate)
@@ -29,10 +29,11 @@ harness-eval harness-lint . --max-total-bytes 500000000 --max-files 200000
 harness-eval harness-gate .                         # gating-tier rules only; exits 1 on any finding, no LLM
 harness-eval harness-review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
 harness-eval harness-security .                     # deterministic security scan
+harness-eval harness-security . --cve               # add networked OSV vulnerability lookup
 harness-eval harness-security . --review            # security scan + LLM semantic review (requires [llm] extra)
 harness-eval harness-security . --fail-on-warning   # exit code 1 on any security finding
 harness-eval skill-review ./skills/my-skill --context . --rubric   # deep-evaluate one skill (requires [llm] extra)
-harness-eval rules                          # list all 108 rules
+harness-eval rules                          # list all 99 rules
 harness-eval rules --category security      # list security rules only
 harness-eval rules --target hooks           # list rules that apply to hooks
 harness-eval rules --format json            # machine-readable rule list
@@ -96,8 +97,8 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
         with:
           path: "."              # directories to scan, one per line (default: repo root)
           preset: "recommended"  # recommended, strict, security, or pre-workflow
-          security-gate: "true"  # run security checks (20 rules)
-          lint-gate: "true"      # run lint checks (108 rules)
+          security-gate: "true"  # run security checks (19 rules)
+          lint-gate: "true"      # run lint checks (99 rules)
           lint-fail-on: "error"  # "error" (default) or "warning" (strict)
           sarif: "true"          # inline PR annotations via Code Scanning
           comment: "true"        # post summary comment on PRs

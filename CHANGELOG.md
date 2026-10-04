@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Current Codex, Copilot, Gemini CLI, OpenCode V2, Windsurf/Devin, Cline,
+  Cursor, Agent Skills, MCP, JSONC, and TOML discovery/configuration support.
+- Five high-precision rules for client settings, dangerous autonomy,
+  instruction activation, disabled components, and duplicate skill IDs.
+
+### Changed
+- Audited all deterministic rules against current official specifications:
+  14 speculative or obsolete rules are deprecated, 30 are updated, and the
+  registry now contains 99 rules.
+- LLM review is client-neutral, reviews settings and MCP configurations,
+  isolates untrusted component text, uses type-specific batches, validates
+  model output, and avoids duplicating deterministic checks.
+- OSV CVE lookup is networked and opt-in through `harness-security --cve`;
+  default deterministic scans remain offline.
+
 ## [7.16.1] - 2026-09-30
 
 ### Added
