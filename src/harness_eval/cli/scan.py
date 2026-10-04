@@ -9,8 +9,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
-from harness_eval.config.presets import SECURITY
+from harness_eval.cli._helpers import exclude_option, scan_limit_options, scan_limits_from
 from harness_eval.inspection.types import finding_data_field
 from harness_eval.output.metadata import EvalMetadata
 
@@ -20,12 +19,14 @@ from harness_eval.output.metadata import EvalMetadata
 @click.option("--format", "fmt", type=click.Choice(["terminal", "json"]), default="terminal")
 @click.option("--fail-on-error", is_flag=True, help="Exit code 1 if any errors are found.")
 @click.option("--fail-on-warning", is_flag=True, help="Exit code 1 if any findings are found.")
+@exclude_option
 @scan_limit_options
 def scan_skill(
     path: str,
     fmt: str,
     fail_on_error: bool,
     fail_on_warning: bool,
+    exclude: tuple[str, ...],
     max_file_bytes: int,
     max_total_bytes: int,
     max_files: int,
@@ -37,15 +38,17 @@ def scan_skill(
     your project. Combines lint + security checks in one pass.
     """
     t0 = time.monotonic()
-    from harness_eval.config.presets import RECOMMENDED
+    from harness_eval.config.presets import RECOMMENDED, SECURITY
     from harness_eval.core.setup import discover_setup
     from harness_eval.inspection.engine import inspect_setup
+    from harness_eval.inspection.merge import merge_inspection_results
 
     target = Path(path).resolve()
 
     setup = discover_setup(
         name=target.name,
         path=str(target),
+        exclude=exclude,
         limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
 
@@ -53,36 +56,10 @@ def scan_skill(
         click.echo(f"No agent components found in {path}.", err=True)
         raise SystemExit(1)
 
-    lint_results = inspect_setup(setup, RECOMMENDED)
-    security_results = inspect_setup(setup, SECURITY)
-
-    _SEV_RANK = {"error": 2, "warning": 1, "info": 0}
-    seen_keys: set[tuple[str, str]] = set()
-    merged = []
-    for r in [*lint_results, *security_results]:
-        key = (r.target_type, r.target_name)
-        if key in seen_keys:
-            existing = next(m for m in merged if (m.target_type, m.target_name) == key)
-            existing_by_rule = {d.rule_id: d for d in existing.diagnostics}
-            for d in r.diagnostics:
-                prev = existing_by_rule.get(d.rule_id)
-                if prev is None:
-                    existing.diagnostics.append(d)
-                    existing_by_rule[d.rule_id] = d
-                elif _SEV_RANK.get(d.severity.value, 0) > _SEV_RANK.get(prev.severity.value, 0):
-                    existing.diagnostics[existing.diagnostics.index(prev)] = d
-                    existing_by_rule[d.rule_id] = d
-            for rr in r.rules_run:
-                if rr.rule_id not in {x.rule_id for x in existing.rules_run}:
-                    existing.rules_run.append(rr)
-        else:
-            seen_keys.add(key)
-            merged.append(r)
-
-    for r in merged:
-        r.error_count = sum(1 for d in r.diagnostics if d.severity.value == "error")
-        r.warning_count = sum(1 for d in r.diagnostics if d.severity.value == "warning")
-        r.info_count = sum(1 for d in r.diagnostics if d.severity.value == "info")
+    merged = merge_inspection_results(
+        inspect_setup(setup, RECOMMENDED),
+        inspect_setup(setup, SECURITY),
+    )
 
     total_errors = sum(r.error_count for r in merged)
     total_warnings = sum(r.warning_count for r in merged)

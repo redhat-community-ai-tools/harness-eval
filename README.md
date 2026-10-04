@@ -15,7 +15,7 @@ Most tools test whether a skill produces correct output. This one checks the set
 ```bash
 pip install harness-eval
 harness-eval harness-lint .                    # 99 deterministic rules, fully offline
-harness-eval harness-gate .                     # validated (gating-tier) rules only; exits 1 on any finding, no LLM
+harness-eval harness-gate .                     # validated (gating-tier) rules only; exits 1 on errors and warnings, no LLM
 harness-eval harness-security .                # security scan
 harness-eval skill-verify ./downloaded-skill   # SAFE / CAUTION / UNSAFE before you install
 ```
@@ -62,7 +62,7 @@ See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tie
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
 | `harness-lint` | 99 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. YAML from the scan target loads only with `--rules-from-target`. | No |
-| `harness-gate` | Validated gating-tier rules only. Exits 1 on any finding. Never loads LLM extras or target YAML. | No |
+| `harness-gate` | Validated gating-tier rules only. Exits 1 on any error or warning. Info is printed and does not fail. Never loads LLM extras or target YAML. | No |
 | `harness-security` | Security rules + YARA, opt-in OSV lookup (`--cve`), and optional semantic review. SAFE/CAUTION/UNSAFE. | Default: no. `--cve` and `--review`: yes. |
 | `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
 | `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |

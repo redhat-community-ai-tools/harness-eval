@@ -9,7 +9,12 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import emit_output, scan_limit_options, scan_limits_from
+from harness_eval.cli._helpers import (
+    emit_output,
+    exclude_option,
+    scan_limit_options,
+    scan_limits_from,
+)
 from harness_eval.core.setup import discover_setup
 from harness_eval.inspection.types import finding_data_field
 from harness_eval.output.metadata import EvalMetadata
@@ -79,11 +84,7 @@ from harness_eval.output.metadata import EvalMetadata
     default=None,
     help="Path to baseline JSON file. Suppress baselined findings.",
 )
-@click.option(
-    "--exclude",
-    multiple=True,
-    help="Glob patterns for files/dirs to exclude from scanning (repeatable).",
-)
+@exclude_option
 @click.option(
     "--rules-from-target",
     is_flag=True,

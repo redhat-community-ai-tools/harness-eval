@@ -26,7 +26,7 @@ The CI runs 5 jobs: lint, typecheck, test, security gate, lint gate. All must pa
 ```bash
 uv run ruff format src/ tests/ && uv run ruff check src/ tests/ && uv run pytest tests/ -q
 uv run harness-eval harness-security . --fail-on-error      # security gate: errors block (warnings are informational)
-uv run harness-eval harness-gate .                          # gating-tier integrity rules; exits 1 on any finding
+uv run harness-eval harness-gate .                          # gating-tier integrity rules; exits 1 on errors and warnings
 uv run harness-eval harness-lint . --fail-on-error          # lint: errors block, advisory findings do not
 ```
 

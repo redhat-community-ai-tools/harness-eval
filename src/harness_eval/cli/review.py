@@ -9,7 +9,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
+from harness_eval.cli._helpers import exclude_option, scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
@@ -58,6 +58,7 @@ def _format_json_review(
     is_flag=True,
     help="Recursively search for agent configs in all subdirectories.",
 )
+@exclude_option
 @scan_limit_options
 def eval_setup_review(
     path: str,
@@ -66,6 +67,7 @@ def eval_setup_review(
     model: str | None,
     user_config: str | None,
     recursive: bool,
+    exclude: tuple[str, ...],
     max_file_bytes: int,
     max_total_bytes: int,
     max_files: int,
@@ -81,6 +83,7 @@ def eval_setup_review(
         path=path,
         user_config_dir=user_config,
         recursive=recursive,
+        exclude=exclude,
         limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
 

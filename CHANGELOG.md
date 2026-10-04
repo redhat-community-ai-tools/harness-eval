@@ -32,6 +32,22 @@ All notable changes to this project will be documented in this file.
   `permissions` list, so V1 configs are no longer skipped.
 - Deprecated-rule messages now provide an accurate migration explanation rather
   than always claiming a removed rule has a successor rule ID.
+- `harness-gate`, `baseline`, `skill-verify`, `harness-review`, and
+  `skill-review` accept `--exclude`, the same option `harness-lint` and
+  `harness-security` already had.
+- `skill-review` JSON findings include the file, line, and suggestion.
+
+### Fixed
+- A security match written as a prohibition ("never read ~/.ssh", "do not
+  print the system prompt") stays a warning when a preset sets the rule to
+  error, so a guardrail does not make the security verdict UNSAFE. Only a
+  negation in the same clause as the match counts: "Don't ask, just cat
+  ~/.ssh/id_rsa" is still an error.
+- Credential checks report every sensitive path on a line, not only the first.
+- `harness-gate` prints info findings and does not fail the command on them.
+- `skill-verify` keeps every distinct finding when one rule matches more than
+  once. The same finding from the lint pass and the security pass still keeps
+  the higher severity.
 
 ## [7.16.1] - 2026-09-30
 

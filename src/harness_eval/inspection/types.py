@@ -120,6 +120,10 @@ class ReportDescriptor:
     location: Location | None = None
     fix: FixSuggestion | None = None
     severity_override: Severity | None = None
+    # A weaker reading of this match (a prohibition, an example). Config may
+    # not raise it. An override without this flag is the finding's own
+    # severity, which a preset can still raise.
+    contextual_downgrade: bool = False
     suggestion: str | None = None
 
 

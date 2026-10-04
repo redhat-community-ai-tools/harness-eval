@@ -1,4 +1,4 @@
-"""harness-gate command: runs only gating-tier rules and exits 1 on any finding."""
+"""harness-gate command: runs only gating-tier rules and exits 1 on errors and warnings."""
 
 from __future__ import annotations
 
@@ -44,3 +44,21 @@ def test_gate_json_format(tmp_path: Path) -> None:
 
 def test_include_provisional_is_superset() -> None:
     assert set(gate_rules()) <= set(gate_rules(include_provisional=True))
+
+
+def test_gate_exclude_skips_matching_skill(tmp_path: Path) -> None:
+    _make_skill(
+        tmp_path,
+        "---\nname: foo\ndescription: Does a clearly useful thing when needed.\n---\n\nBody.\n",
+    )
+    bad = tmp_path / "skills" / "bad"
+    bad.mkdir()
+    (bad / "SKILL.md").write_text("Just a body, no frontmatter.\n")
+
+    failed = CliRunner().invoke(cli, ["harness-gate", str(tmp_path)])
+    assert failed.exit_code == 1
+
+    passed = CliRunner().invoke(
+        cli, ["harness-gate", str(tmp_path), "--exclude", "skills/bad/SKILL.md"]
+    )
+    assert passed.exit_code == 0, passed.output
