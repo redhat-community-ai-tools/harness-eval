@@ -152,7 +152,7 @@ class TestNoAuditTrail:
 
 
 class TestMissingBoundaryPolicy:
-    def test_no_boundary_fires(self, tmp_path: Path) -> None:
+    def test_boundary_policy_is_semantic_not_deterministic(self, tmp_path: Path) -> None:
         _ensure_rules()
         from harness_eval.inspection.engine import lint_claude_md
 
@@ -160,7 +160,7 @@ class TestMissingBoundaryPolicy:
         claude_md.write_text("# Project\n\nUse Python 3.11. Follow PEP 8.")
         result = lint_claude_md(str(claude_md))
         findings = [d for d in result.diagnostics if d.rule_id == "content/missing-boundary-policy"]
-        assert len(findings) >= 1
+        assert len(findings) == 0
 
     def test_boundary_present_clean(self, tmp_path: Path) -> None:
         from harness_eval.inspection.engine import lint_claude_md
