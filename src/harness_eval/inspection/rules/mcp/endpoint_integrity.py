@@ -8,14 +8,13 @@ Three decidable conditions:
 
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules._config_fs import project_root
-from harness_eval.inspection.rules.mcp._shared import extract_servers
+from harness_eval.inspection.rules.mcp._shared import extract_servers, parse_config
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -25,7 +24,14 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
-_LOOPBACK = {"localhost", "127.0.0.1", "::1", "0.0.0.0", "host.docker.internal"}
+# Endpoint detection values, not listener bind addresses.
+_LOOPBACK = {  # nosec B104
+    "localhost",
+    "127.0.0.1",
+    "::1",
+    "0.0.0.0",
+    "host.docker.internal",
+}
 
 
 def _is_private_host(host: str) -> bool:
@@ -60,10 +66,7 @@ class McpEndpointIntegrity:
         raw, path = context.source_text()
         if not raw or not raw.strip():
             return
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError:
-            return
+        data, _ = parse_config(raw)
         if not isinstance(data, dict):
             return
         servers = extract_servers(data)
@@ -94,7 +97,7 @@ class McpEndpointIntegrity:
                             location=loc,
                         )
                     )
-            url = sd.get("url")
+            url = sd.get("url") or sd.get("httpUrl") or sd.get("serverUrl")
             if isinstance(url, str) and "://" in url:
                 parts = urlsplit(url)
                 host = (parts.hostname or "").lower()

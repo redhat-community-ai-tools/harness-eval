@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules.mcp._shared import extract_servers, parse_config
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -189,15 +190,12 @@ class McpUnpinnedPackage:
 
         loc = Location(file=path)
 
-        try:
-            data = json.loads(raw)
-        except (json.JSONDecodeError, ValueError):
-            return
+        data, _ = parse_config(raw)
 
         if not isinstance(data, dict):
             return
 
-        servers = data.get("mcpServers")
+        servers = extract_servers(data)
         if not isinstance(servers, dict):
             return
 
@@ -207,10 +205,17 @@ class McpUnpinnedPackage:
             if server_def.get("disabled") is True:
                 continue  # never started, so nothing is resolved
 
-            command = server_def.get("command", "")
+            command_value = server_def.get("command", "")
             args = server_def.get("args", [])
             if not isinstance(args, list):
                 args = []
+
+            # OpenCode V2 stores a local command as one argv array.
+            if isinstance(command_value, list):
+                command = str(command_value[0]) if command_value else ""
+                args = [*command_value[1:], *args]
+            else:
+                command = command_value if isinstance(command_value, str) else ""
 
             all_parts = [command] + [str(a) for a in args]
             cmd_base = command.rsplit("/", 1)[-1] if command else ""

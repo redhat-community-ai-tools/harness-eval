@@ -70,7 +70,10 @@ class ScopeGrabDescription:
                 "does, not demand to be chosen for all requests."
             ),
         },
-        default_suggestion="Rewrite the description to state what the skill does, not when to run.",
+        default_suggestion=(
+            "Rewrite the description to state what the skill does and when it is relevant,"
+            " without demanding universal or exclusive use."
+        ),
     )
 
     def create(self, context: RuleContext) -> None:

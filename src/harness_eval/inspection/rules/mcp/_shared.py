@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from harness_eval.utils.jsonc import strip_jsonc
+
 
 def extract_servers(data: dict[str, Any]) -> Any:
     """Return the MCP servers mapping from a parsed config.
@@ -38,20 +40,23 @@ def has_transport(server_def: dict[str, Any]) -> bool:
 
 
 def parse_config(raw: str) -> tuple[Any, bool]:
-    """Parse an MCP config; retry as JSONC (comments, trailing commas) which
-    VS Code and OpenCode accept. Returns (data, was_jsonc); (None, False) when
-    neither parses."""
+    """Parse an MCP config as JSON, JSONC, or TOML.
+
+    The boolean is true when a non-JSON parser was needed. Codex stores MCP
+    servers in ``config.toml`` while VS Code and OpenCode accept JSONC.
+    """
     import json
-    import re
+    import tomllib
 
     try:
         return json.loads(raw), False
     except (json.JSONDecodeError, ValueError):
         pass
-    stripped = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
-    stripped = re.sub(r"(?m)^\s*//[^\n]*$", "", stripped)
-    stripped = re.sub(r",\s*([}\]])", r"\1", stripped)
     try:
-        return json.loads(stripped), True
+        return json.loads(strip_jsonc(raw)), True
     except (json.JSONDecodeError, ValueError):
+        pass
+    try:
+        return tomllib.loads(raw), True
+    except (tomllib.TOMLDecodeError, ValueError):
         return None, False

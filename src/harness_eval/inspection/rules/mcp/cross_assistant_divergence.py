@@ -11,11 +11,11 @@ comparing two files.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 from harness_eval.core.types import ComponentType
+from harness_eval.inspection.rules.mcp._shared import extract_servers, parse_config
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -34,7 +34,7 @@ _MCP_CONFIG_FILES: list[tuple[str, str, str]] = [
     ("opencode.json", "mcp", "OpenCode"),
     ("opencode.jsonc", "mcp", "OpenCode"),
     (".windsurf/mcp_config.json", "mcpServers", "Windsurf"),
-    (".codex/config.json", "mcpServers", "Codex CLI"),
+    (".codex/config.toml", "mcp_servers", "Codex"),
 ]
 
 _COMPARE_KEYS = ("command", "args", "url", "type", "transport")
@@ -45,18 +45,10 @@ def _load_servers(path: Path, key: str) -> dict[str, dict[str, Any]] | None:
         text = path.read_text()
     except (OSError, UnicodeDecodeError):
         return None
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError:
-        # jsonc: strip // comments crudely and retry
-        stripped = "\n".join(line.split("//")[0] for line in text.splitlines())
-        try:
-            data = json.loads(stripped)
-        except json.JSONDecodeError:
-            return None
+    data, _ = parse_config(text)
     if not isinstance(data, dict):
         return None
-    servers = data.get(key)
+    servers = data.get(key) if key in data else extract_servers(data)
     if not isinstance(servers, dict):
         return None
     return {k: v for k, v in servers.items() if isinstance(v, dict)}
