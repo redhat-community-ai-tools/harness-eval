@@ -25,23 +25,31 @@ class WindsurfDiscoverer(ToolDiscoverer):
         return "windsurf"
 
     def detect(self, root: Path) -> bool:
-        return (root / ".windsurf").is_dir() or (root / ".windsurfrules").is_file()
+        return (
+            (root / ".devin").is_dir()
+            or (root / ".windsurf").is_dir()
+            or (root / ".windsurfrules").is_file()
+        )
 
     def discover(
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[ParsedComponent]:
-        return self._discover_rules(root, recursive=recursive)
+        results = self._discover_rules(root, recursive=recursive)
+        results.extend(self._discover_skills(root, recursive=recursive))
+        results.extend(self._discover_workflows(root, recursive=recursive))
+        results.extend(self._discover_hooks(root, recursive=recursive))
+        results.extend(self._discover_mcp(root))
+        results.extend(self._discover_agents_md(root, recursive=recursive))
+        return results
 
     def collect_paths(
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[Path]:
         paths: list[Path] = []
 
-        rules_dir = root / ".windsurf" / "rules"
-        if rules_dir.is_dir():
-            for f in sorted(rules_dir.rglob("*.md")):
-                if f.is_file():
-                    paths.append(f)
+        for rules_dir in (root / ".devin" / "rules", root / ".windsurf" / "rules"):
+            if rules_dir.is_dir():
+                paths.extend(sorted(rules_dir.rglob("*.md")))
         if recursive:
             paths.extend(_recursive_glob(root, ".windsurf/rules/*.md"))
 
@@ -50,6 +58,24 @@ class WindsurfDiscoverer(ToolDiscoverer):
             paths.append(top)
         if recursive:
             paths.extend(_recursive_glob(root, ".windsurfrules"))
+
+        for base in (root / ".devin", root / ".windsurf"):
+            for child, pattern in (("skills", "*/SKILL.md"), ("workflows", "*.md")):
+                directory = base / child
+                if directory.is_dir():
+                    paths.extend(sorted(directory.glob(pattern)))
+        agents_skills = root / ".agents" / "skills"
+        if agents_skills.is_dir():
+            paths.extend(sorted(agents_skills.glob("*/SKILL.md")))
+        hooks = root / ".windsurf" / "hooks.json"
+        if hooks.is_file():
+            paths.append(hooks)
+        mcp = root / ".windsurf" / "mcp_config.json"
+        if mcp.is_file():
+            paths.append(mcp)
+        agents_md = root / "AGENTS.md"
+        if agents_md.is_file():
+            paths.append(agents_md)
 
         return paths
 
@@ -67,10 +93,9 @@ class WindsurfDiscoverer(ToolDiscoverer):
                     parse_file(f, ComponentType.CLAUDE_MD, name=name, source_tool="windsurf")
                 )
 
-        rules_dir = root / ".windsurf" / "rules"
-        if rules_dir.is_dir():
-            for f in sorted(rules_dir.rglob("*.md")):
-                if f.is_file():
+        for rules_dir in (root / ".devin" / "rules", root / ".windsurf" / "rules"):
+            if rules_dir.is_dir():
+                for f in sorted(rules_dir.rglob("*.md")):
                     _add(f, f.stem)
         if recursive:
             for f in _recursive_glob(root, ".windsurf/rules/*.md"):
@@ -84,4 +109,76 @@ class WindsurfDiscoverer(ToolDiscoverer):
                 rel = f.relative_to(root)
                 _add(f, str(rel) if rel != Path(".windsurfrules") else ".windsurfrules")
 
+        return results
+
+    def _discover_skills(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        candidates: list[Path] = []
+        for directory in (
+            root / ".devin" / "skills",
+            root / ".windsurf" / "skills",
+            root / ".agents" / "skills",
+        ):
+            if directory.is_dir():
+                candidates.extend(sorted(directory.glob("*/SKILL.md")))
+        if recursive:
+            for pattern in (
+                ".devin/skills/*/SKILL.md",
+                ".windsurf/skills/*/SKILL.md",
+                ".agents/skills/*/SKILL.md",
+            ):
+                candidates.extend(_recursive_glob(root, pattern))
+        for path in candidates:
+            resolved = str(path.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            results.append(
+                parse_file(path, ComponentType.SKILL, name=path.parent.name, source_tool="windsurf")
+            )
+        return results
+
+    def _discover_workflows(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        candidates: list[Path] = []
+        for directory in (root / ".devin" / "workflows", root / ".windsurf" / "workflows"):
+            if directory.is_dir():
+                candidates.extend(sorted(directory.glob("*.md")))
+        if recursive:
+            for pattern in (".devin/workflows/*.md", ".windsurf/workflows/*.md"):
+                candidates.extend(_recursive_glob(root, pattern))
+        for path in candidates:
+            resolved = str(path.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            results.append(
+                parse_file(path, ComponentType.COMMAND, name=path.stem, source_tool="windsurf")
+            )
+        return results
+
+    def _discover_hooks(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        path = root / ".windsurf" / "hooks.json"
+        if not path.is_file():
+            return []
+        return [parse_file(path, ComponentType.HOOKS, source_tool="windsurf")]
+
+    def _discover_mcp(self, root: Path) -> list[ParsedComponent]:
+        path = root / ".windsurf" / "mcp_config.json"
+        if not path.is_file():
+            return []
+        return [parse_file(path, ComponentType.MCP_CONFIG, source_tool="windsurf")]
+
+    def _discover_agents_md(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        paths = [root / "AGENTS.md"]
+        if recursive:
+            paths.extend(_recursive_glob(root, "AGENTS.md"))
+        seen: set[str] = set()
+        for path in paths:
+            if path.is_file() and str(path.resolve()) not in seen:
+                seen.add(str(path.resolve()))
+                results.append(parse_file(path, ComponentType.CLAUDE_MD, source_tool="agents-md"))
         return results

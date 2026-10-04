@@ -7,6 +7,7 @@ from pathlib import Path
 from harness_eval.core.discoverers.base import (
     ToolDiscoverer,
     _recursive_glob,
+    _toml_top_level_keys,
     parse_file,
 )
 from harness_eval.core.types import ComponentType, ParsedComponent
@@ -35,6 +36,9 @@ class CodexDiscoverer(ToolDiscoverer):
     ) -> list[ParsedComponent]:
         results: list[ParsedComponent] = []
         results.extend(self._discover_instructions(root, recursive=recursive))
+        results.extend(self._discover_skills(root, recursive=recursive))
+        results.extend(self._discover_mcp(root, user_config_dir))
+        results.extend(self._discover_settings(root, user_config_dir))
         results.extend(self._discover_config(root))
         return results
 
@@ -59,6 +63,21 @@ class CodexDiscoverer(ToolDiscoverer):
         cfg = root / "codex.json"
         if cfg.is_file():
             paths.append(cfg)
+
+        for skills_dir in (root / ".agents" / "skills", root / ".codex" / "skills"):
+            if skills_dir.is_dir():
+                paths.extend(sorted(skills_dir.glob("*/SKILL.md")))
+        if recursive:
+            for pattern in (".agents/skills/*/SKILL.md", ".codex/skills/*/SKILL.md"):
+                paths.extend(_recursive_glob(root, pattern))
+
+        project_config = root / ".codex" / "config.toml"
+        if project_config.is_file():
+            paths.append(project_config)
+        if user_config_dir is not None:
+            user_config = user_config_dir / "config.toml"
+            if user_config.is_file():
+                paths.append(user_config)
 
         return paths
 
@@ -88,6 +107,55 @@ class CodexDiscoverer(ToolDiscoverer):
                     parse_file(instructions, ComponentType.CLAUDE_MD, source_tool="codex")
                 )
 
+        return results
+
+    def _discover_skills(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        candidates: list[Path] = []
+        for skills_dir in (root / ".agents" / "skills", root / ".codex" / "skills"):
+            if skills_dir.is_dir():
+                candidates.extend(sorted(skills_dir.glob("*/SKILL.md")))
+        if recursive:
+            for pattern in (".agents/skills/*/SKILL.md", ".codex/skills/*/SKILL.md"):
+                candidates.extend(_recursive_glob(root, pattern))
+        for skill_md in candidates:
+            resolved = str(skill_md.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            results.append(
+                parse_file(
+                    skill_md,
+                    ComponentType.SKILL,
+                    name=skill_md.parent.name,
+                    source_tool="codex",
+                )
+            )
+        return results
+
+    def _discover_mcp(self, root: Path, user_config_dir: Path | None) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        candidates = [(root / ".codex" / "config.toml", ".codex/config.toml")]
+        if user_config_dir is not None:
+            candidates.append((user_config_dir / "config.toml", "~/.codex/config.toml"))
+        for path, name in candidates:
+            if path.is_file() and "mcp_servers" in _toml_top_level_keys(path):
+                results.append(
+                    parse_file(path, ComponentType.MCP_CONFIG, name=name, source_tool="codex")
+                )
+        return results
+
+    def _discover_settings(self, root: Path, user_config_dir: Path | None) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        candidates = [(root / ".codex" / "config.toml", ".codex/config.toml")]
+        if user_config_dir is not None:
+            candidates.append((user_config_dir / "config.toml", "~/.codex/config.toml"))
+        for path, name in candidates:
+            if path.is_file():
+                results.append(
+                    parse_file(path, ComponentType.CONFIG, name=name, source_tool="codex")
+                )
         return results
 
     def _discover_config(self, root: Path) -> list[ParsedComponent]:

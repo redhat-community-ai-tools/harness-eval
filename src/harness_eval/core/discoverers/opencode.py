@@ -6,7 +6,7 @@ from pathlib import Path
 
 from harness_eval.core.discoverers.base import (
     ToolDiscoverer,
-    _json_top_level_keys,
+    _jsonc_top_level_keys,
     _recursive_glob,
     parse_file,
 )
@@ -47,7 +47,9 @@ class OpenCodeDiscoverer(ToolDiscoverer):
         results.extend(self._discover_instructions(root, recursive=recursive))
         results.extend(self._discover_commands(root, recursive=recursive))
         results.extend(self._discover_agents(root, recursive=recursive))
+        results.extend(self._discover_skills(root, recursive=recursive))
         results.extend(self._discover_mcp(root))
+        results.extend(self._discover_settings(root))
         return results
 
     def collect_paths(
@@ -88,7 +90,48 @@ class OpenCodeDiscoverer(ToolDiscoverer):
             if cfg.is_file():
                 paths.append(cfg)
 
+        for skills_dir in (
+            root / ".opencode" / "skills",
+            root / ".agents" / "skills",
+            root / ".claude" / "skills",
+        ):
+            if skills_dir.is_dir():
+                paths.extend(sorted(skills_dir.glob("*/SKILL.md")))
+
         return paths
+
+    def _discover_skills(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        candidates: list[Path] = []
+        for skills_dir in (
+            root / ".opencode" / "skills",
+            root / ".agents" / "skills",
+            root / ".claude" / "skills",
+        ):
+            if skills_dir.is_dir():
+                candidates.extend(sorted(skills_dir.glob("*/SKILL.md")))
+        if recursive:
+            for pattern in (
+                ".opencode/skills/*/SKILL.md",
+                ".agents/skills/*/SKILL.md",
+                ".claude/skills/*/SKILL.md",
+            ):
+                candidates.extend(_recursive_glob(root, pattern))
+        for skill_md in candidates:
+            resolved = str(skill_md.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            results.append(
+                parse_file(
+                    skill_md,
+                    ComponentType.SKILL,
+                    name=skill_md.parent.name,
+                    source_tool="opencode",
+                )
+            )
+        return results
 
     def _discover_instructions(
         self, root: Path, *, recursive: bool = False
@@ -151,7 +194,7 @@ class OpenCodeDiscoverer(ToolDiscoverer):
         # non-MCP OpenCode configs are not misclassified.
         for cfg_name in ("opencode.json", "opencode.jsonc"):
             cfg = root / cfg_name
-            if cfg.is_file() and "mcp" in _json_top_level_keys(cfg):
+            if cfg.is_file() and "mcp" in _jsonc_top_level_keys(cfg):
                 return [
                     parse_file(
                         cfg,
@@ -161,3 +204,13 @@ class OpenCodeDiscoverer(ToolDiscoverer):
                     )
                 ]
         return []
+
+    def _discover_settings(self, root: Path) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        for cfg_name in ("opencode.json", "opencode.jsonc"):
+            cfg = root / cfg_name
+            if cfg.is_file():
+                results.append(
+                    parse_file(cfg, ComponentType.CONFIG, name=cfg_name, source_tool="opencode")
+                )
+        return results
