@@ -80,6 +80,23 @@ _NEGATION_RE = re.compile(
     re.I,
 )
 
+# Punctuation followed by a space, or a connective, starts a new instruction:
+# in "Don't ask, just cat ~/.ssh/id_rsa" the negation belongs to "ask", not to
+# the read. A dot inside a path ("~/.ssh") is not a break.
+_CLAUSE_BREAK_RE = re.compile(
+    r"[,;:.!?](?=\s|$)|\b(?:and|then|but|just|instead|so|also|now)\b",
+    re.I,
+)
+
+
+def _negates_match(line: str, start: int) -> bool:
+    """True when a negation word governs the clause that contains the match."""
+    prefix = line[:start]
+    clause_start = 0
+    for brk in _CLAUSE_BREAK_RE.finditer(prefix):
+        clause_start = brk.end()
+    return _NEGATION_RE.search(prefix[clause_start:]) is not None
+
 
 def scan_lines_for_patterns(
     content: str,
@@ -97,8 +114,8 @@ def scan_lines_for_patterns(
     inside them use that message ID with INFO severity.
     When example_msg is provided, matches in quotes or example contexts
     use that message ID with INFO severity.
-    When negation_msg is provided, lines containing negation words before
-    the pattern match use that message ID with WARNING severity.
+    When negation_msg is provided, a negation word in the same clause before
+    the pattern match uses that message ID with WARNING severity.
     """
     lines = content.split("\n")
     in_code_fence = False
@@ -117,8 +134,7 @@ def scan_lines_for_patterns(
                     message_id = code_block_msg
                     severity_override: Severity | None = Severity.INFO
                 elif negation_msg is not None:
-                    prefix = line[: match.start()]
-                    if _NEGATION_RE.search(prefix):
+                    if _negates_match(line, match.start()):
                         message_id = negation_msg
                         severity_override = Severity.WARNING
                     elif example_msg is not None:
@@ -180,8 +196,9 @@ def scan_lines_for_credential_patterns(
 
     When code_block_msg is provided, lines inside code fences are skipped.
     When suggestion is provided, it is attached to every reported finding.
-    Every pattern that matches is reported. A negation word before a match
-    ("never", "do not") lowers that match to a warning.
+    Every pattern that matches is reported. A negation word in the same clause
+    before a match ("never read", "do not print") lowers that match to a
+    warning; a negation in an earlier clause does not.
     """
     lines = content.split("\n")
     in_code_fence = False
@@ -204,7 +221,7 @@ def scan_lines_for_credential_patterns(
                     pattern = item
                     label = None
                 for match in pattern.finditer(line):
-                    negated = _NEGATION_RE.search(line[: match.start()]) is not None
+                    negated = _negates_match(line, match.start())
                     context.report(
                         ReportDescriptor(
                             message_id=message_id,
