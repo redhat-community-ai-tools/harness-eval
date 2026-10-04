@@ -14,20 +14,6 @@
     "target_type": "command"
   },
   {
-    "message": "No boundary policy found in system instructions. Consider defining which directories or resources are off-limits.",
-    "rule_id": "content/missing-boundary-policy",
-    "severity": "info",
-    "target_name": "CLAUDE.md",
-    "target_type": "claude_md"
-  },
-  {
-    "message": "Description lacks use-case context \u2014 include phrases like 'use when', 'applies to', 'relevant for' so the assistant knows when to activate it",
-    "rule_id": "frontmatter/description-quality",
-    "severity": "warning",
-    "target_name": "exfil",
-    "target_type": "skill"
-  },
-  {
     "message": "References sensitive path '~/.aws/credentials' at line 10",
     "rule_id": "security/no-credential-access",
     "severity": "error",

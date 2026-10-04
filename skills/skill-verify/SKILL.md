@@ -1,9 +1,7 @@
 ---
 name: skill-verify
 description: Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. Use when the user wants to check if a downloaded or cloned skill is safe to install.
-allowed-tools:
-  - Bash
-  - Read
+allowed-tools: Bash Read
 ---
 <!-- evaluator-ignore: content/allowed-tools-auto-approve -->
 

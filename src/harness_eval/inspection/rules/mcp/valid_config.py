@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-
 from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.mcp._shared import extract_servers, has_transport, parse_config
 from harness_eval.inspection.types import (
@@ -53,19 +51,16 @@ class McpValidConfig:
 
         loc = Location(file=path)
 
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError as e:
-            data, jsonc = parse_config(raw)
-            if not jsonc:
-                context.report(
-                    ReportDescriptor(
-                        message_id="invalid_json",
-                        data={"error": str(e)},
-                        location=loc,
-                    )
+        data, _non_json = parse_config(raw)
+        if data is None:
+            context.report(
+                ReportDescriptor(
+                    message_id="invalid_json",
+                    data={"error": "expected JSON, JSONC, or TOML"},
+                    location=loc,
                 )
-                return
+            )
+            return
 
         if not isinstance(data, dict):
             context.report(ReportDescriptor(message_id="not_object", location=loc))
@@ -109,6 +104,16 @@ class McpValidConfig:
                     ReportDescriptor(
                         message_id="args_not_array",
                         data={"name": name, "actual_type": type(args).__name__},
+                        location=loc,
+                    )
+                )
+
+            command = server_def.get("command")
+            if command is not None and not isinstance(command, (str, list)):
+                context.report(
+                    ReportDescriptor(
+                        message_id="server_no_transport",
+                        data={"name": name},
                         location=loc,
                     )
                 )

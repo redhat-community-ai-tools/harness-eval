@@ -305,15 +305,15 @@ class TestStaleReferences:
 
     def test_tslint(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "st5", "Run tslint before committing.")
-        assert STALE in _rule_ids(path)
+        assert STALE not in _rule_ids(path)
 
     def test_create_react_app(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "st6", "Bootstrap with create-react-app.")
-        assert STALE in _rule_ids(path)
+        assert STALE not in _rule_ids(path)
 
     def test_python_37(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "st7", "Requires Python 3.7 or higher.")
-        assert STALE in _rule_ids(path)
+        assert STALE not in _rule_ids(path)
 
     def test_current_model_no_flag(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "st8", "Use claude-sonnet-4-6 for code generation.")
@@ -331,4 +331,4 @@ class TestStaleReferences:
     def test_includes_replacement(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "st11", "Run tslint on all files.")
         msgs = [d.message for d in _findings_for(path, STALE)]
-        assert any("@typescript-eslint" in m for m in msgs)
+        assert msgs == []

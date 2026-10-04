@@ -68,6 +68,8 @@ class HooksLocalSettingsCommitted:
         hooks_data = context.hooks
         if hooks_data is None:
             return
+        if context.source_tool is not None and context.source_tool != "claude":
+            return
         settings_path = Path(hooks_data.file_path)
         if settings_path.parent.name != ".claude":
             return

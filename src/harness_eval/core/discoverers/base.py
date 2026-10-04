@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import tomllib
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from harness_eval.core.types import (
     ComponentType,
     ParsedComponent,
 )
+from harness_eval.utils.jsonc import strip_jsonc
 from harness_eval.utils.parsing import parse_frontmatter
 from harness_eval.utils.paths import is_within
 from harness_eval.utils.tokens import count_tokens
@@ -85,6 +87,35 @@ def _json_top_level_keys(filepath: Path) -> set[str]:
     try:
         data = json.loads(filepath.read_text(encoding="utf-8", errors="replace"))
     except (json.JSONDecodeError, ValueError, OSError):
+        return set()
+    return set(data.keys()) if isinstance(data, dict) else set()
+
+
+def _jsonc_top_level_keys(filepath: Path) -> set[str]:
+    """Return top-level keys from JSON or JSONC configuration."""
+    keys = _json_top_level_keys(filepath)
+    if keys:
+        return keys
+    if _is_excluded_from_scan(filepath):
+        return set()
+    try:
+        raw = filepath.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return set()
+    try:
+        data = json.loads(strip_jsonc(raw))
+    except (json.JSONDecodeError, ValueError):
+        return set()
+    return set(data.keys()) if isinstance(data, dict) else set()
+
+
+def _toml_top_level_keys(filepath: Path) -> set[str]:
+    """Return top-level keys from a TOML configuration."""
+    if _is_excluded_from_scan(filepath):
+        return set()
+    try:
+        data = tomllib.loads(filepath.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, tomllib.TOMLDecodeError):
         return set()
     return set(data.keys()) if isinstance(data, dict) else set()
 

@@ -31,6 +31,7 @@ class CursorDiscoverer(ToolDiscoverer):
         results.extend(self._discover_skills(root, recursive=recursive))
         results.extend(self._discover_hooks(root, recursive=recursive))
         results.extend(self._discover_mcp(root, recursive=recursive))
+        results.extend(self._discover_agents_md(root, recursive=recursive))
         return results
 
     def collect_paths(
@@ -47,6 +48,10 @@ class CursorDiscoverer(ToolDiscoverer):
         if recursive:
             for f in _recursive_glob(root, ".cursor/rules/*.mdc"):
                 paths.append(f)
+
+        agents_md = root / "AGENTS.md"
+        if agents_md.is_file():
+            paths.append(agents_md)
 
         for f in sorted(root.rglob(".cursorrules")):
             if f.is_file() and ".git" not in f.parts:
@@ -91,6 +96,22 @@ class CursorDiscoverer(ToolDiscoverer):
                 paths.append(f)
 
         return paths
+
+    def _discover_agents_md(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        candidates = [root / "AGENTS.md"]
+        if recursive:
+            candidates.extend(_recursive_glob(root, "AGENTS.md"))
+        for path in candidates:
+            if not path.is_file():
+                continue
+            resolved = str(path.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            results.append(parse_file(path, ComponentType.CLAUDE_MD, source_tool="agents-md"))
+        return results
 
     def _discover_rules(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
         results: list[ParsedComponent] = []

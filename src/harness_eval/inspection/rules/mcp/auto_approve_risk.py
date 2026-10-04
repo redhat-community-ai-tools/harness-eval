@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
-
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.rules.mcp._shared import extract_servers
+from harness_eval.inspection.rules.mcp._shared import extract_servers, parse_config
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -51,10 +49,6 @@ class McpAutoApproveRisk:
                 "Server '{{server}}' auto-approves '{{tool}}' which appears to have"
                 " write/execute capability. Auto-approved tools bypass human confirmation."
             ),
-            "auto_approve_all": (
-                "Server '{{server}}' has an empty autoApprove list, which may auto-approve"
-                " all tools depending on the runtime."
-            ),
         },
         target_type=ComponentType.MCP_CONFIG,
         default_suggestion="Remove write/execute tools from the autoApprove list.",
@@ -67,10 +61,7 @@ class McpAutoApproveRisk:
 
         loc = Location(file=path)
 
-        try:
-            data = json.loads(raw)
-        except (json.JSONDecodeError, ValueError):
-            return
+        data, _ = parse_config(raw)
 
         if not isinstance(data, dict):
             return
@@ -88,16 +79,6 @@ class McpAutoApproveRisk:
                 continue
 
             if isinstance(auto_approve, list):
-                if len(auto_approve) == 0:
-                    context.report(
-                        ReportDescriptor(
-                            message_id="auto_approve_all",
-                            data={"server": name},
-                            location=loc,
-                        )
-                    )
-                    continue
-
                 for tool in auto_approve:
                     if isinstance(tool, str) and _is_high_risk_tool(tool):
                         context.report(

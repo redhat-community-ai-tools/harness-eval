@@ -75,6 +75,8 @@ class ConstraintBodyMatch:
         agent = context.agent
         if not agent or not agent.body:
             return
+        if context.source_tool is not None and context.source_tool != "claude":
+            return
 
         disallowed_str = " ".join(agent.disallowed_tools).lower()
 

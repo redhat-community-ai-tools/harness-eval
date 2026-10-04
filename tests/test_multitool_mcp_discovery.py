@@ -118,9 +118,9 @@ class TestOpenCodeMcp:
             },
         )
         setup = discover_setup("opencode", str(tmp_path))
-        # suspicious-endpoint reads url via the shared extractor -> flags private-net host
+        # Private-network endpoints are common and not intrinsically suspicious.
         ids = [rid for rid, _ in _diag_ids(setup, {"mcp/suspicious-endpoint": "warning"})]
-        assert "mcp/suspicious-endpoint" in ids
+        assert "mcp/suspicious-endpoint" not in ids
 
     def test_opencode_without_mcp_key_not_discovered(self, tmp_path: Path) -> None:
         self._write(tmp_path, {"theme": "opencode", "model": "anthropic/claude"})

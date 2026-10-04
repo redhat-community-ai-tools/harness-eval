@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -116,12 +115,14 @@ def _parse_mcp_config(mcp_path: str) -> dict[str, dict]:
     if not path.exists():
         return {}
     try:
-        data = json.loads(path.read_text())
-    except (json.JSONDecodeError, OSError):
+        raw = path.read_text()
+    except OSError:
         return {}
+    from harness_eval.inspection.rules.mcp._shared import extract_servers, parse_config
+
+    data, _ = parse_config(raw)
     if not isinstance(data, dict):
         return {}
-    from harness_eval.inspection.rules.mcp._shared import extract_servers
 
     servers = extract_servers(data)
     if not isinstance(servers, dict):
@@ -198,6 +199,17 @@ def build_component_graph(
             component_type=ComponentType.COMMAND,
             file_path=cmd.command_md_path,
         )
+        if cmd.body:
+            for ref in extract_references(cmd.body, name):
+                if ref in skill_names:
+                    graph.edges.append(
+                        GraphEdge(
+                            source=f"cmd:{name}",
+                            target=ref,
+                            edge_type="references",
+                            evidence=f"command body references {ref}",
+                        )
+                    )
 
     for agent in agents:
         name = agent.file_name.removesuffix(".md")

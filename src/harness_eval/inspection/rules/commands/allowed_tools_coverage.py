@@ -93,11 +93,15 @@ class CommandAllowedToolsCoverage:
         command = context.command
         if command is None:
             return
+        if context.source_tool is not None and context.source_tool != "claude":
+            return
 
         allowed_tools = command.frontmatter.get("allowed-tools")
         if allowed_tools is None:
             # No allowed-tools means default permissions; not a defect
             return
+        if isinstance(allowed_tools, str):
+            allowed_tools = [part for part in allowed_tools.replace(",", " ").split() if part]
         if not isinstance(allowed_tools, list):
             return
 

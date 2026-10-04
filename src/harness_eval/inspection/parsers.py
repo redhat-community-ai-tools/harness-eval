@@ -11,6 +11,7 @@ from harness_eval.inspection.types import (
     ParsedAgent,
     ParsedClaudeMd,
     ParsedCommand,
+    ParsedConfig,
     ParsedHooks,
     ParsedMcpConfig,
     ParsedSkill,
@@ -295,7 +296,7 @@ def parse_claude_md(file_path: str) -> ParsedClaudeMd:
 
 
 def parse_hooks(settings_path: str) -> ParsedHooks:
-    """Parse hooks from a .claude/settings.json file."""
+    """Parse hooks from supported assistants into a common event/command view."""
     path = Path(settings_path)
     if not path.exists():
         return ParsedHooks(
@@ -338,24 +339,40 @@ def parse_hooks(settings_path: str) -> ParsedHooks:
                                     **extra,
                                 }
                             )
-                        elif isinstance(sub_hook, dict) and "command" in sub_hook:
+                        elif isinstance(sub_hook, dict):
                             hooks.append(
-                                {
-                                    "event": event,
-                                    "command": sub_hook["command"],
-                                    **extra,
-                                }
+                                {"event": event, **extra, **_normalise_hook_entry(sub_hook)}
                             )
-                elif "command" in hook_entry:
-                    hooks.append({"event": event, **hook_entry})
                 else:
-                    hooks.append({"event": event, **hook_entry})
+                    hooks.append({"event": event, **_normalise_hook_entry(hook_entry)})
 
     return ParsedHooks(
         file_path=settings_path,
         hooks=hooks,
         raw_content=raw_content,
     )
+
+
+def _normalise_hook_entry(entry: dict) -> dict:
+    """Keep source fields and expose a shell/exec handler as ``command``."""
+    normalised = dict(entry)
+    if isinstance(normalised.get("command"), str):
+        return normalised
+    for key in ("bash", "powershell"):
+        value = normalised.get(key)
+        if isinstance(value, str) and value.strip():
+            normalised["command"] = value
+            return normalised
+    executable = normalised.get("exec")
+    args = normalised.get("args", [])
+    if isinstance(executable, str):
+        argv = [executable]
+        if isinstance(args, list):
+            argv.extend(str(arg) for arg in args)
+        normalised["command"] = " ".join(argv)
+    elif isinstance(executable, list):
+        normalised["command"] = " ".join(str(arg) for arg in executable)
+    return normalised
 
 
 def _tool_list(raw: object) -> list[str]:
@@ -456,6 +473,23 @@ def parse_mcp_config_file(file_path: str) -> ParsedMcpConfig:
         )
     raw_content = path.read_text(encoding="utf-8", errors="replace")
     return ParsedMcpConfig(
+        file_path=file_path,
+        raw_content=raw_content,
+        tokens=count_tokens(raw_content),
+    )
+
+
+def parse_config_file(file_path: str) -> ParsedConfig:
+    """Read a general assistant configuration without imposing one schema."""
+    path = Path(file_path)
+    if not path.exists():
+        return ParsedConfig(
+            file_path=file_path,
+            raw_content="",
+            parse_errors=[f"File not found: {file_path}"],
+        )
+    raw_content = path.read_text(encoding="utf-8", errors="replace")
+    return ParsedConfig(
         file_path=file_path,
         raw_content=raw_content,
         tokens=count_tokens(raw_content),

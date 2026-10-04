@@ -58,6 +58,7 @@ _TARGET_MAP = {
     "hooks": ComponentType.HOOKS,
     "claude_md": ComponentType.CLAUDE_MD,
     "mcp_config": ComponentType.MCP_CONFIG,
+    "config": ComponentType.CONFIG,
 }
 
 _CATEGORY_MAP = {

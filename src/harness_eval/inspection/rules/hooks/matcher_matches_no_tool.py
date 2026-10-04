@@ -43,6 +43,8 @@ class HooksMatcherMatchesNoTool:
         hooks_data = context.hooks
         if hooks_data is None:
             return
+        if context.source_tool not in {None, "claude", "copilot"}:
+            return
 
         tool_names = load_tool_names()
         loc = Location(file=hooks_data.file_path)

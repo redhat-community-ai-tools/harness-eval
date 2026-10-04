@@ -11,7 +11,7 @@ SKILL_CATEGORIES = [
     ),
     IssueCategory(
         name="redundancy",
-        description="Flag if instructions duplicate Claude's default behavior (e.g., 'be helpful', 'handle errors properly', 'think step by step'). Test: if this skill were deleted, would Claude behave differently?",
+        description="Flag generic advice that capable coding agents already follow. Test: if this skill were deleted, would agent behavior materially change?",
     ),
     IssueCategory(
         name="trigger_quality",
@@ -38,7 +38,7 @@ COMMAND_CATEGORIES = [
     ),
     IssueCategory(
         name="instruction_clarity",
-        description="Flag if instructions are ambiguous, contradictory, or Claude wouldn't know what to do or in what order. Also flag vague language ('handle appropriately', 'follow best practices'), hedging where directives are needed ('consider', 'try to'), and important instructions buried below less important content.",
+        description="Flag if instructions are ambiguous, contradictory, or do not establish what to do or in what order. Also flag vague language and important instructions buried below less important content.",
     ),
     IssueCategory(
         name="script_integrity",
@@ -54,7 +54,7 @@ COMMAND_CATEGORIES = [
     ),
     IssueCategory(
         name="redundancy",
-        description="Flag if Claude already does this without the command. Built-in capabilities include plan mode, commit messages, code explanation, and code review.",
+        description="Flag generic workflows already handled without custom configuration. Do not assume every client has the same built-in commands.",
     ),
     IssueCategory(
         name="robustness",
@@ -62,14 +62,14 @@ COMMAND_CATEGORIES = [
     ),
 ]
 
-CLAUDE_MD_CATEGORIES = [
+INSTRUCTIONS_CATEGORIES = [
     IssueCategory(
         name="conciseness",
-        description="Flag lines that could be removed without causing Claude to make mistakes. Ruthlessly prune.",
+        description="Flag lines that can be removed without changing agent behavior. Prefer project-specific facts over generic advice.",
     ),
     IssueCategory(
         name="signal_to_noise",
-        description="Flag generic advice Claude already follows ('write clean code', 'be helpful', 'follow best practices'). Also flag standard language conventions (use linters instead) and detailed API docs (link instead).",
+        description="Flag generic advice coding agents already follow ('write clean code', 'be helpful', 'follow best practices'). Also flag copied reference material better kept in source documentation.",
     ),
     IssueCategory(
         name="skill_separation",
@@ -119,7 +119,7 @@ HOOKS_CATEGORIES = [
     ),
     IssueCategory(
         name="reliability",
-        description="Flag if referenced scripts don't exist or commands are malformed.",
+        description="Flag semantic reliability risks not established by deterministic parsing, such as non-idempotent behavior or unsafe assumptions. Do not repeat file-existence or syntax findings.",
     ),
     IssueCategory(
         name="scope",
@@ -145,14 +145,41 @@ SECURITY_REVIEW_CATEGORIES = [
     ),
     IssueCategory(
         name="permission_scope_safety",
-        description="Flag if allowed-tools grants more access than the skill needs, if Bash is declared but only Read is used, or if the skill requests destructive capabilities (write, delete) for a read-only task.",
+        description="Flag semantic mismatches between the stated task and requested authority. Do not infer actual client permissions from portable Agent Skills allowed-tools metadata alone.",
+    ),
+]
+
+MCP_CONFIG_CATEGORIES = [
+    IssueCategory(
+        name="trust_boundary",
+        description="Flag semantic trust-boundary problems such as sending sensitive repository data to an unexplained remote service. Do not repeat syntax, plaintext-secret, or package-pinning checks.",
+    ),
+    IssueCategory(
+        name="purpose_alignment",
+        description="Flag servers whose documented purpose or granted use is inconsistent with the repository workflow or adjacent instructions.",
+    ),
+]
+
+CONFIG_CATEGORIES = [
+    IssueCategory(
+        name="policy_intent",
+        description="Flag internally coherent but semantically unsafe or self-defeating policy choices that deterministic schema checks cannot establish.",
+    ),
+    IssueCategory(
+        name="component_alignment",
+        description="Flag semantic conflicts between settings and instructions, skills, agents, hooks, or MCP servers. Do not repeat deterministic reachability findings.",
     ),
 ]
 
 CATEGORIES_BY_TYPE: dict[str, list[IssueCategory]] = {
     "skill": SKILL_CATEGORIES,
     "command": COMMAND_CATEGORIES,
-    "claude_md": CLAUDE_MD_CATEGORIES,
+    "claude_md": INSTRUCTIONS_CATEGORIES,
     "agent": AGENT_CATEGORIES,
     "hooks": HOOKS_CATEGORIES,
+    "mcp_config": MCP_CONFIG_CATEGORIES,
+    "config": CONFIG_CATEGORIES,
 }
+
+# Backward-compatible import name for API users.
+CLAUDE_MD_CATEGORIES = INSTRUCTIONS_CATEGORIES

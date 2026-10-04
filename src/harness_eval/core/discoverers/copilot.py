@@ -31,6 +31,8 @@ class CopilotDiscoverer(ToolDiscoverer):
             or (root / ".github" / "agents").is_dir()
             or (root / ".github" / "skills").is_dir()
             or (root / ".github" / "copilot-instructions.md").is_file()
+            or (root / ".github" / "instructions").is_dir()
+            or (root / ".github" / "hooks").is_dir()
             or (root / ".vscode" / "mcp.json").is_file()
         )
 
@@ -42,6 +44,8 @@ class CopilotDiscoverer(ToolDiscoverer):
         results.extend(self._discover_skills(root, recursive=recursive))
         results.extend(self._discover_commands(root, recursive=recursive))
         results.extend(self._discover_agents(root, recursive=recursive))
+        results.extend(self._discover_hooks(root, recursive=recursive))
+        results.extend(self._discover_settings(root))
         results.extend(self._discover_mcp(root))
         return results
 
@@ -53,12 +57,18 @@ class CopilotDiscoverer(ToolDiscoverer):
         instructions = root / ".github" / "copilot-instructions.md"
         if instructions.is_file():
             paths.append(instructions)
+        instructions_dir = root / ".github" / "instructions"
+        if instructions_dir.is_dir():
+            paths.extend(sorted(instructions_dir.rglob("*.instructions.md")))
 
         # Copilot skills
-        copilot_skills = root / ".github" / "skills"
-        if copilot_skills.is_dir():
-            for f in sorted(copilot_skills.glob("*/SKILL.md")):
-                paths.append(f)
+        for copilot_skills in (
+            root / ".github" / "skills",
+            root / ".agents" / "skills",
+            root / ".claude" / "skills",
+        ):
+            if copilot_skills.is_dir():
+                paths.extend(sorted(copilot_skills.glob("*/SKILL.md")))
         if recursive:
             for f in _recursive_glob(root, ".github/skills/*/SKILL.md"):
                 paths.append(f)
@@ -87,26 +97,54 @@ class CopilotDiscoverer(ToolDiscoverer):
         if vscode_mcp.is_file():
             paths.append(vscode_mcp)
 
+        hooks_dir = root / ".github" / "hooks"
+        if hooks_dir.is_dir():
+            paths.extend(sorted(hooks_dir.glob("*.json")))
+        for name in ("settings.json", "settings.local.json"):
+            settings = root / ".github" / "copilot" / name
+            if settings.is_file():
+                paths.append(settings)
+
         return paths
 
     def _discover_instructions(self, root: Path) -> list[ParsedComponent]:
         instructions = root / ".github" / "copilot-instructions.md"
+        results: list[ParsedComponent] = []
         if instructions.is_file():
-            return [
+            results.append(
                 parse_file(
                     instructions,
                     ComponentType.CLAUDE_MD,
                     name="copilot-instructions",
                     source_tool="copilot",
                 )
-            ]
-        return []
+            )
+        instructions_dir = root / ".github" / "instructions"
+        if instructions_dir.is_dir():
+            for path in sorted(instructions_dir.rglob("*.instructions.md")):
+                results.append(parse_file(path, ComponentType.CLAUDE_MD, source_tool="copilot"))
+        return results
+
+    def _discover_settings(self, root: Path) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        for name in ("settings.json", "settings.local.json"):
+            path = root / ".github" / "copilot" / name
+            if path.is_file():
+                results.append(
+                    parse_file(path, ComponentType.CONFIG, name=name, source_tool="copilot")
+                )
+        return results
 
     def _discover_skills(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
         results = []
         seen_paths: set[str] = set()
-        skills_dir = root / ".github" / "skills"
-        if skills_dir.is_dir():
+        for skills_dir in (
+            root / ".github" / "skills",
+            root / ".agents" / "skills",
+            root / ".claude" / "skills",
+        ):
+            if not skills_dir.is_dir():
+                continue
             for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
                 seen_paths.add(str(skill_md.resolve()))
                 results.append(
@@ -130,6 +168,23 @@ class CopilotDiscoverer(ToolDiscoverer):
                             source_tool="copilot",
                         )
                     )
+        return results
+
+    def _discover_hooks(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        candidates: list[Path] = []
+        hooks_dir = root / ".github" / "hooks"
+        if hooks_dir.is_dir():
+            candidates.extend(sorted(hooks_dir.glob("*.json")))
+        if recursive:
+            candidates.extend(_recursive_glob(root, ".github/hooks/*.json"))
+        for path in candidates:
+            resolved = str(path.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            results.append(parse_file(path, ComponentType.HOOKS, source_tool="copilot"))
         return results
 
     def _discover_commands(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:

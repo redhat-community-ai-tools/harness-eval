@@ -132,13 +132,12 @@ class TestAgentModelSpecified:
         model_diags = [d for d in result.diagnostics if d.rule_id == "agent/model-specified"]
         assert len(model_diags) == 0
 
-    def test_agent_without_model_reports(self, tmp_path: Path) -> None:
+    def test_agent_without_model_inherits(self, tmp_path: Path) -> None:
         agent_file = tmp_path / "helper.md"
         agent_file.write_text("---\ndescription: Helper\n---\n\n# Helper\n")
         result = lint_agent(str(agent_file), {"agent/model-specified": "info"})
         model_diags = [d for d in result.diagnostics if d.rule_id == "agent/model-specified"]
-        assert len(model_diags) == 1
-        assert "model" in model_diags[0].message.lower()
+        assert len(model_diags) == 0
 
     def test_agent_with_specific_model_passes(self, tmp_path: Path) -> None:
         agent_file = tmp_path / "helper.md"

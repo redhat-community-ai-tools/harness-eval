@@ -1,9 +1,7 @@
 ---
 name: eval-skill
 description: Deep-evaluate a single skill with static analysis and qualitative issue detection, both individually and in context of the full setup. Use when the user wants to check if a specific skill is worth keeping, well-built, or redundant.
-allowed-tools:
-  - Bash
-  - Read
+allowed-tools: Bash Read
 ---
 <!-- evaluator-ignore: content/broken-references, content/allowed-tools-auto-approve -->
 

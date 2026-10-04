@@ -33,7 +33,10 @@ class GeminiDiscoverer(ToolDiscoverer):
         results: list[ParsedComponent] = []
         results.extend(self._discover_instructions(root, recursive=recursive))
         results.extend(self._discover_commands(root, recursive=recursive))
+        results.extend(self._discover_skills(root, recursive=recursive))
+        results.extend(self._discover_hooks(root, user_config_dir))
         results.extend(self._discover_mcp(root, user_config_dir))
+        results.extend(self._discover_settings(root, user_config_dir))
         return results
 
     def collect_paths(
@@ -68,6 +71,10 @@ class GeminiDiscoverer(ToolDiscoverer):
             if global_settings.is_file():
                 paths.append(global_settings)
 
+        for skills_dir in (root / ".gemini" / "skills", root / ".agents" / "skills"):
+            if skills_dir.is_dir():
+                paths.extend(sorted(skills_dir.glob("*/SKILL.md")))
+
         return paths
 
     def _discover_instructions(
@@ -85,6 +92,55 @@ class GeminiDiscoverer(ToolDiscoverer):
                 if resolved not in seen_paths:
                     seen_paths.add(resolved)
                     results.append(parse_file(f, ComponentType.CLAUDE_MD, source_tool="gemini"))
+        return results
+
+    def _discover_skills(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        candidates: list[Path] = []
+        for skills_dir in (root / ".gemini" / "skills", root / ".agents" / "skills"):
+            if skills_dir.is_dir():
+                candidates.extend(sorted(skills_dir.glob("*/SKILL.md")))
+        if recursive:
+            for pattern in (".gemini/skills/*/SKILL.md", ".agents/skills/*/SKILL.md"):
+                candidates.extend(_recursive_glob(root, pattern))
+        for skill_md in candidates:
+            resolved = str(skill_md.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            results.append(
+                parse_file(
+                    skill_md,
+                    ComponentType.SKILL,
+                    name=skill_md.parent.name,
+                    source_tool="gemini",
+                )
+            )
+        return results
+
+    def _discover_hooks(self, root: Path, user_config_dir: Path | None) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        candidates = [(root / ".gemini" / "settings.json", ".gemini/settings.json")]
+        if user_config_dir is not None:
+            candidates.append((user_config_dir / "settings.json", "~/.gemini/settings.json"))
+        for path, name in candidates:
+            if path.is_file() and "hooks" in _json_top_level_keys(path):
+                results.append(
+                    parse_file(path, ComponentType.HOOKS, name=name, source_tool="gemini")
+                )
+        return results
+
+    def _discover_settings(self, root: Path, user_config_dir: Path | None) -> list[ParsedComponent]:
+        results: list[ParsedComponent] = []
+        candidates = [(root / ".gemini" / "settings.json", ".gemini/settings.json")]
+        if user_config_dir is not None:
+            candidates.append((user_config_dir / "settings.json", "~/.gemini/settings.json"))
+        for path, name in candidates:
+            if path.is_file():
+                results.append(
+                    parse_file(path, ComponentType.CONFIG, name=name, source_tool="gemini")
+                )
         return results
 
     def _discover_commands(self, root: Path, *, recursive: bool = False) -> list[ParsedComponent]:

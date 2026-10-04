@@ -96,15 +96,15 @@ class TestPromptExfiltration:
 
 
 class TestScopeOverreach:
-    def test_claims_authority_flagged(self, tmp_path: Path) -> None:
+    def test_removed_scope_heuristic_does_not_fire(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "This skill supersedes all other linting tools.")
         result = lint(path, {"quality/scope-overreach": "warning"})
-        assert len(_diags_for(result, "quality/scope-overreach")) >= 1
+        assert len(_diags_for(result, "quality/scope-overreach")) == 0
 
-    def test_universal_scope_flagged(self, tmp_path: Path) -> None:
+    def test_removed_universal_scope_heuristic_does_not_fire(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "This is required for all tasks in the project.")
         result = lint(path, {"quality/scope-overreach": "warning"})
-        assert len(_diags_for(result, "quality/scope-overreach")) >= 1
+        assert len(_diags_for(result, "quality/scope-overreach")) == 0
 
     def test_specific_scope_clean(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "Use when reviewing Python test coverage.")
@@ -118,15 +118,15 @@ class TestScopeOverreach:
 
 
 class TestTriggerManipulation:
-    def test_forced_invocation_flagged(self, tmp_path: Path) -> None:
+    def test_removed_forced_invocation_heuristic_does_not_fire(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "MUST use this before any coding task.")
         result = lint(path, {"quality/trigger-manipulation": "warning"})
-        assert len(_diags_for(result, "quality/trigger-manipulation")) >= 1
+        assert len(_diags_for(result, "quality/trigger-manipulation")) == 0
 
-    def test_blocks_progress_flagged(self, tmp_path: Path) -> None:
+    def test_removed_progress_heuristic_does_not_fire(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "Do NOT proceed without running this first.")
         result = lint(path, {"quality/trigger-manipulation": "warning"})
-        assert len(_diags_for(result, "quality/trigger-manipulation")) >= 1
+        assert len(_diags_for(result, "quality/trigger-manipulation")) == 0
 
     def test_normal_trigger_clean(self, tmp_path: Path) -> None:
         path = _make_skill(tmp_path, "Use when the user asks about database migrations.")

@@ -14,7 +14,7 @@ from harness_eval.inspection.types import (
 )
 from harness_eval.utils.similarity import tfidf_similarity
 
-_MEMORY_FILES = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"]
+_MEMORY_FILES = ["CLAUDE.md", "AGENTS.md", "GEMINI.md", ".github/copilot-instructions.md"]
 _MIN_FILE_LENGTH = 200
 _DRIFT_LOW = 0.75
 _DRIFT_HIGH = 0.97
@@ -50,13 +50,11 @@ def _split_sections(content: str) -> dict[str, str]:
 class MultiAssistantDrift:
     meta = RuleMeta(
         id="cross/multi-assistant-drift",
-        tier="gating",
+        tier="advisory",
         scope="PAIRWISE",
         default_severity=Severity.INFO,  # a review item: the difference is usually intended
         fixable=False,
-        description=(
-            "Flag diverged copies of assistant memory files (CLAUDE.md, AGENTS.md, GEMINI.md)"
-        ),
+        description=("Flag likely diverged copies of cross-assistant instruction files"),
         category=RuleCategory.CROSS_COMPONENT,
         messages={
             "drift": (

@@ -118,10 +118,26 @@ def get_default_catalog() -> RuleCatalog:
 
 
 # Rule IDs that have been removed. A config or suppression that still references
-# one gets a deprecation warning (pointing at the replacement) instead of the
-# generic "unknown rule" warning, and never an error.
+# one gets a deprecation warning explaining the migration instead of the generic
+# "unknown rule" warning, and never an error.
 DEPRECATED_RULES: dict[str, str] = {
-    "mcp/duplicate-server": "mcp/json-duplicate-keys",
+    "mcp/duplicate-server": "use 'mcp/json-duplicate-keys' instead",
+    "agent/model-specified": "Agents inherit a model when the field is omitted.",
+    "claude-md/exists": "Discovery cannot lint a file that does not exist.",
+    "content/mcp-skill-alignment": "MCP tools need not be referenced by a skill.",
+    "content/missing-boundary-policy": "Use semantic review for repository-specific boundaries.",
+    "content/orphan-skills": "Skills are dynamically discovered and need no static reference.",
+    "content/permission-escalation": "Skill allowed-tools entries are not capability boundaries.",
+    "content/total-context-budget": "On-demand skill bodies are not loaded together.",
+    "hooks/no-audit-trail": "Absence of project telemetry is not a configuration defect.",
+    "hooks/no-commit-guard": "A repository hook is not required to guard git commit.",
+    "mcp/no-wildcard-tools": "Most clients do not support per-server tool allowlists.",
+    "mcp/suspicious-endpoint": "Private-network MCP endpoints are not inherently suspicious.",
+    "security/mcp-least-privilege": (
+        "Agent Skills allowed-tools is client-specific and cannot be inferred from script imports."
+    ),
+    "quality/scope-overreach": "use 'quality/scope-grab-description' instead",
+    "quality/trigger-manipulation": "use 'quality/scope-grab-description' instead",
 }
 
 

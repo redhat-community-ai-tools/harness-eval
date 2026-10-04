@@ -93,6 +93,8 @@ class HooksPermissionContradiction:
         hooks_data = context.hooks
         if hooks_data is None:
             return
+        if context.source_tool is not None and context.source_tool != "claude":
+            return
         raw = hooks_data.raw_content
         if not raw or not raw.strip():
             return

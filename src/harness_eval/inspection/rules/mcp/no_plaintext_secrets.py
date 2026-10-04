@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import json
 import math
 
 from harness_eval.core.types import ComponentType
 from harness_eval.data import load_secret_prefixes
+from harness_eval.inspection.rules.mcp._shared import extract_servers, parse_config
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -65,7 +65,8 @@ class McpNoPlaintextSecrets:
         description="Flag literal secret values committed in MCP configuration files",
         category=RuleCategory.SECURITY,
         messages={
-            "literal_secret": (
+            # Diagnostic copy, not a credential.
+            "literal_secret": (  # nosec B105
                 "MCP server '{{server}}': '{{key}}' appears to contain a literal secret."
                 " Use an environment variable reference instead."
             ),
@@ -81,15 +82,12 @@ class McpNoPlaintextSecrets:
 
         loc = Location(file=path)
 
-        try:
-            data = json.loads(raw)
-        except (json.JSONDecodeError, ValueError):
-            return
+        data, _ = parse_config(raw)
 
         if not isinstance(data, dict):
             return
 
-        servers = data.get("mcpServers")
+        servers = extract_servers(data)
         if not isinstance(servers, dict):
             return
 
@@ -110,6 +108,14 @@ class McpNoPlaintextSecrets:
             headers = server_def.get("headers")
             if isinstance(headers, dict):
                 for key, value in headers.items():
+                    if isinstance(value, str):
+                        self._check_value(context, loc, server_name, key, value, prefixes)
+
+            # Codex remote servers use env_http_headers to name environment
+            # variables and http_headers for literal values.
+            literal_headers = server_def.get("http_headers")
+            if isinstance(literal_headers, dict):
+                for key, value in literal_headers.items():
                     if isinstance(value, str):
                         self._check_value(context, loc, server_name, key, value, prefixes)
 

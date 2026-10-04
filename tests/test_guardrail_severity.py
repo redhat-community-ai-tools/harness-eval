@@ -59,32 +59,14 @@ def test_real_credential_access_stays_an_error(tmp_path: Path) -> None:
     assert any(d.severity == Severity.ERROR for d in creds)
 
 
-def test_gate_does_not_fail_on_info_drift(tmp_path: Path) -> None:
+def test_gate_does_not_fail_on_info_finding(tmp_path: Path) -> None:
+    # A skill without a name is an info finding from the gating-tier
+    # frontmatter/format-valid rule: clients default the name to the directory.
     (tmp_path / ".git").mkdir()
-    (tmp_path / "CLAUDE.md").write_text(
-        "# Project Setup\n\n"
-        "This project uses Python 3.11 with uv for package management.\n"
-        "Run tests with `uv run pytest`. Format with `uv run ruff format`.\n"
-        "Always check lint before committing with `uv run ruff check`.\n\n"
-        "# Conventions\n\n"
-        "Use frozen dataclasses for domain objects. Keep functions short.\n"
-        "Follow PEP 8. Use type hints everywhere.\n"
-    )
-    (tmp_path / "AGENTS.md").write_text(
-        "# Project Setup\n\n"
-        "This project uses Python 3.11 with uv for package management.\n"
-        "Run tests with `pytest`. Format with `ruff format`.\n"
-        "Always check lint before committing with `ruff check`.\n"
-        "Use mypy for type checking.\n\n"
-        "# Conventions\n\n"
-        "Use frozen dataclasses for domain objects. Keep functions short.\n"
-        "Follow PEP 8. Use type hints everywhere.\n"
-    )
-    skill = tmp_path / "skills" / "demo"
+    skill = tmp_path / ".claude" / "skills" / "demo"
     skill.mkdir(parents=True)
     (skill / "SKILL.md").write_text(
         "---\n"
-        "name: demo\n"
         "description: Use when following the project conventions.\n"
         "---\n\n"
         "Follow the conventions in the project docs.\n"
@@ -92,7 +74,8 @@ def test_gate_does_not_fail_on_info_drift(tmp_path: Path) -> None:
 
     result = CliRunner().invoke(cli, ["harness-gate", str(tmp_path), "--format", "json"])
 
-    assert "cross/multi-assistant-drift" in result.output
+    assert "frontmatter/format-valid" in result.output
+    assert '"info"' in result.output
     assert result.exit_code == 0, result.output
 
 

@@ -127,7 +127,7 @@ class TestTaintTracking:
 
 
 class TestMcpLeastPrivilege:
-    def test_detects_underdeclared(self, skill_dir: Path) -> None:
+    def test_script_imports_do_not_define_client_permissions(self, skill_dir: Path) -> None:
         _write_skill(
             skill_dir,
             py_content='import subprocess\nsubprocess.run(["ls"])\n',
@@ -139,7 +139,7 @@ class TestMcpLeastPrivilege:
         underdeclared = [
             d for d in mcp_findings if "underdeclared" in d.rule_id or "shell" in d.message.lower()
         ]
-        assert len(underdeclared) >= 1
+        assert len(underdeclared) == 0
 
     def test_clean_when_matching(self, skill_dir: Path) -> None:
         skill_md = skill_dir / "SKILL.md"
@@ -238,7 +238,7 @@ class TestCveLookup:
         mock_resp_obj = io.BytesIO(json.dumps(mock_response).encode())
 
         with patch("urllib.request.urlopen", return_value=mock_resp_obj):
-            result = lint(str(skill_dir), SECURITY)
+            result = lint(str(skill_dir), {**SECURITY, "security/cve-lookup": "warning"})
 
         cve_findings = [d for d in result.diagnostics if d.rule_id == "security/cve-lookup"]
         assert len(cve_findings) >= 1

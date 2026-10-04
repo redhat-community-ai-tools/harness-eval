@@ -1,9 +1,7 @@
 ---
 name: review
 description: Full qualitative review of the agent setup. Reads every file, applies per-component rubrics, runs 21 cross-type optimization checks, and produces KEEP/REVIEW/REMOVE verdicts. Use when the user wants a deep review, redundancy check, or quality assessment of their setup.
-allowed-tools:
-  - Bash
-  - Read
+allowed-tools: Bash Read
 ---
 <!-- evaluator-ignore: content/broken-references, content/allowed-tools-auto-approve -->
 

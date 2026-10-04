@@ -112,10 +112,10 @@ class TestLintSkill:
         assert result.target_type == "skill"
         assert result.error_count == 0
 
-    def test_lint_catches_description_quality(self) -> None:
+    def test_portable_description_has_no_style_finding(self) -> None:
         result = lint(str(FIXTURES / "sample-setup-a/skills/code-review"))
         rule_ids = {d.rule_id for d in result.diagnostics}
-        assert "frontmatter/description-quality" in rule_ids
+        assert "frontmatter/description-quality" not in rule_ids
 
 
 class TestLintCommand:
@@ -362,7 +362,7 @@ class TestFrontmatterRules:
         rule_ids = {d.rule_id for d in result.diagnostics}
         assert "frontmatter/description-required" in rule_ids
 
-    def test_name_need_not_match_directory(self, tmp_path: Path) -> None:
+    def test_name_must_match_directory_for_portable_skills(self, tmp_path: Path) -> None:
         skill_dir = tmp_path / "my-skill"
         skill_dir.mkdir()
         (skill_dir / "SKILL.md").write_text(
@@ -370,7 +370,7 @@ class TestFrontmatterRules:
         )
         result = lint(str(skill_dir))
         rule_ids = {d.rule_id for d in result.diagnostics}
-        assert "frontmatter/format-valid" not in rule_ids
+        assert "frontmatter/format-valid" in rule_ids
 
     def test_missing_name(self, tmp_path: Path) -> None:
         skill_dir = tmp_path / "my-skill"

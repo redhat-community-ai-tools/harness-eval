@@ -29,7 +29,7 @@ def _make_skill(
 
 class TestOrphanSkills:
     def test_orphan_detected(self, tmp_path: Path) -> None:
-        """Skills not referenced by any command should be flagged."""
+        """Dynamically discovered skills do not require static references."""
         _make_skill(tmp_path, "alpha")
         _make_skill(tmp_path, "beta")
 
@@ -47,7 +47,7 @@ class TestOrphanSkills:
         )
 
         rule_ids = {d.rule_id for d in result.diagnostics}
-        assert "content/orphan-skills" in rule_ids
+        assert "content/orphan-skills" not in rule_ids
 
     def test_no_orphan_when_referenced(self, tmp_path: Path) -> None:
         """A skill referenced by a command body should not be flagged."""
@@ -102,7 +102,7 @@ class TestOrphanSkills:
 
 class TestMcpSkillAlignment:
     def test_mcp_config_unused(self, tmp_path: Path) -> None:
-        """MCP config with servers but no skill referencing MCP should flag."""
+        """Configured MCP servers need not be referenced by a skill."""
         _make_skill(tmp_path, "plain-skill", body="This skill does plain stuff.")
 
         mcp_config = tmp_path / ".mcp.json"
@@ -119,9 +119,7 @@ class TestMcpSkillAlignment:
         )
 
         rule_ids = {d.rule_id for d in result.diagnostics}
-        assert "content/mcp-skill-alignment" in rule_ids
-        mcp_findings = [d for d in result.diagnostics if d.rule_id == "content/mcp-skill-alignment"]
-        assert any("my-server" in d.message for d in mcp_findings)
+        assert "content/mcp-skill-alignment" not in rule_ids
 
     def test_mcp_config_with_matching_skill(self, tmp_path: Path) -> None:
         """MCP config should not flag if a skill references MCP tools."""
@@ -153,7 +151,7 @@ class TestMcpSkillAlignment:
 
 class TestTotalContextBudget:
     def test_over_budget(self, tmp_path: Path) -> None:
-        """Total tokens exceeding threshold should flag."""
+        """On-demand skill bodies are not treated as one aggregate context."""
         # Create skills with large content to exceed 60,000 tokens (30% of 200k)
         big_content = "word " * 20000  # ~20k tokens each
         _make_skill(tmp_path, "big-a", body=big_content)
@@ -177,7 +175,7 @@ class TestTotalContextBudget:
         )
 
         rule_ids = {d.rule_id for d in result.diagnostics}
-        assert "content/total-context-budget" in rule_ids
+        assert "content/total-context-budget" not in rule_ids
 
     def test_under_budget(self, tmp_path: Path) -> None:
         """Small skills should not trigger total context budget warning."""
@@ -208,7 +206,7 @@ class TestTotalContextBudget:
 
 class TestPermissionEscalation:
     def test_escalation_detected(self, tmp_path: Path) -> None:
-        """Skill without Bash referencing one with Bash should flag (transitive escalation)."""
+        """Portable allowed-tools metadata is not an enforceable capability boundary."""
         _make_skill(
             tmp_path,
             "admin-skill",
@@ -235,11 +233,7 @@ class TestPermissionEscalation:
         )
 
         rule_ids = {d.rule_id for d in result.diagnostics}
-        assert "content/permission-escalation" in rule_ids
-        escalation_findings = [
-            d for d in result.diagnostics if d.rule_id == "content/permission-escalation"
-        ]
-        assert any("Bash" in d.message for d in escalation_findings)
+        assert "content/permission-escalation" not in rule_ids
 
     def test_no_escalation_when_both_have_tools(self, tmp_path: Path) -> None:
         """No flag when both skills have the same tools."""

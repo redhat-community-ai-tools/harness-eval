@@ -230,12 +230,15 @@ def _detect_tools(root: Path) -> tuple[str, ...]:
 
 
 def _deduplicate_components(components: list[ParsedComponent]) -> list[ParsedComponent]:
-    seen: set[str] = set()
+    # One settings file can legitimately contain multiple component surfaces,
+    # for example Gemini hooks and MCP servers. Deduplicate only identical
+    # interpretations, not every component that shares a physical file.
+    seen: set[tuple[str, ComponentType]] = set()
     deduped: list[ParsedComponent] = []
     for c in components:
-        resolved = str(Path(c.path).resolve())
-        if resolved not in seen:
-            seen.add(resolved)
+        key = (str(Path(c.path).resolve()), c.component_type)
+        if key not in seen:
+            seen.add(key)
             deduped.append(c)
     return deduped
 
