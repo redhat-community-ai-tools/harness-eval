@@ -14,6 +14,7 @@ from harness_eval.inspection.parsers import (
     parse_agent,
     parse_claude_md,
     parse_command,
+    parse_config_file,
     parse_hooks,
     parse_mcp_config_file,
     parse_skill,
@@ -32,6 +33,7 @@ from harness_eval.inspection.types import (
     ParsedAgent,
     ParsedClaudeMd,
     ParsedCommand,
+    ParsedConfig,
     ParsedHooks,
     ParsedMcpConfig,
     ParsedSkill,
@@ -527,6 +529,46 @@ def lint_mcp_config(
     )
 
 
+def lint_config(
+    config_path: str,
+    config_rules: dict[str, str | list[Any]] | None = None,
+    all_skills: list[ParsedSkill] | None = None,
+    all_commands: list[ParsedCommand] | None = None,
+    scan_state: dict[str, Any] | None = None,
+    source_tool: str | None = None,
+    parsed: ParsedConfig | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
+) -> InspectionResult:
+    """Lint a general assistant configuration file."""
+    config = parsed if parsed is not None else parse_config_file(config_path)
+    diagnostics = _parse_errors_to_findings(config.parse_errors, config_path)
+    rule_diags, suppression_count, rules_run = _run_rules(
+        ComponentType.CONFIG,
+        config.file_path,
+        config.raw_content,
+        skill=None,
+        target=config,
+        config_rules=config_rules,
+        all_skills=all_skills,
+        all_commands=all_commands,
+        scan_state=scan_state,
+        source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
+    )
+    diagnostics.extend(rule_diags)
+    return _build_result(
+        config.file_path,
+        Path(config.file_path).name,
+        config.tokens,
+        "config",
+        diagnostics,
+        suppression_count,
+        rules_run,
+    )
+
+
 _SECURITY_ONLY_RULES = {
     "security/no-prompt-injection",
     "security/no-credential-access",
@@ -699,6 +741,7 @@ def _inspect_setup(
     hooks_comps = list(parsed_setup.core_by_type(CT.HOOKS))
     agent_comps = list(parsed_setup.core_by_type(CT.AGENT))
     mcp_comps = list(parsed_setup.core_by_type(CT.MCP_CONFIG))
+    config_comps = list(parsed_setup.core_by_type(CT.CONFIG))
 
     all_skills = list(parsed_setup.skills)
     all_commands = list(parsed_setup.commands)
@@ -706,6 +749,7 @@ def _inspect_setup(
     all_hooks = list(parsed_setup.hooks)
     all_agents = list(parsed_setup.agents)
     all_mcp = list(parsed_setup.mcp_configs)
+    all_configs = list(parsed_setup.configs)
 
     artifacts.component_graph = build_component_graph(
         all_skills,
@@ -776,6 +820,17 @@ def _inspect_setup(
             catalog=catalog,
             artifacts=artifacts,
         ),
+        CT.CONFIG: lambda comp, parsed: lint_config(
+            parsed.file_path,
+            config_rules,
+            all_skills=all_skills,
+            all_commands=all_commands,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
+        ),
     }
 
     parsed_by_type: list[tuple[CT, list[Any], list[Any]]] = [
@@ -785,6 +840,7 @@ def _inspect_setup(
         (CT.HOOKS, hooks_comps, all_hooks),
         (CT.AGENT, agent_comps, all_agents),
         (CT.MCP_CONFIG, mcp_comps, all_mcp),
+        (CT.CONFIG, config_comps, all_configs),
     ]
     for ctype, comps, parsed_list in parsed_by_type:
         run = lint_dispatch[ctype]

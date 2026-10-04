@@ -33,6 +33,8 @@ class DisallowedToolsParseable:
         agent = context.agent
         if not agent or not agent.disallowed_tools:
             return
+        if context.source_tool is not None and context.source_tool != "claude":
+            return
 
         for entry in agent.disallowed_tools:
             if not _VALID_PATTERN.match(entry):

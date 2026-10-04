@@ -35,6 +35,8 @@ class AgentExcessivePermissions:
         agent = context.agent
         if agent is None:
             return
+        if context.source_tool is not None and context.source_tool != "claude":
+            return
 
         if not agent.allowed_tools and not agent.disallowed_tools:
             context.report(

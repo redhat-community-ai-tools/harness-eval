@@ -23,6 +23,7 @@ class CommandDescriptionRequired:
             "missing": "Command is missing 'description' in frontmatter — it won't show properly in the UI menu",
         },
         target_type=ComponentType.COMMAND,
+        tools=("claude",),
         default_suggestion="Add a 'description' field to the command frontmatter.",
     )
 
@@ -30,9 +31,7 @@ class CommandDescriptionRequired:
         cmd = context.command
         if cmd is None or cmd.parse_errors:
             return
-        path = cmd.command_md_path.replace("\\", "/")
-        cursor_prose = context.source_tool == "cursor" or "/.cursor/commands/" in path
-        if cursor_prose and not cmd.raw_content.lstrip().startswith("---"):
+        if context.source_tool is not None and context.source_tool != "claude":
             return
 
         desc = cmd.frontmatter.get("description", "")

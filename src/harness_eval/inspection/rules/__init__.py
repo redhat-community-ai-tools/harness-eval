@@ -27,7 +27,6 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.agents.memory_write_unscoped import (
         AgentMemoryWriteUnscoped,
     )
-    from harness_eval.inspection.rules.agents.model_specified import AgentModelSpecified
     from harness_eval.inspection.rules.agents.no_credential_access import (
         AgentNoCredentialAccess,
     )
@@ -46,7 +45,6 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     )
 
     # CLAUDE.md rules
-    from harness_eval.inspection.rules.claude_md.exists import ClaudeMdExists
     from harness_eval.inspection.rules.claude_md.generic_advice import ClaudeMdGenericAdvice
     from harness_eval.inspection.rules.claude_md.include_exists import ClaudeMdIncludeExists
     from harness_eval.inspection.rules.claude_md.skill_duplication import (
@@ -83,6 +81,10 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.commands.script_exists import CommandScriptExists
     from harness_eval.inspection.rules.commands.shadows_builtin import CommandShadowsBuiltin
     from harness_eval.inspection.rules.commands.skill_overlap import CommandSkillOverlap
+    from harness_eval.inspection.rules.config.component_conflict import ConfigComponentConflict
+    from harness_eval.inspection.rules.config.dangerous_autonomy import ConfigDangerousAutonomy
+    from harness_eval.inspection.rules.config.valid_structure import ConfigValidStructure
+    from harness_eval.inspection.rules.content.activation_valid import InstructionActivationValid
     from harness_eval.inspection.rules.content.allowed_tools_auto_approve import (
         AllowedToolsAutoApprove,
     )
@@ -91,17 +93,14 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.content.description_length import DescriptionLength
     from harness_eval.inspection.rules.content.duplicate_detection import DuplicateDetection
     from harness_eval.inspection.rules.content.hardcoded_machine_path import HardcodedMachinePath
-    from harness_eval.inspection.rules.content.mcp_skill_alignment import McpSkillAlignment
-    from harness_eval.inspection.rules.content.orphan_skills import OrphanSkills
-    from harness_eval.inspection.rules.content.permission_escalation import PermissionEscalation
     from harness_eval.inspection.rules.content.token_budget import TokenBudget
-    from harness_eval.inspection.rules.content.total_context_budget import TotalContextBudget
     from harness_eval.inspection.rules.content.total_description_budget import (
         TotalDescriptionBudget,
     )
     from harness_eval.inspection.rules.cross.config_instruction_conflict import (
         ConfigInstructionConflict,
     )
+    from harness_eval.inspection.rules.cross.duplicate_skill_id import DuplicateSkillId
     from harness_eval.inspection.rules.cross.multi_assistant_drift import MultiAssistantDrift
     from harness_eval.inspection.rules.cross.overpermissive_grants import OverpermissiveGrants
     from harness_eval.inspection.rules.frontmatter.description_quality import DescriptionQuality
@@ -148,8 +147,6 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     )
     from harness_eval.inspection.rules.mcp.endpoint_integrity import McpEndpointIntegrity
     from harness_eval.inspection.rules.mcp.no_plaintext_secrets import McpNoPlaintextSecrets
-    from harness_eval.inspection.rules.mcp.no_wildcard_tools import McpNoWildcardTools
-    from harness_eval.inspection.rules.mcp.suspicious_endpoint import McpSuspiciousEndpoint
     from harness_eval.inspection.rules.mcp.unpinned_package import McpUnpinnedPackage
     from harness_eval.inspection.rules.mcp.valid_config import McpValidConfig
     from harness_eval.inspection.rules.quality.example_gap import ExampleGap
@@ -159,9 +156,7 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.quality.scope_grab_description import (
         ScopeGrabDescription,
     )
-    from harness_eval.inspection.rules.quality.scope_overreach import ScopeOverreach
     from harness_eval.inspection.rules.quality.stale_references import StaleReferences
-    from harness_eval.inspection.rules.quality.trigger_manipulation import TriggerManipulation
     from harness_eval.inspection.rules.quality.unfinished_content import UnfinishedContent
     from harness_eval.inspection.rules.security.ast_behavioral import AstBehavioral
     from harness_eval.inspection.rules.security.bash_taint_tracking import BashTaintTracking
@@ -172,7 +167,6 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.security.cross_component_flow import CrossComponentFlow
     from harness_eval.inspection.rules.security.cve_lookup import CveLookup
     from harness_eval.inspection.rules.security.data_exfiltration import DataExfiltration
-    from harness_eval.inspection.rules.security.mcp_least_privilege import McpLeastPrivilege
     from harness_eval.inspection.rules.security.mcp_tool_poisoning import McpToolPoisoning
     from harness_eval.inspection.rules.security.memory_write_unscoped import MemoryWriteUnscoped
     from harness_eval.inspection.rules.security.no_credential_access import NoCredentialAccess
@@ -198,6 +192,11 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
 
     builtin_rules: list[type[Rule]] = [
         SkillMdExists,
+        ConfigValidStructure,
+        ConfigDangerousAutonomy,
+        ConfigComponentConflict,
+        InstructionActivationValid,
+        DuplicateSkillId,
         DescriptionRequired,
         DescriptionQuality,
         FormatValid,
@@ -222,7 +221,6 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         CommandShadowsBuiltin,
         CommandDuplicateDetection,
         CommandReferencesNonexistentSkill,
-        ClaudeMdExists,
         ClaudeMdSkillDuplication,
         ClaudeMdGenericAdvice,
         HooksScriptBoundary,
@@ -239,14 +237,10 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         AgentReverseShellDetection,
         AgentObfuscationDetection,
         AgentDataExfiltration,
-        AgentModelSpecified,
         AstBehavioral,
         TaintTracking,
         BashTaintTracking,
-        McpLeastPrivilege,
         McpValidConfig,
-        McpSuspiciousEndpoint,
-        McpNoWildcardTools,
         McpToolPoisoning,
         YaraScan,
         CveLookup,
@@ -256,15 +250,9 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         ExampleGap,
         StaleReferences,
         NegativeOnly,
-        ScopeOverreach,
-        TriggerManipulation,
         CoerciveOverride,
         StealthPersistence,
         PromptExfiltration,
-        OrphanSkills,
-        McpSkillAlignment,
-        TotalContextBudget,
-        PermissionEscalation,
         CrossComponentFlow,
         AgentExcessivePermissions,
         MemoryWriteUnscoped,
@@ -305,20 +293,12 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     for rule_cls in builtin_rules:
         target.register(rule_cls())
 
-    from harness_eval.inspection.rules.claude_md.missing_boundary_policy import (
-        ClaudeMdMissingBoundaryPolicy,
-    )
     from harness_eval.inspection.rules.hooks.dangerous_permission_grant import (
         HooksDangerousPermissionGrant,
     )
-    from harness_eval.inspection.rules.hooks.no_audit_trail import HooksNoAuditTrail
-    from harness_eval.inspection.rules.hooks.no_commit_guard import HooksNoCommitGuard
 
     gap_rules: list[type[Rule]] = [
-        HooksNoCommitGuard,
         HooksDangerousPermissionGrant,
-        HooksNoAuditTrail,
-        ClaudeMdMissingBoundaryPolicy,
     ]
     for rule_cls in gap_rules:
         target.register(rule_cls())
