@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from fnmatch import fnmatchcase
+
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.rules.config._shared import parsed_config
+from harness_eval.inspection.rules.config._shared import (
+    opencode_permission_rules,
+    parsed_config,
+)
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -10,6 +15,8 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
+
+_OPENCODE_HIGH_IMPACT = ("shell", "edit", "external_directory")
 
 
 class ConfigDangerousAutonomy:
@@ -71,21 +78,18 @@ class ConfigDangerousAutonomy:
             return
 
         if context.source_tool == "opencode":
-            permissions = data.get("permissions")
-            if not isinstance(permissions, list):
-                return
-            for rule in permissions:
-                if not isinstance(rule, dict):
+            for rule in opencode_permission_rules(data):
+                action = rule.get("action")
+                if rule.get("effect") != "allow" or rule.get("resource") != "*":
                     continue
-                if (
-                    rule.get("effect") == "allow"
-                    and rule.get("resource") == "*"
-                    and rule.get("action") in {"shell", "edit", "external_directory"}
-                ):
+                if not isinstance(action, str):
+                    continue
+                matched = [a for a in _OPENCODE_HIGH_IMPACT if fnmatchcase(a, action)]
+                if matched:
                     context.report(
                         ReportDescriptor(
                             message_id="opencode_broad_allow",
-                            data={"action": str(rule["action"])},
+                            data={"action": ", ".join(matched)},
                             location=loc,
                             severity_override=Severity.WARNING,
                         )

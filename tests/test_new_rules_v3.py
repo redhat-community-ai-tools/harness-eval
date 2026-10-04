@@ -23,6 +23,15 @@ class TestDeprecatedRules:
         assert "mcp/json-duplicate-keys" in caplog.text
         assert "now covered by" not in caplog.text
 
+    def test_explanation_message_ends_with_one_period(self, caplog) -> None:
+        from harness_eval.inspection.engine import _warn_unknown_config_rules, _warned_config_rules
+
+        _warned_config_rules.discard("agent/model-specified")
+        with caplog.at_level("WARNING"):
+            _warn_unknown_config_rules({"agent/model-specified": "warning"})
+        assert "omitted." in caplog.text
+        assert ".." not in caplog.text
+
 
 class TestMcpSuspiciousEndpoint:
     def test_public_url_clean(self, tmp_path: Path) -> None:

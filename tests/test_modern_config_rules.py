@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from harness_eval.inspection.engine import lint, lint_claude_md, lint_config
 from harness_eval.inspection.parsers import parse_skill
 
@@ -210,9 +212,17 @@ def test_unique_skill_id_is_clean(tmp_path: Path) -> None:
     assert _ids(result) == []
 
 
-def test_copilot_path_instruction_requires_apply_to(tmp_path: Path) -> None:
+def test_copilot_instruction_without_apply_to_is_manual_and_clean(tmp_path: Path) -> None:
     path = tmp_path / "python.instructions.md"
     path.write_text("---\ndescription: Python rules\n---\nUse Ruff.\n")
+    result = lint_claude_md(str(path), {"content/activation-valid": "error"}, source_tool="copilot")
+    assert _ids(result) == []
+
+
+@pytest.mark.parametrize("apply_to", ['""', "[]", '["**/*.py"]', "42"])
+def test_copilot_unusable_apply_to_is_flagged(tmp_path: Path, apply_to: str) -> None:
+    path = tmp_path / "python.instructions.md"
+    path.write_text(f"---\napplyTo: {apply_to}\n---\nUse Ruff.\n")
     result = lint_claude_md(str(path), {"content/activation-valid": "error"}, source_tool="copilot")
     assert _ids(result) == ["content/activation-valid"]
 
@@ -222,3 +232,71 @@ def test_copilot_apply_to_is_clean(tmp_path: Path) -> None:
     path.write_text('---\napplyTo: "**/*.py"\n---\nUse Ruff.\n')
     result = lint_claude_md(str(path), {"content/activation-valid": "error"}, source_tool="copilot")
     assert _ids(result) == []
+
+
+AUTONOMY = {"config/dangerous-autonomy": "error"}
+
+
+@pytest.mark.parametrize(
+    "permission",
+    ["allow", {"bash": "allow"}, {"*": "allow"}, {"edit": {"*": "allow"}}],
+)
+def test_opencode_v1_broad_allow_is_flagged(tmp_path: Path, permission: object) -> None:
+    path = _config(tmp_path, json.dumps({"permission": permission}), "opencode.json")
+    result = lint_config(path, AUTONOMY, source_tool="opencode")
+    assert _ids(result) == ["config/dangerous-autonomy"]
+
+
+def test_opencode_v1_narrow_allow_is_clean(tmp_path: Path) -> None:
+    data = {"permission": {"bash": {"*": "ask", "git status *": "allow"}, "read": "allow"}}
+    path = _config(tmp_path, json.dumps(data), "opencode.json")
+    result = lint_config(path, AUTONOMY, source_tool="opencode")
+    assert _ids(result) == []
+
+
+def test_opencode_v1_wildcard_allow_names_each_high_impact_action(tmp_path: Path) -> None:
+    path = _config(tmp_path, json.dumps({"permission": "allow"}), "opencode.json")
+    result = lint_config(path, AUTONOMY, source_tool="opencode")
+    assert "shell, edit, external_directory" in result.diagnostics[0].message
+
+
+def test_opencode_v1_skill_deny_makes_skill_unreachable(tmp_path: Path) -> None:
+    skill = parse_skill(_skill(tmp_path, ".opencode/skills", "release"))
+    data = {"permission": {"skill": {"*": "allow", "release": "deny"}}}
+    path = _config(tmp_path, json.dumps(data), "opencode.json")
+    result = lint_config(
+        path,
+        {"cross/config-component-conflict": "error"},
+        all_skills=[skill],
+        source_tool="opencode",
+    )
+    assert _ids(result) == ["cross/config-component-conflict"]
+
+
+def test_valid_opencode_v1_config_is_clean(tmp_path: Path) -> None:
+    data = {
+        "permission": {"*": "ask", "bash": {"git *": "allow", "rm *": "deny"}, "edit": "deny"},
+        "agent": {"build": {"permission": {"edit": "allow"}}},
+        "plugin": ["opencode-helicone-session"],
+    }
+    path = _config(tmp_path, json.dumps(data), "opencode.json")
+    result = lint_config(path, {"config/valid-structure": "error"}, source_tool="opencode")
+    assert _ids(result) == []
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"permission": "sometimes"},
+        {"permission": {"bash": "yes"}},
+        {"permission": {"bash": {"git *": "maybe"}}},
+        {"permission": {"bash": ["allow"]}},
+        {"permission": ["allow"]},
+        {"agent": []},
+        {"plugin": "one"},
+    ],
+)
+def test_invalid_opencode_v1_config_is_flagged(tmp_path: Path, data: dict) -> None:
+    path = _config(tmp_path, json.dumps(data), "opencode.json")
+    result = lint_config(path, {"config/valid-structure": "error"}, source_tool="opencode")
+    assert _ids(result) == ["config/valid-structure"]

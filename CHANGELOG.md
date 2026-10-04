@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- Current Codex, Copilot, Gemini CLI, OpenCode V2, Windsurf/Devin, Cline,
+- Current Codex, Copilot, Gemini CLI, OpenCode (V1 and V2), Windsurf/Devin, Cline,
   Cursor, Agent Skills, MCP, JSONC, and TOML discovery/configuration support.
 - Five deterministic rules for client settings, dangerous autonomy,
   instruction activation, disabled components, and duplicate skill IDs.
@@ -26,6 +26,10 @@ All notable changes to this project will be documented in this file.
   heuristic. Three new intent-dependent rules (`config/dangerous-autonomy`,
   `cross/config-component-conflict`, and `cross/duplicate-skill-id`) are also
   advisory rather than build-gating until corpus precision evidence exists.
+- `content/activation-valid` accepts a Copilot `.instructions.md` without
+  `applyTo` (it is attached manually) and flags only an empty or non-string value.
+- OpenCode rules read the V1 `permission` object or string as well as the V2
+  `permissions` list, so V1 configs are no longer skipped.
 - Deprecated-rule messages now provide an accurate migration explanation rather
   than always claiming a removed rule has a successor rule ID.
 

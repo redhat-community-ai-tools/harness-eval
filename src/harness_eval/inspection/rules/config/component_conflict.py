@@ -4,7 +4,10 @@ from fnmatch import fnmatchcase
 from typing import Any
 
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.rules.config._shared import parsed_config
+from harness_eval.inspection.rules.config._shared import (
+    opencode_permission_rules,
+    parsed_config,
+)
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -82,8 +85,8 @@ class ConfigComponentConflict:
         if context.source_tool == "gemini":
             self._gemini(context, data, loc)
         elif context.source_tool == "opencode":
-            permissions = data.get("permissions")
-            if isinstance(permissions, list):
+            permissions = opencode_permission_rules(data)
+            if permissions:
                 for skill in context.all_skills:
                     if not _skill_is_loaded_by(skill.skill_md_path, "opencode"):
                         continue

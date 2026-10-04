@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from harness_eval.core.types import ComponentType
-from harness_eval.inspection.rules.config._shared import parsed_config
+from harness_eval.inspection.rules.config._shared import OPENCODE_EFFECTS, parsed_config
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -35,6 +35,10 @@ class ConfigValidStructure:
             ),
             "permission_effect": (
                 "OpenCode permissions[{{index}}].effect must be allow, deny, or ask"
+            ),
+            "v1_permission_effect": (
+                "OpenCode {{field}} must be allow, deny, or ask, or an object of patterns"
+                " that map to one of them"
             ),
         },
         target_type=ComponentType.CONFIG,
@@ -94,6 +98,7 @@ class ConfigValidStructure:
             "an array of strings",
             _is_string_list(data.get("plugins")),
         )
+        self._opencode_v1(context, data, loc)
         if not isinstance(permissions, list):
             return
         for index, rule in enumerate(permissions):
@@ -106,12 +111,53 @@ class ConfigValidStructure:
                     )
                 )
                 continue
-            if rule["effect"] not in {"allow", "deny", "ask"}:
+            if rule["effect"] not in OPENCODE_EFFECTS:
                 context.report(
                     ReportDescriptor(
                         message_id="permission_effect", data={"index": index}, location=loc
                     )
                 )
+
+    def _opencode_v1(self, context: RuleContext, data: dict[str, Any], loc: Location) -> None:
+        """Validate the V1 ``permission``, ``agent``, and ``plugin`` keys."""
+        self._type(context, loc, data, "agent", "an object", isinstance(data.get("agent"), dict))
+        self._type(
+            context,
+            loc,
+            data,
+            "plugin",
+            "an array of strings",
+            _is_string_list(data.get("plugin")),
+        )
+        if "permission" not in data:
+            return
+        permission = data["permission"]
+        if isinstance(permission, str):
+            bad = [] if permission in OPENCODE_EFFECTS else ["permission"]
+        elif isinstance(permission, dict):
+            bad = []
+            for tool, value in permission.items():
+                field = f"permission.{tool}"
+                if isinstance(value, str):
+                    if value not in OPENCODE_EFFECTS:
+                        bad.append(field)
+                elif isinstance(value, dict):
+                    bad.extend(
+                        f"{field}.{pattern}"
+                        for pattern, effect in value.items()
+                        if effect not in OPENCODE_EFFECTS
+                    )
+                else:
+                    bad.append(field)
+        else:
+            self._type(context, loc, data, "permission", "a string or an object", False)
+            return
+        for field in bad:
+            context.report(
+                ReportDescriptor(
+                    message_id="v1_permission_effect", data={"field": field}, location=loc
+                )
+            )
 
     def _gemini(self, context: RuleContext, data: dict[str, Any], loc: Location) -> None:
         for field in ("mcp", "skills", "hooksConfig", "security"):

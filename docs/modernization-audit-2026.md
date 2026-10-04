@@ -49,9 +49,9 @@ The registry retains migration messages for old configuration and suppression en
 
 | Rule | Scope | Defensible signal |
 |---|---|---|
-| `config/valid-structure` | File | Current client-specific field types and OpenCode V2 ordered permission entries. |
+| `config/valid-structure` | File | Current client-specific field types and OpenCode permissions in both the V2 ordered list and the V1 `permission` object. |
 | `config/dangerous-autonomy` | File | Codex explicitly combines no approval with full host access; Gemini explicitly trusts an MCP server; or OpenCode explicitly allows every high-impact resource. Advisory: the project may deliberately accept this tradeoff. |
-| `content/activation-valid` | File | A Copilot path instruction lacks its required `applyTo` glob. |
+| `content/activation-valid` | File | A Copilot path instruction has an empty or non-string `applyTo`. A missing `applyTo` is valid (manual attachment). |
 | `cross/config-component-conflict` | Setup | A discovered Gemini skill/hook/MCP server or OpenCode skill is disabled/denied by the same setup. Advisory: disabled components can be intentional. |
 | `cross/duplicate-skill-id` | Setup | Multiple discovery roots expose the same skill identity; divergent bodies make client search order behavior ambiguous. Advisory: recursive scans can intentionally include sibling projects. |
 

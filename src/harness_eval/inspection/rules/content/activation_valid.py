@@ -25,7 +25,8 @@ class InstructionActivationValid:
         category=RuleCategory.STRUCTURAL,
         messages={
             "copilot_apply_to": (
-                "Copilot .instructions.md files require a non-empty string applyTo glob in frontmatter"
+                "Copilot applyTo must be a non-empty glob string; omit it to attach the"
+                " file manually"
             ),
         },
         target_type=ComponentType.CLAUDE_MD,
@@ -40,7 +41,11 @@ class InstructionActivationValid:
         if not Path(target.file_path).name.endswith(".instructions.md"):
             return
         parsed = parse_frontmatter_rich(target.raw_content)
-        apply_to = parsed.frontmatter.get("applyTo")
+        # A file without applyTo is valid: it is attached manually instead of
+        # by path. Only a present but unusable value is a defect.
+        if "applyTo" not in parsed.frontmatter:
+            return
+        apply_to = parsed.frontmatter["applyTo"]
         if not isinstance(apply_to, str) or not apply_to.strip():
             context.report(
                 ReportDescriptor(

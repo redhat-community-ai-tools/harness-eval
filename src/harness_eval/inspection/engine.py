@@ -673,7 +673,7 @@ def _warn_unknown_config_rules(
             logger.warning(
                 "Config references removed rule '%s': %s.",
                 rule_id,
-                DEPRECATED_RULES[rule_id],
+                DEPRECATED_RULES[rule_id].rstrip("."),
             )
             continue
         suggestions = catalog.suggest(rule_id)
