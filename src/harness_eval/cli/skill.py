@@ -10,7 +10,7 @@ from typing import Any
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
+from harness_eval.cli._helpers import exclude_option, scan_limit_options, scan_limits_from
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType, ScanLimits
 from harness_eval.inspection.types import finding_data_field
@@ -45,6 +45,7 @@ from harness_eval.utils.redact import redact_secrets
     default=None,
     help="Path to ~/.claude directory for user-level CLAUDE.md discovery.",
 )
+@exclude_option
 @scan_limit_options
 def eval_skill(
     skill_path: str,
@@ -55,6 +56,7 @@ def eval_skill(
     provider: str,
     model: str | None,
     user_config: str | None,
+    exclude: tuple[str, ...],
     max_file_bytes: int,
     max_total_bytes: int,
     max_files: int,
@@ -78,7 +80,7 @@ def eval_skill(
     context_findings: list[str] = []
     if context_path:
         context_findings = _contextual_skill_analysis(
-            str(target), context_path, config_rules, limits
+            str(target), context_path, config_rules, limits, exclude
         )
 
     rubric_result = None
@@ -138,6 +140,9 @@ def eval_skill(
                     "rule": d.rule_id,
                     "severity": d.severity.value,
                     "message": d.message,
+                    "file": d.location.file,
+                    **({"line": d.location.start_line} if d.location.start_line else {}),
+                    **({"suggestion": d.suggestion} if d.suggestion else {}),
                     **finding_data_field(d),
                 }
                 for d in result.diagnostics
@@ -207,7 +212,11 @@ def eval_skill(
 
 
 def _contextual_skill_analysis(
-    skill_path: str, context_path: str, config_rules: dict[str, Any], limits: ScanLimits
+    skill_path: str,
+    context_path: str,
+    config_rules: dict[str, Any],
+    limits: ScanLimits,
+    exclude: tuple[str, ...] = (),
 ) -> list[str]:
     """Analyze a skill in context of its parent setup."""
     from harness_eval.analysis.triggers import analyze_triggers
@@ -216,7 +225,7 @@ def _contextual_skill_analysis(
 
     findings = []
     skill = parse_skill(skill_path)
-    setup = discover_setup(name="context", path=context_path, limits=limits)
+    setup = discover_setup(name="context", path=context_path, limits=limits, exclude=exclude)
 
     for comp in setup.by_type(ComponentType.SKILL):
         if comp.name == skill.dir_name:

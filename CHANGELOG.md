@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- A security match written as a prohibition ("never read ~/.ssh", "do not
+  print the system prompt") stays a warning when a preset sets the rule to
+  error, so a guardrail does not make the security verdict UNSAFE.
+- Credential checks report every sensitive path on a line, not only the first.
+- `harness-gate` prints info findings and does not fail the command on them.
+- `skill-verify` keeps every distinct finding when one rule matches more than
+  once. The same finding from the lint pass and the security pass still keeps
+  the higher severity.
+
+### Changed
+- `harness-gate`, `baseline`, `skill-verify`, `harness-review`, and
+  `skill-review` accept `--exclude`, the same option `harness-lint` and
+  `harness-security` already had.
+- `skill-review` JSON findings include the file, line, and suggestion.
+
 ## [7.16.1] - 2026-09-30
 
 ### Added

@@ -8,8 +8,13 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import emit_output, scan_limit_options, scan_limits_from
-from harness_eval.inspection.types import finding_data_field
+from harness_eval.cli._helpers import (
+    emit_output,
+    exclude_option,
+    scan_limit_options,
+    scan_limits_from,
+)
+from harness_eval.inspection.types import Severity, finding_data_field
 
 
 @cli.command("harness-gate")
@@ -45,6 +50,7 @@ from harness_eval.inspection.types import finding_data_field
     is_flag=True,
     help="Recursively search subdirectories for agent configs.",
 )
+@exclude_option
 @scan_limit_options
 def harness_gate(
     path: str,
@@ -53,13 +59,15 @@ def harness_gate(
     include_provisional: bool,
     output_path: str | None,
     recursive: bool,
+    exclude: tuple[str, ...],
     max_file_bytes: int,
     max_total_bytes: int,
     max_files: int,
     max_depth: int,
 ) -> None:
     """Gate on validated rules only. Runs tier=gating rules (add --include-provisional
-    for the provisional tier), exits 1 on any finding, and never loads LLM extras."""
+    for the provisional tier), exits 1 on any error or warning, and never loads
+    LLM extras. Info findings are printed and do not fail the command."""
     from harness_eval.config.presets import gate_rules
     from harness_eval.core.setup import discover_setup
     from harness_eval.inspection.engine import inspect_setup
@@ -72,6 +80,7 @@ def harness_gate(
             name=target.name,
             path=path,
             recursive=recursive,
+            exclude=exclude,
             limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
         )
         results = inspect_setup(setup, config_rules)
@@ -117,5 +126,5 @@ def harness_gate(
         lines = [f"{d.rule_id}\t{d.location.file}\t{d.message}" for d in findings]
         emit_output("\n".join(lines) if lines else "No gating findings.", output_path)
 
-    if findings:
+    if any(d.severity != Severity.INFO for d in findings):
         raise SystemExit(1)

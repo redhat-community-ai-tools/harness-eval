@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
+from harness_eval.cli._helpers import exclude_option, scan_limit_options, scan_limits_from
 
 
 @cli.command("baseline")
@@ -36,6 +36,7 @@ from harness_eval.cli._helpers import scan_limit_options, scan_limits_from
     is_flag=True,
     help="Recursively search for agent configs in all subdirectories.",
 )
+@exclude_option
 @scan_limit_options
 def create_baseline_cmd(
     path: str,
@@ -43,6 +44,7 @@ def create_baseline_cmd(
     preset: str,
     user_config: str | None,
     recursive: bool,
+    exclude: tuple[str, ...],
     max_file_bytes: int,
     max_total_bytes: int,
     max_files: int,
@@ -61,6 +63,7 @@ def create_baseline_cmd(
         path=path,
         user_config_dir=user_config,
         recursive=recursive,
+        exclude=exclude,
         limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
     results = inspect_setup(setup, config_rules)

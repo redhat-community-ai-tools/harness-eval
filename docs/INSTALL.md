@@ -26,7 +26,7 @@ harness-eval harness-lint . --format json           # JSON output for scripts
 
 # Resource limits on the agent-setup files a scan reads (all scanning commands)
 harness-eval harness-lint . --max-total-bytes 500000000 --max-files 200000
-harness-eval harness-gate .                         # gating-tier rules only; exits 1 on any finding, no LLM
+harness-eval harness-gate .                         # gating-tier rules only; exits 1 on errors and warnings, no LLM
 harness-eval harness-review . --provider gemini     # LLM-based rubric review (requires [llm] extra)
 harness-eval harness-security .                     # deterministic security scan
 harness-eval harness-security . --review            # security scan + LLM semantic review (requires [llm] extra)
