@@ -46,28 +46,28 @@ class TestMcpSuspiciousEndpoint:
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/suspicious-endpoint"]
         assert len(diags) == 0
 
-    def test_private_10_flagged(self, tmp_path: Path) -> None:
+    def test_private_10_not_intrinsically_suspicious(self, tmp_path: Path) -> None:
         mcp = tmp_path / ".mcp.json"
         mcp.write_text(
             json.dumps({"mcpServers": {"internal": {"url": "http://10.0.1.5:9090/api"}}})
         )
         result = lint_mcp_config(str(mcp), {"mcp/suspicious-endpoint": "warning"})
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/suspicious-endpoint"]
-        assert len(diags) == 1
+        assert len(diags) == 0
 
-    def test_private_192_168_flagged(self, tmp_path: Path) -> None:
+    def test_private_192_168_not_intrinsically_suspicious(self, tmp_path: Path) -> None:
         mcp = tmp_path / ".mcp.json"
         mcp.write_text(json.dumps({"mcpServers": {"home": {"url": "http://192.168.1.100:8080"}}}))
         result = lint_mcp_config(str(mcp), {"mcp/suspicious-endpoint": "warning"})
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/suspicious-endpoint"]
-        assert len(diags) == 1
+        assert len(diags) == 0
 
-    def test_private_172_flagged(self, tmp_path: Path) -> None:
+    def test_private_172_not_intrinsically_suspicious(self, tmp_path: Path) -> None:
         mcp = tmp_path / ".mcp.json"
         mcp.write_text(json.dumps({"mcpServers": {"docker": {"url": "http://172.17.0.2:3000"}}}))
         result = lint_mcp_config(str(mcp), {"mcp/suspicious-endpoint": "warning"})
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/suspicious-endpoint"]
-        assert len(diags) == 1
+        assert len(diags) == 0
 
     def test_command_server_not_flagged(self, tmp_path: Path) -> None:
         mcp = tmp_path / ".mcp.json"
@@ -118,15 +118,14 @@ class TestMcpNoWildcardTools:
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-wildcard-tools"]
         assert len(diags) == 0
 
-    def test_no_restriction_flagged(self, tmp_path: Path) -> None:
+    def test_absent_nonportable_allowlist_is_clean(self, tmp_path: Path) -> None:
         mcp = tmp_path / ".mcp.json"
         mcp.write_text(
             json.dumps({"mcpServers": {"srv": {"command": "node", "args": ["server.js"]}}})
         )
         result = lint_mcp_config(str(mcp), {"mcp/no-wildcard-tools": "info"})
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-wildcard-tools"]
-        assert len(diags) == 1
-        assert "srv" in diags[0].message
+        assert len(diags) == 0
 
 
 # ── Hooks rules ────────────────────────────────────────────────────────

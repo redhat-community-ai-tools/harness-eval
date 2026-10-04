@@ -38,15 +38,14 @@ class TestAutoApproveRisk:
         assert len(diags) == 1
         assert "run_pipeline" in diags[0].message
 
-    def test_flags_empty_auto_approve(self, tmp_path: Path) -> None:
+    def test_empty_auto_approve_is_not_approve_all(self, tmp_path: Path) -> None:
         path = _make_mcp_config(
             tmp_path,
             {"danger": {"command": "x", "autoApprove": []}},
         )
         result = lint_mcp_config(path, RULE_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == RULE_ID]
-        assert len(diags) == 1
-        assert "empty" in diags[0].message.lower() or "all tools" in diags[0].message.lower()
+        assert len(diags) == 0
 
     def test_no_flag_read_only_tools(self, tmp_path: Path) -> None:
         path = _make_mcp_config(

@@ -82,7 +82,7 @@ class TestCrossComponentExfiltration:
 
 
 class TestConfusedDeputy:
-    def test_detects_disallowed_tool_bypass(self, tmp_path: Path) -> None:
+    def test_skill_does_not_bypass_agent_tool_policy(self, tmp_path: Path) -> None:
         _make_skill(
             tmp_path,
             "shell-skill",
@@ -99,7 +99,7 @@ class TestConfusedDeputy:
         results = inspect_setup(setup, CONFIG)
         all_diags = [d for r in results for d in r.diagnostics if d.rule_id == RULE_ID]
         confused = [d for d in all_diags if "confused deputy" in d.message.lower()]
-        assert len(confused) >= 1
+        assert len(confused) == 0
 
     def test_no_finding_when_capabilities_match(self, tmp_path: Path) -> None:
         _make_skill(
