@@ -147,6 +147,24 @@ and depth 50 by default. Every command that discovers a setup accepts
 `--max-file-bytes`, `--max-total-bytes`, `--max-files`, and `--max-depth`;
 an exceeded limit is reported as a one-line error.
 
+### Scan evidence
+
+A result that will be consumed by something other than a person (a merge
+policy, a compliance record) has to say what it was computed from.
+`harness-lint --format json` carries that under `metadata.evidence`, and
+`harness-lint`/`harness-gate --format sarif` under `runs[0].properties` plus
+`runs[0].versionControlProvenance`:
+
+- `setup_fingerprint`: hash of the scanned inventory (the same one watch mode uses)
+- `vcs.revision`: HEAD of the enclosing git checkout, read from `.git` without a subprocess
+- `rules.digest` / `rules.count` / `rules.target_rules_loaded`: the rule catalog in force
+- `config.preset` / `config.digest`: the severities in force
+- `baseline.digest` / `baseline.suppressed`: what a `--baseline` hid, counted rather than dropped silently
+- `inventory.files` / `inventory.excludes` / `inventory.limits`: what was and was not read
+
+Two runs with the same fingerprint, revision, rules digest and config digest
+are the same evaluation.
+
 ## Privacy
 
 `harness-lint` and default `harness-security` are fully offline. OSV lookup (`harness-security --cve`) and **LLM review are opt-in:**

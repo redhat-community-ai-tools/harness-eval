@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Scan evidence in `harness-lint` JSON (`metadata.evidence`) and in SARIF
+  (`run.versionControlProvenance`, `run.properties`) for `harness-lint` and
+  `harness-gate`: the setup fingerprint, the enclosing git revision (read
+  from `.git`, no subprocess), a digest of the effective rule catalog and of
+  the severity configuration, whether target YAML rules were loaded, what a
+  baseline suppressed, and the inventory size, excludes, and limits. A
+  result can now be bound to exactly what it was computed from.
+- `inspection.engine.build_scan_catalog` exposes the per-scan rule catalog
+  so callers can record the rules in force.
+
 ## [7.17.0] - 2026-10-04
 
 ### Added

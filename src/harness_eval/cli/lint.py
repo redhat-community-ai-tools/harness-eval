@@ -162,15 +162,22 @@ def eval_setup_lint(
             exclude=exclude,
             limits=limits,
         )
-        results = inspect_setup(setup, config_rules, load_target_yaml=rules_from_target)
+        from harness_eval.inspection.engine import build_scan_catalog
+        from harness_eval.output.provenance import collect_scan_evidence
 
+        scan_catalog = build_scan_catalog(path, load_target_yaml=rules_from_target)
+        results = inspect_setup(setup, config_rules, catalog=scan_catalog)
+
+        baseline_suppressed = 0
         if baseline_path:
             import json as _json_bl
 
             from harness_eval.baseline import filter_baselined
 
             bl_data = _json_bl.loads(Path(baseline_path).read_text())
+            before = sum(len(r.diagnostics) for r in results)
             results = filter_baselined(results, bl_data)
+            baseline_suppressed = before - sum(len(r.diagnostics) for r in results)
 
         system = analyze_system(setup)
 
@@ -180,6 +187,16 @@ def eval_setup_lint(
             components_scanned=len(results),
             rules_checked=sum(len(r.rules_run) for r in results),
             invocation_source="cli",
+            evidence=collect_scan_evidence(
+                setup,
+                scan_catalog,
+                config_rules,
+                preset=preset,
+                target_rules_loaded=rules_from_target,
+                excludes=exclude,
+                baseline_path=baseline_path,
+                baseline_suppressed=baseline_suppressed,
+            ),
         )
 
         if fmt == "sarif":
