@@ -108,6 +108,9 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         DescriptionRequired,
     )
     from harness_eval.inspection.rules.frontmatter.format_valid import FormatValid
+    from harness_eval.inspection.rules.harness.referenced_file_exists import (
+        HarnessReferencedFileExists,
+    )
 
     # Hooks rules
     from harness_eval.inspection.rules.hooks.api_key_helper import HooksApiKeyHelper
@@ -289,6 +292,7 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         TotalDescriptionBudget,
         ScopeGrabDescription,
         FileCompleteness,
+        HarnessReferencedFileExists,
     ]
     for rule_cls in builtin_rules:
         target.register(rule_cls())

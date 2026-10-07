@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `HARNESS` component type for pipeline agent harnesses (the definition that
+  runs an agent unattended in CI), with a normalized model and a per-format
+  mapper registry under `inspection/harness_formats/`.
+- fullsend discoverer: `harness/*.yaml` files carrying an `agent:` or `base:`
+  key are discovered, inventoried, and fingerprinted.
+- `harness/referenced-file-exists` (structural, FILE_FS, provisional): every
+  path a harness references must exist in the tree; skips what the runtime
+  cannot resolve statically (URLs, absolute paths, host `${VAR}` references,
+  optional host files, URL bases) and stays silent on overlay or org-config
+  layers, whose references other layers satisfy at dispatch time.
+- `harness-lint <file>` accepts a single `harness/*.yaml` file.
+
 ## [7.17.0] - 2026-10-04
 
 ### Added

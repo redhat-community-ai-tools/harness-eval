@@ -6,12 +6,14 @@ import json as json_mod
 import re
 import tomllib
 from pathlib import Path
+from typing import Any
 
 from harness_eval.inspection.types import (
     ParsedAgent,
     ParsedClaudeMd,
     ParsedCommand,
     ParsedConfig,
+    ParsedHarness,
     ParsedHooks,
     ParsedMcpConfig,
     ParsedSkill,
@@ -492,5 +494,58 @@ def parse_config_file(file_path: str) -> ParsedConfig:
     return ParsedConfig(
         file_path=file_path,
         raw_content=raw_content,
+        tokens=count_tokens(raw_content),
+    )
+
+
+def parse_harness(file_path: str, source_tool: str | None = None) -> ParsedHarness:
+    """Parse a pipeline agent harness definition into a ParsedHarness.
+
+    The YAML is loaded once; the format mapper for *source_tool* turns the
+    mapping into the normalized ``HarnessFields`` that rules consume.
+    """
+    import yaml
+
+    from harness_eval.inspection.harness_formats import mapper_for
+
+    path = Path(file_path)
+    name = path.stem
+    if not path.exists() or not path.is_file():
+        return ParsedHarness(
+            file_path=str(path),
+            name=name,
+            raw_content="",
+            data={},
+            source_tool=source_tool,
+            fields=None,
+            parse_errors=[f"File not found: {path}"],
+        )
+
+    raw_content = path.read_text(encoding="utf-8", errors="replace")
+    parse_errors: list[str] = []
+    data: dict[str, Any] = {}
+    try:
+        loaded = yaml.safe_load(raw_content)
+    except yaml.YAMLError as exc:
+        parse_errors.append(f"Invalid YAML: {exc}")
+        loaded = None
+    if isinstance(loaded, dict):
+        data = loaded
+    elif loaded is not None:
+        parse_errors.append("Harness file is not a YAML mapping")
+
+    fields = None
+    mapper = mapper_for(source_tool)
+    if data and mapper is not None:
+        fields = mapper(data, path)
+
+    return ParsedHarness(
+        file_path=str(path),
+        name=name,
+        raw_content=raw_content,
+        data=data,
+        source_tool=source_tool,
+        fields=fields,
+        parse_errors=parse_errors,
         tokens=count_tokens(raw_content),
     )

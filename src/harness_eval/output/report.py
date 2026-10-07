@@ -18,6 +18,7 @@ def _get_type_display(detected_tools: tuple[str, ...] = ()) -> dict[str, str]:
         "agent": "Agents",
         "rule": "Rules",
         "output_style": "Output Styles",
+        "harness": "Harness Definitions",
     }
     multi_tool = len(detected_tools) > 1
     has_cursor_only = detected_tools == ("Cursor",)
@@ -45,6 +46,7 @@ _TYPE_ORDER = [
     "agent",
     "config",
     "mcp_config",
+    "harness",
     "rule",
     "output_style",
 ]

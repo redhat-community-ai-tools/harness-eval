@@ -15,6 +15,7 @@ from harness_eval.inspection.parsers import (
     parse_claude_md,
     parse_command,
     parse_config_file,
+    parse_harness,
     parse_hooks,
     parse_mcp_config_file,
     parse_skill,
@@ -34,6 +35,7 @@ from harness_eval.inspection.types import (
     ParsedClaudeMd,
     ParsedCommand,
     ParsedConfig,
+    ParsedHarness,
     ParsedHooks,
     ParsedMcpConfig,
     ParsedSkill,
@@ -576,6 +578,42 @@ def lint_config(
     )
 
 
+def lint_harness(
+    harness_path: str,
+    config_rules: dict[str, str | list[Any]] | None = None,
+    scan_state: dict[str, Any] | None = None,
+    source_tool: str | None = None,
+    parsed: ParsedHarness | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
+) -> InspectionResult:
+    """Lint a pipeline agent harness definition."""
+    harness = parsed if parsed is not None else parse_harness(harness_path, source_tool)
+    diagnostics = _parse_errors_to_findings(harness.parse_errors, harness.file_path)
+    rule_diags, suppression_count, rules_run = _run_rules(
+        ComponentType.HARNESS,
+        harness.file_path,
+        harness.raw_content,
+        skill=None,
+        target=harness,
+        config_rules=config_rules,
+        scan_state=scan_state,
+        source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
+    )
+    diagnostics.extend(rule_diags)
+    return _build_result(
+        harness.file_path,
+        harness.name,
+        harness.tokens,
+        "harness",
+        diagnostics,
+        suppression_count,
+        rules_run,
+    )
+
+
 _SECURITY_ONLY_RULES = {
     "security/no-prompt-injection",
     "security/no-credential-access",
@@ -749,6 +787,7 @@ def _inspect_setup(
     agent_comps = list(parsed_setup.core_by_type(CT.AGENT))
     mcp_comps = list(parsed_setup.core_by_type(CT.MCP_CONFIG))
     config_comps = list(parsed_setup.core_by_type(CT.CONFIG))
+    harness_comps = list(parsed_setup.core_by_type(CT.HARNESS))
 
     all_skills = list(parsed_setup.skills)
     all_commands = list(parsed_setup.commands)
@@ -757,6 +796,7 @@ def _inspect_setup(
     all_agents = list(parsed_setup.agents)
     all_mcp = list(parsed_setup.mcp_configs)
     all_configs = list(parsed_setup.configs)
+    all_harnesses = list(parsed_setup.harnesses)
 
     artifacts.component_graph = build_component_graph(
         all_skills,
@@ -838,6 +878,15 @@ def _inspect_setup(
             catalog=catalog,
             artifacts=artifacts,
         ),
+        CT.HARNESS: lambda comp, parsed: lint_harness(
+            parsed.file_path,
+            config_rules,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
+        ),
     }
 
     parsed_by_type: list[tuple[CT, list[Any], list[Any]]] = [
@@ -848,6 +897,7 @@ def _inspect_setup(
         (CT.AGENT, agent_comps, all_agents),
         (CT.MCP_CONFIG, mcp_comps, all_mcp),
         (CT.CONFIG, config_comps, all_configs),
+        (CT.HARNESS, harness_comps, all_harnesses),
     ]
     for ctype, comps, parsed_list in parsed_by_type:
         run = lint_dispatch[ctype]

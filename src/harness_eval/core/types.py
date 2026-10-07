@@ -18,6 +18,7 @@ class ComponentType(StrEnum):
     AGENT = "agent"
     MCP_CONFIG = "mcp_config"
     CONFIG = "config"
+    HARNESS = "harness"
     RULE = "rule"
     OUTPUT_STYLE = "output_style"
     UNCATEGORIZED = "uncategorized"

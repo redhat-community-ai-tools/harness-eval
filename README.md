@@ -3,10 +3,10 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-99-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
+[![Rules](https://img.shields.io/badge/rules-100-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Codex, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf/Devin, Cline, and OpenCode), builds a component graph across them, and runs 99 deterministic rules. It catches client-specific schema problems plus cross-component failures such as disabled skills, unreachable MCP servers, ambiguous duplicate skill IDs, and explicit credential-to-network paths.
+A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Codex, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf/Devin, Cline, OpenCode, and fullsend pipeline harnesses), builds a component graph across them, and runs 100 deterministic rules. It catches client-specific schema problems plus cross-component failures such as disabled skills, unreachable MCP servers, ambiguous duplicate skill IDs, and explicit credential-to-network paths.
 
 Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`, `.codex/`.
 
@@ -14,7 +14,7 @@ Most tools test whether a skill produces correct output. This one checks the set
 
 ```bash
 pip install harness-eval
-harness-eval harness-lint .                    # 99 deterministic rules, fully offline
+harness-eval harness-lint .                    # 100 deterministic rules, fully offline
 harness-eval harness-gate .                     # validated (gating-tier) rules only; exits 1 on errors and warnings, no LLM
 harness-eval harness-security .                # security scan
 harness-eval skill-verify ./downloaded-skill   # SAFE / CAUTION / UNSAFE before you install
@@ -61,7 +61,7 @@ See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tie
 
 | Command | What it does | LLM needed? |
 |---------|-------------|-------------|
-| `harness-lint` | 99 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. YAML from the scan target loads only with `--rules-from-target`. | No |
+| `harness-lint` | 100 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. YAML from the scan target loads only with `--rules-from-target`. | No |
 | `harness-gate` | Validated gating-tier rules only. Exits 1 on any error or warning. Info is printed and does not fail. Never loads LLM extras or target YAML. | No |
 | `harness-security` | Security rules + YARA, opt-in OSV lookup (`--cve`), and optional semantic review. SAFE/CAUTION/UNSAFE. | Default: no. `--cve` and `--review`: yes. |
 | `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
@@ -96,11 +96,12 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 | Gemini CLI | `GEMINI.md`, `.gemini/commands/` (`.md` and `.toml` linted), `.gemini/settings.json` (MCP) |
 | OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `opencode.json` (MCP) |
 | Codex CLI | `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, `codex.json` |
+| fullsend | `harness/*.yaml` pipeline agent harnesses (agent prompt, model, pre/post scripts, skills, plugins, host files, output contract) |
 | Third-party modules | `.lola/modules/` (skills, commands, agents installed via package managers) |
 
 ## Inspection rules
 
-99 deterministic rules across 13 categories: structural, frontmatter, content, quality, security, cross-component, commands, instruction files, configuration, MCP, hooks, agents, and submission. Six presets: `recommended` (default), `strict`, `security`, `pre-workflow`, `skill-submission`, and `gate`.
+100 deterministic rules across 14 categories: structural, frontmatter, content, quality, security, cross-component, commands, instruction files, configuration, MCP, hooks, agents, harness definitions, and submission. Six presets: `recommended` (default), `strict`, `security`, `pre-workflow`, `skill-submission`, and `gate`.
 
 **Rule tiers.** Each rule carries an evidence tier. **Gating** rules are structural checks that are safe to block a build on; `harness-gate` runs exactly these (corpus-validated rules plus decidable FILE/FILE_FS integrity checks). **Provisional** rules have no observed false positives but too few findings to promote yet. **Advisory** rules (including every heuristic, prose-judgment rule) are reported but never gate. Rules are also tagged by analysis scope (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`) — the last two are findings a per-file linter structurally cannot see. See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
 
@@ -110,7 +111,7 @@ Rules by tier:
 | Tier | Rules |
 |------|-------|
 | gating | 22 |
-| provisional | 0 |
+| provisional | 1 |
 | advisory | 77 |
 <!-- END GENERATED: tier-counts -->
 
@@ -120,7 +121,7 @@ Rules by scope:
 | Scope | Rules |
 |-------|-------|
 | FILE | 75 |
-| FILE_FS | 10 |
+| FILE_FS | 11 |
 | PAIRWISE | 9 |
 | SETUP | 5 |
 <!-- END GENERATED: scope-counts -->

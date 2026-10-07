@@ -1,0 +1,49 @@
+---
+# Triage agent: reads an issue, labels it, writes a structured result.
+agent: agents/triage.md
+model: opus
+image: ghcr.io/example/sandbox:latest
+policy: policies/base.yaml
+providers:
+  - github
+
+role: triage
+slug: example-triage
+
+host_files:
+  - src: env/vertex.env
+    dest: /sandbox/workspace/.env.d/vertex.env
+    expand: true
+    optional: true
+  - src: ${GOOGLE_APPLICATION_CREDENTIALS}
+    dest: /tmp/.gcp-credentials.json
+
+skills:
+  - skills/issue-labels
+
+plugins:
+  - plugins/gopls-lsp
+
+pre_script: scripts/pre-triage.sh
+post_script: scripts/post-triage.sh
+
+validation_loop:
+  script: scripts/validate-output-schema.sh
+  max_iterations: 2
+
+env:
+  runner:
+    FULLSEND_OUTPUT_SCHEMA: ${FULLSEND_DIR}/schemas/triage-result.schema.json
+    FULLSEND_OUTPUT_FILE: triage-result.json
+
+timeout_minutes: 10
+
+forge:
+  github:
+    pre_script: scripts/pre-triage.sh
+    post_script: scripts/post-triage.sh
+    env:
+      runner:
+        GITHUB_ISSUE_URL: ${GITHUB_ISSUE_URL}
+      sandbox:
+        GITHUB_ISSUE_URL: "${GITHUB_ISSUE_URL}"

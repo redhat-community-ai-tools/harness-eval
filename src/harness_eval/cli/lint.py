@@ -311,10 +311,16 @@ def _inspect_single_file(target, config_rules):
         lint_agent,
         lint_claude_md,
         lint_command,
+        lint_harness,
         lint_hooks,
     )
 
     name = target.name.lower()
+    if target.suffix in (".yaml", ".yml") and target.parent.name == "harness":
+        from harness_eval.core.discoverers.fullsend import is_harness_file
+
+        if is_harness_file(target):
+            return [lint_harness(str(target), config_rules, source_tool="fullsend")]
     if name == "skill.md":
         return [lint(str(target.parent), config_rules)]
     elif name == "command.md":
@@ -332,7 +338,7 @@ def _inspect_single_file(target, config_rules):
     click.echo(
         f"Warning: could not detect component type for '{target.name}'. "
         f"Expected: SKILL.md, command.md, CLAUDE.md, .mdc, .cursorrules, "
-        f"settings.json, hooks.json, or an agent .md file.",
+        f"settings.json, hooks.json, an agent .md file, or a harness/*.yaml file.",
         err=True,
     )
     return []

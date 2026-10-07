@@ -10,6 +10,7 @@ from harness_eval.core.types import ComponentType, ScanLimits
 
 if TYPE_CHECKING:
     from harness_eval.analysis.component_graph import ComponentGraph
+    from harness_eval.inspection.harness_formats import HarnessFields
 
 
 class Severity(str, Enum):
@@ -214,6 +215,26 @@ class ParsedConfig:
     tokens: int = 0
 
 
+@dataclass
+class ParsedHarness:
+    """A pipeline agent harness: the definition that runs an agent unattended.
+
+    ``fields`` is the format-neutral view produced by the mapper registered for
+    ``source_tool`` (see ``inspection.harness_formats``). It is None when the
+    file did not parse as a mapping or no mapper knows the format; rules must
+    return early in that case.
+    """
+
+    file_path: str
+    name: str
+    raw_content: str
+    data: dict[str, Any]
+    source_tool: str | None
+    fields: HarnessFields | None
+    parse_errors: list[str] = field(default_factory=list)
+    tokens: int = 0
+
+
 ParsedFile = (
     ParsedSkill
     | ParsedCommand
@@ -222,6 +243,7 @@ ParsedFile = (
     | ParsedAgent
     | ParsedMcpConfig
     | ParsedConfig
+    | ParsedHarness
 )
 
 
@@ -354,6 +376,8 @@ class RuleContext:
             return t.raw_content, t.agent_md_path
         if isinstance(t, (ParsedClaudeMd, ParsedHooks, ParsedMcpConfig, ParsedConfig)):
             return t.raw_content, t.file_path
+        if isinstance(t, ParsedHarness):
+            return t.raw_content, t.file_path
         if self.skill is not None:
             return self.skill.raw_content, self.skill.skill_md_path
         return "", ""
@@ -381,6 +405,10 @@ class RuleContext:
     @property
     def config(self) -> ParsedConfig | None:
         return self.target if isinstance(self.target, ParsedConfig) else None
+
+    @property
+    def harness(self) -> ParsedHarness | None:
+        return self.target if isinstance(self.target, ParsedHarness) else None
 
 
 @dataclass

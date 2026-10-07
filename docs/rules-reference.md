@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 99 deterministic lint rules and the LLM-based review system.
+Complete reference for all 100 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -14,7 +14,7 @@ All deterministic rules run in the **CLI** (`harness-lint`/`harness-gate`/`harne
 
 Project-local YAML under `.harness-eval/rules/` is **opt-in**. Pass `--rules-from-target` to `harness-lint`. `harness-gate` and `harness-security` never load them. See the [README](../README.md#custom-yaml-rules) for the file format.
 
-Abbreviations: CC = Claude Code, CU = Cursor, CP = Copilot, GE = Gemini CLI, OC = OpenCode, CX = Codex CLI
+Abbreviations: CC = Claude Code, CU = Cursor, CP = Copilot, GE = Gemini CLI, OC = OpenCode, CX = Codex CLI, FS = fullsend
 
 ### Framework mappings
 
@@ -100,6 +100,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `frontmatter/description-quality` | advisory | FILE |
 | `frontmatter/description-required` | gating | FILE |
 | `frontmatter/format-valid` | gating | FILE |
+| `harness/referenced-file-exists` | provisional | FILE_FS |
 | `hooks/api-key-helper` | advisory | FILE |
 | `hooks/base-url-override` | advisory | FILE |
 | `hooks/command-script-exists` | gating | FILE_FS |
@@ -275,6 +276,14 @@ These rules run against hook definitions. Applies to: CC, CU.
 | `hooks/env-credential-override` | security | Flags project-scoped settings that set credential-shaped environment variables (`_KEY`, `_TOKEN`, `_SECRET`, `_PASSWORD`, `_KEY_ID`, `_PAT`). Excludes `_PUBLIC_KEY`. A cloned repo should not control credential values. | `"env": {"GITHUB_API_KEY": "ghp_abc123"}` in project settings | Regex suffix matching |
 | `hooks/pre-trust-permissions` | security | Flags project-scoped settings with `permissions.allow` entries or lifecycle hooks (`SessionStart`, `Stop`, etc.) that auto-execute without user interaction. CVE-2025-59536 and GHSA-ph6w-f82w-28w6 exploited this. `PreToolUse`/`PostToolUse` hooks are not flagged since they only run during active interaction. | `"permissions": {"allow": ["Bash(*)"]}` or `"hooks": {"SessionStart": [...]}` in project settings | JSON key + lifecycle event check |
 | `security/dangerous-permission-grant` | security | Flags `permissions.allow` entries that auto-approve destructive, privilege-escalating, or persistence-creating patterns. Goes beyond breadth (Bash(*)) to check depth (sudo, shred, curl\|bash, terraform destroy, crontab, etc.). | `"permissions": {"allow": ["Bash(sudo apt install *)"]}` | Regex pattern matching on allow entries |
+
+## Harness definitions (harness/*.yaml)
+
+A pipeline agent harness is the definition that runs an agent unattended in CI: it binds an agent prompt to a model, sandbox image, pre/post scripts, skills, plugins, host files and an output contract (validator script plus schema). Each format is mapped into one normalized model by a mapper under `inspection/harness_formats/`; rules only see the normalized model. First format: fullsend. Applies to: FS.
+
+| Rule | Type | What it does | Example | Built with |
+|------|------|-------------|---------|------------|
+| `harness/referenced-file-exists` | structural | Every path the harness references (agent prompt, policy, base, pre/post/validator scripts, skills, plugins, non-optional host file sources, output schema, per-platform script overrides) must exist in the tree. Mirrors the runtime's own file check and skips exactly what the runtime skips: URLs, absolute paths, references containing a host `${VAR}`, optional host files, and every reference when the harness inherits from a URL base. Runs only on a complete scaffold (own `agents/` and `scripts/`, no org `config.yaml`, not a `customized/` overlay), since fullsend composes layers at dispatch time and a reference another layer satisfies is not missing. | `validation_loop.schema: ${FULLSEND_DIR}/schemas/code-result.schema.json` after the schema was moved | File existence check, root-relative resolution |
 
 ## Cross-component rules
 

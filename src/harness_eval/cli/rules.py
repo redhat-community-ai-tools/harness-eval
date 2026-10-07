@@ -11,12 +11,12 @@ from harness_eval.cli import cli
 @click.option(
     "--category",
     default=None,
-    help="Filter by category (security, quality, content, hooks, mcp, agents, commands, etc.)",
+    help="Filter by category (security, quality, content, hooks, mcp, agents, commands, harness, etc.)",
 )
 @click.option(
     "--target",
     default=None,
-    help="Filter by target type (skill, command, claude_md, hooks, agent, mcp_config).",
+    help="Filter by target type (skill, command, claude_md, hooks, agent, mcp_config, harness).",
 )
 @click.option(
     "--framework",
