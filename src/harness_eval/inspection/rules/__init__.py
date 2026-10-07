@@ -108,6 +108,15 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         DescriptionRequired,
     )
     from harness_eval.inspection.rules.frontmatter.format_valid import FormatValid
+    from harness_eval.inspection.rules.harness.host_file_dest_collision import (
+        HarnessHostFileDestCollision,
+    )
+    from harness_eval.inspection.rules.harness.output_contract_instructed import (
+        HarnessOutputContractInstructed,
+    )
+    from harness_eval.inspection.rules.harness.output_schema_valid import (
+        HarnessOutputSchemaValid,
+    )
     from harness_eval.inspection.rules.harness.referenced_file_exists import (
         HarnessReferencedFileExists,
     )
@@ -293,6 +302,9 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         ScopeGrabDescription,
         FileCompleteness,
         HarnessReferencedFileExists,
+        HarnessOutputContractInstructed,
+        HarnessOutputSchemaValid,
+        HarnessHostFileDestCollision,
     ]
     for rule_cls in builtin_rules:
         target.register(rule_cls())

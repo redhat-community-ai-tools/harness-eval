@@ -44,6 +44,14 @@ _SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
 
 SCHEMA_ENV = "FULLSEND_OUTPUT_SCHEMA"
 OUTPUT_FILE_ENV = "FULLSEND_OUTPUT_FILE"
+OUTPUT_DIR_ENV = "FULLSEND_OUTPUT_DIR"
+# The validator's default when FULLSEND_OUTPUT_FILE is unset
+# (scripts/validate-output-schema.sh), and the in-sandbox self-check tool
+# the scaffold prompts call.
+DEFAULT_OUTPUT_FILE = "agent-result.json"
+OUTPUT_CHECK_TOOL = "fullsend-check-output"
+# Scaffold-level instruction files the runtime exposes to every agent.
+SHARED_INSTRUCTION_FILES = ("AGENTS.md", "CLAUDE.md")
 
 
 def normalize_path(value: str) -> str | None:
@@ -194,6 +202,14 @@ def map_fullsend(data: dict[str, Any], path: Path) -> HarnessFields:
                 continue
             fields.platform_overrides[str(platform)] = override
             _script_fields(fields, override, f"forge.{platform}.")
+
+    if fields.output_schema is not None or fields.output_file is not None:
+        tokens = [OUTPUT_DIR_ENV, OUTPUT_FILE_ENV, SCHEMA_ENV, OUTPUT_CHECK_TOOL]
+        tokens.append(Path(fields.output_file).name if fields.output_file else DEFAULT_OUTPUT_FILE)
+        if fields.output_schema is not None:
+            tokens.append(Path(fields.output_schema).name)
+        fields.output_contract_tokens = tokens
+    fields.shared_instruction_files = list(SHARED_INSTRUCTION_FILES)
 
     return fields
 

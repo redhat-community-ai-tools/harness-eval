@@ -61,6 +61,14 @@ class HarnessFields:
     # Every path-typed reference in declaration order, after format-specific
     # normalization (for fullsend: ``${FULLSEND_DIR}/x`` becomes ``x``).
     refs: list[HarnessRef] = field(default_factory=list)
+    # Strings whose presence in the agent's instructions prove it was told
+    # about the output contract (the output file name, the schema name, the
+    # environment variables or helper tool the runtime exposes for it). Empty
+    # when the harness declares no output contract.
+    output_contract_tokens: list[str] = field(default_factory=list)
+    # Root-level instruction files the runtime gives every agent, relative to
+    # root_dir, in addition to ``instructions`` and the listed skills.
+    shared_instruction_files: list[str] = field(default_factory=list)
 
 
 Mapper = Callable[[dict[str, Any], Path], HarnessFields]

@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 100 deterministic lint rules and the LLM-based review system.
+Complete reference for all 103 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -100,6 +100,9 @@ and verified against the registry in CI. Do not edit it by hand.
 | `frontmatter/description-quality` | advisory | FILE |
 | `frontmatter/description-required` | gating | FILE |
 | `frontmatter/format-valid` | gating | FILE |
+| `harness/host-file-dest-collision` | provisional | FILE |
+| `harness/output-contract-instructed` | advisory | PAIRWISE |
+| `harness/output-schema-valid` | provisional | FILE_FS |
 | `harness/referenced-file-exists` | provisional | FILE_FS |
 | `hooks/api-key-helper` | advisory | FILE |
 | `hooks/base-url-override` | advisory | FILE |
@@ -284,6 +287,9 @@ A pipeline agent harness is the definition that runs an agent unattended in CI: 
 | Rule | Type | What it does | Example | Built with |
 |------|------|-------------|---------|------------|
 | `harness/referenced-file-exists` | structural | Every path the harness references (agent prompt, policy, base, pre/post/validator scripts, skills, plugins, non-optional host file sources, output schema, per-platform script overrides) must exist in the tree. Mirrors the runtime's own file check and skips exactly what the runtime skips: URLs, absolute paths, references containing a host `${VAR}`, optional host files, and every reference when the harness inherits from a URL base. Runs only on a complete scaffold (own `agents/` and `scripts/`, no org `config.yaml`, not a `customized/` overlay), since fullsend composes layers at dispatch time and a reference another layer satisfies is not missing. | `validation_loop.schema: ${FULLSEND_DIR}/schemas/code-result.schema.json` after the schema was moved | File existence check, root-relative resolution |
+| `harness/output-contract-instructed` | content | When the harness declares an output contract (a schema or an output file the validator expects), the instructions the agent reads from this tree (its prompt, every markdown file of each listed skill and plugin, the scaffold's shared instruction files) must mention it: the output file name, the schema name, or the runtime's contract variables and self-check tool. Otherwise the validator looks for a file nobody was told to write and the run fails after the agent finished. Silent whenever instructions can come from outside the tree (`base`, `agent_input`, runtime fetching, an incomplete layer, a listed instruction file that is missing). | Harness adds `validation_loop` with `code-result.schema.json`; `agents/code.md` and its skills never mention the output file | Token search over the instruction closure |
+| `harness/output-schema-valid` | structural | A declared output schema that resolves to a file in the tree must parse as a JSON object, because the validator loads it with a JSON parser. A missing schema is `harness/referenced-file-exists`' finding. | `schemas/triage-result.schema.json` has a trailing comma | JSON parse |
+| `harness/host-file-dest-collision` | structural | Two non-optional `host_files` entries must not deliver to the same sandbox destination; the later one silently overwrites the earlier one. | Two entries with `dest: /tmp/.gcp-credentials.json` | Destination set |
 
 ## Cross-component rules
 

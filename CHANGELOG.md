@@ -16,6 +16,14 @@ All notable changes to this project will be documented in this file.
   optional host files, URL bases) and stays silent on overlay or org-config
   layers, whose references other layers satisfy at dispatch time.
 - `harness-lint <file>` accepts a single `harness/*.yaml` file.
+- `harness/output-contract-instructed` (content, PAIRWISE, advisory): a
+  harness that declares an output contract must have instructions, in this
+  tree, that mention it; silent whenever instructions can come from outside
+  the tree.
+- `harness/output-schema-valid` (structural, FILE_FS, provisional): a
+  declared output schema that exists must parse as a JSON object.
+- `harness/host-file-dest-collision` (structural, FILE, provisional): two
+  non-optional host files must not share a sandbox destination.
 
 ## [7.17.0] - 2026-10-04
 
