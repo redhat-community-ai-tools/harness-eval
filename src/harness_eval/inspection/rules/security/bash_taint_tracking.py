@@ -404,6 +404,7 @@ def _analyze_bash_file(bash_path: Path, context: RuleContext, skill_md_path: str
 class BashTaintTracking:
     meta: RuleMeta = RuleMeta(
         id="security/bash-taint-flow",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect data flows from untrusted sources to dangerous sinks in bash scripts",

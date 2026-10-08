@@ -21,7 +21,8 @@ if TYPE_CHECKING:
 class DuplicateSkillId:
     meta = RuleMeta(
         id="cross/duplicate-skill-id",
-        tier="advisory",
+        tier="provisional",
+        effect="block",
         scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,

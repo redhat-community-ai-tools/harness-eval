@@ -22,6 +22,7 @@ class ConfigValidStructure:
     meta = RuleMeta(
         id="config/valid-structure",
         tier="gating",
+        effect="block",
         scope="FILE",
         default_severity=Severity.ERROR,
         fixable=False,

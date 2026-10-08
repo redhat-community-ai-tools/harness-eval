@@ -37,6 +37,7 @@ def _has_sensitive_op(command: str) -> bool:
 class HooksSilentFailureMasking:
     meta = RuleMeta(
         id="hooks/silent-failure-masking",
+        effect="signal",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

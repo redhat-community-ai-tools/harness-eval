@@ -169,6 +169,7 @@ class McpUnpinnedPackage:
     meta = RuleMeta(
         id="mcp/unpinned-package",
         tier="gating",
+        effect="policy",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag MCP servers that run unpinned third-party packages",

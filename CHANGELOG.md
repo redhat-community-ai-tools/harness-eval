@@ -4,6 +4,182 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [8.0.0] - 2026-10-08
+
+Four tools, one axis. Every rule now declares what a finding means, and the
+commands select on that declaration instead of on hand-maintained preset lists.
+See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
+
+### Added
+- `RuleMeta.effect`: `block` (a decidable configuration defect), `policy` (a
+  decidable fact whose acceptability is a trust decision), `signal` (a
+  heuristic match) or `advice` (quality). Tests enforce that signal and advice
+  rules are advisory tier and that block and policy rules are gating or
+  provisional. `harness-eval rules --effect <e>` filters on it; JSON output and
+  the generated docs tables carry it.
+- `harness-autonomy`: the deterministic check a merge policy can trust. Runs
+  block and policy rules at gating or provisional tier only; exit 0 PASS, 1
+  FAIL (a block finding), 2 REVIEW_REQUIRED (policy findings nobody accepted).
+  `--policy <trusted file>` turns accepted policy findings into visible
+  `waived` entries (only policy rules can be accepted; a block rule in the file
+  is reported and ignored). JSON and SARIF output carry the verdict, a
+  `coverage` block (components, rules run, rules not applicable and why,
+  skipped composed harness layers, baseline suppressions) and the scan
+  evidence (fingerprint, revision, rules/config/policy digests). Never loads an
+  LLM, the network, or YAML rules from the scanned tree.
+- `RuleMeta.target_type` accepts a tuple so one rule class can check several
+  component types; `RuleMeta.targets` and `target_label` normalize both forms.
+- Six decidable rules, all provisional: `frontmatter/near-miss-key` (a
+  frontmatter key that differs from a documented key only by case or
+  separator), `frontmatter/allowed-tools-case` (a tool entry that matches a
+  built-in only case-insensitively), `hooks/event-name-near-miss` (a hooks
+  event key that differs from a Claude Code event only by case or separator),
+  `agent/tools-disallowed-overlap` (the same tool in `tools` and
+  `disallowedTools`), `mcp/args-reference-missing-file` (a stdio server script
+  argument that does not exist) and `harness/image-unpinned` (policy: a
+  floating sandbox image). `data/hook_events.json` lists the event names.
+- `--provider openai` for `harness-review` and `harness-security --review`:
+  talks to any OpenAI-compatible chat-completions endpoint (`--base-url` or
+  `OPENAI_BASE_URL`; `OPENAI_API_KEY`) with the standard library only, so no
+  extra is needed. `--provider`, `--model` and `--base-url` are one shared
+  option group. `doctor` reports the OpenAI variables.
+- GitHub Action: `autonomy`, `autonomy-policy`, `autonomy-allow-review` and
+  `lint-all` inputs, `autonomy-verdict` and `autonomy-passed` outputs, and an
+  autonomy line in the PR comment. Pre-commit: a `harness-autonomy` hook; the
+  hook file patterns include `agents/` and `harness/`.
+- Plugin skill and command `harness-autonomy` (Claude Code and Cursor).
+- `harness/output-schema-valid` also reports a `required` key that the
+  schema can never carry (`additionalProperties: false`, no such property, no
+  `patternProperties`), at any depth.
+- `harness-autonomy --compare <base checkout>`: findings that already exist
+  on the base revision are listed as `pre_existing` and do not decide the
+  verdict, so the verdict is about the change. The GitHub Action does this
+  on pull requests by default (`autonomy-changed-only`). Finding identity is
+  the rule, the file relative to the scan root, and the message with the
+  root path blanked (`baseline.finding_key`), so two checkouts of one
+  revision agree.
+- The fullsend mapper now references `doc`, path-form `providers`,
+  `openshell.profiles`, skill entries written as mappings with `source`,
+  and everything under `forge.<platform>` (skills, plugins, host files,
+  providers, policy, profiles, validation loop), so
+  `harness/referenced-file-exists` covers them.
+
+### Changed
+- `harness-gate` runs block rules at gating tier (plus provisional with
+  `--include-provisional`); the set is derived from the registry.
+- `harness-security` runs every policy and signal rule plus the
+  security-category block rules, with YARA on and the code-analysis rules at
+  error; advice rules no longer appear in it. Adjudication and `--review` are
+  unchanged.
+- `harness-lint` runs advice rules by default; `--all` runs every rule.
+  `--preset` is now a severity preset (`recommended`, `strict`) and no longer
+  selects rules. Exit code is 0 unless `--fail-on-error`, `--fail-on-warning`
+  or `--enforce` says otherwise.
+- The seven instruction-text security rules (`security/no-prompt-injection`,
+  `data-exfiltration`, `obfuscation`, `reverse-shell`, `no-credential-access`,
+  `memory-write-unscoped`, `unbounded-delegation`) run on skills, commands and
+  agents under one id each.
+- Promoted to provisional tier (decidable, zero corpus false positives):
+  `agent/disallowed-tools-parseable`, `command/script-exists`,
+  `cross/duplicate-skill-id`, `hooks/matcher-matches-no-tool`,
+  `hooks/script-boundary`, `mcp/no-plaintext-secrets`,
+  `harness/output-contract-instructed`, and the policy rules
+  `hooks/api-key-helper`, `hooks/base-url-override`,
+  `hooks/env-credential-override`, `security/dangerous-permission-grant`,
+  `mcp/auto-approve-risk`, `config/dangerous-autonomy`,
+  `hooks/pre-trust-permissions`, `agent/excessive-permissions`,
+  `content/allowed-tools-auto-approve` (`hooks/permission-prompt-disabled`
+  and `cross/overpermissive-grants` were already gating).
+- `agent/referenced-skills-exist`, `content/broken-references` and
+  `command/references-nonexistent-skill` stay advisory (effect `advice`): the
+  check is decidable but what counts as a reference is not (a path quoted in
+  prose, a skill that lives in a user or plugin directory), and both fired on
+  real trees during validation.
+- `hooks/matcher-matches-no-tool`: an invalid regex or a case mismatch is a
+  finding; a matcher that names no known tool is now informational, because
+  the built-in tool list decays as clients add tools.
+- `content/allowed-tools-auto-approve` and the new frontmatter rules split
+  `allowed-tools` on separators outside parentheses, so `Bash(git commit:*)`
+  is one entry. The rule reports one finding per severity class per file
+  (the decision is about the file's grants), not one per grant.
+- `agent/excessive-permissions` and `content/allowed-tools-auto-approve`
+  skip agents and skills that a pipeline harness runs: those execute in the
+  harness sandbox, where the harness policy is the boundary and Claude Code
+  permission fields decide nothing.
+- `frontmatter/format-valid`: a skill `name` that differs from its directory
+  is informational. The Agent Skills spec requires a match, but every
+  current client resolves a skill by its directory, so it is a portability
+  note and no longer fails `harness-gate` or `harness-autonomy`.
+- `mcp/unpinned-package` is effect `policy` (a floating reference, like
+  `harness/image-unpinned`): `harness-autonomy` reports it as
+  REVIEW_REQUIRED and `harness-gate` no longer runs it.
+- Custom YAML rules carry effect `signal`.
+- `scripts/gen_rules_reference.py` renders effect counts, an effect column, and
+  the exact table of rules `harness-autonomy` runs.
+
+### Removed
+- Commands `skill-verify`, `skill-review`, `skill-submission-scan` and the
+  aliases `lint` and `security`. Use `harness-autonomy`, `harness-security`
+  or `harness-lint` on the skill directory.
+- Presets `security`, `pre-workflow`, `skill-submission` and `gate`. The
+  command rule sets are derived from `effect` and `tier`
+  (`autonomy_rules`, `gate_rules`, `security_rules`, `lint_rules`).
+- The `submission` package, the `eval-skill` and `skill-verify` plugin skills
+  and their commands.
+- Twelve duplicated rules (`agent/no-prompt-injection`,
+  `agent/data-exfiltration`, `agent/obfuscation`, `agent/reverse-shell`,
+  `agent/no-credential-access`, `agent/memory-write-unscoped`,
+  `agent/unbounded-delegation`, `command/no-prompt-injection`,
+  `command/data-exfiltration`, `command/obfuscation`, `command/reverse-shell`,
+  `command/no-credential-access`): their `security/*` counterparts now cover
+  those component types. The old ids are aliases in suppression comments.
+- Five rules with no decidable reading or tied to a removed command:
+  `quality/negative-only`, `quality/example-gap`, `claude-md/generic-advice`
+  (covered by `quality/redundant-guidance`), `cross/multi-assistant-drift`,
+  `submission/file-completeness`. Their ids remain recognized aliases.
+- Fourteen rule files that were never registered.
+
+### Migration
+- `harness-lint --preset security` or `pre-workflow`: use `harness-security`
+  (security rules) or `harness-lint --all` (everything).
+- `skill-verify <dir>`: `harness-security <dir>` gives the SAFE/CAUTION/UNSAFE
+  verdict; `harness-autonomy <dir>` gives the decidable PASS/FAIL.
+- CI that gated on `harness-lint --fail-on-error`: add `--all` to keep the old
+  rule set, or switch the gate to `harness-autonomy`.
+- `evaluator-ignore` comments naming a removed id keep working through the
+  alias map; rename them at leisure.
+- The GitHub Action's `preset` input accepts `recommended` or `strict` only.
+
+### Added (pipeline agent harnesses and scan evidence)
+- `HARNESS` component type for pipeline agent harnesses (the definition that
+  runs an agent unattended in CI), with a normalized model and a per-format
+  mapper registry under `inspection/harness_formats/`.
+- fullsend discoverer: `harness/*.yaml` files carrying an `agent:` or `base:`
+  key are discovered, inventoried, and fingerprinted.
+- `harness/referenced-file-exists` (structural, FILE_FS, provisional): every
+  path a harness references must exist in the tree; skips what the runtime
+  cannot resolve statically (URLs, absolute paths, host `${VAR}` references,
+  optional host files, URL bases) and stays silent on overlay or org-config
+  layers, whose references other layers satisfy at dispatch time.
+- `harness-lint <file>` accepts a single `harness/*.yaml` file.
+- `harness/output-contract-instructed` (content, PAIRWISE, advisory): a
+  harness that declares an output contract must have instructions, in this
+  tree, that mention it; silent whenever instructions can come from outside
+  the tree.
+- `harness/output-schema-valid` (structural, FILE_FS, provisional): a
+  declared output schema that exists must parse as a JSON object.
+- `harness/host-file-dest-collision` (structural, FILE, provisional): two
+  non-optional host files must not share a sandbox destination.
+- Scan evidence in `harness-lint` JSON (`metadata.evidence`) and in SARIF
+  (`run.versionControlProvenance`, `run.properties`) for `harness-lint` and
+  `harness-gate`: the setup fingerprint, the enclosing git revision (read
+  from `.git`, no subprocess), a digest of the effective rule catalog and of
+  the severity configuration, whether target YAML rules were loaded, what a
+  baseline suppressed, and the inventory size, excludes, and limits. A
+  result can now be bound to exactly what it was computed from.
+- `inspection.engine.build_scan_catalog` exposes the per-scan rule catalog
+  so callers can record the rules in force.
+
 ## [7.17.0] - 2026-10-04
 
 ### Added

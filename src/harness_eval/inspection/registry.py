@@ -59,7 +59,7 @@ class RuleCatalog:
         """Return the rules applicable to a component type using a cached index."""
         if component_type not in self._target_index:
             self._target_index[component_type] = tuple(
-                rule for rule in self._rules.values() if rule.meta.target_type == component_type
+                rule for rule in self._rules.values() if component_type in rule.meta.targets
             )
         return self._target_index[component_type]
 
@@ -138,6 +138,25 @@ DEPRECATED_RULES: dict[str, str] = {
     ),
     "quality/scope-overreach": "use 'quality/scope-grab-description' instead",
     "quality/trigger-manipulation": "use 'quality/scope-grab-description' instead",
+    # 8.0: one rule per check, whatever the component type.
+    "agent/no-prompt-injection": "use 'security/no-prompt-injection' (now runs on agents)",
+    "agent/data-exfiltration": "use 'security/data-exfiltration' (now runs on agents)",
+    "agent/obfuscation": "use 'security/obfuscation' (now runs on agents)",
+    "agent/reverse-shell": "use 'security/reverse-shell' (now runs on agents)",
+    "agent/no-credential-access": "use 'security/no-credential-access' (now runs on agents)",
+    "agent/memory-write-unscoped": "use 'security/memory-write-unscoped' (now runs on agents)",
+    "agent/unbounded-delegation": "use 'security/unbounded-delegation' (now runs on agents)",
+    "command/no-prompt-injection": "use 'security/no-prompt-injection' (now runs on commands)",
+    "command/data-exfiltration": "use 'security/data-exfiltration' (now runs on commands)",
+    "command/obfuscation": "use 'security/obfuscation' (now runs on commands)",
+    "command/reverse-shell": "use 'security/reverse-shell' (now runs on commands)",
+    "command/no-credential-access": "use 'security/no-credential-access' (now runs on commands)",
+    # 8.0: removed; heuristics with no decidable reading, or tied to a removed command.
+    "quality/negative-only": "Prohibition-heavy instructions are a style choice, not a defect.",
+    "quality/example-gap": "Whether instructions need an example is a judgment call.",
+    "claude-md/generic-advice": "Use 'quality/redundant-guidance', which covers the same patterns.",
+    "cross/multi-assistant-drift": "Assistant-specific instruction files may differ on purpose.",
+    "submission/file-completeness": "The skill-submission-scan command was removed.",
 }
 
 

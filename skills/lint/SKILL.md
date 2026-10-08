@@ -1,13 +1,13 @@
 ---
 name: lint
-description: Run deterministic static analysis on the full agent setup (instruction files, skills, commands, hooks, agents, settings, and MCP configs). 99 rules plus system-level analysis. No LLM. Use when the user wants a fast lint check, CI gate, or structural health report.
+description: Run the quality lint on the full agent setup (instruction files, skills, commands, hooks, agents, settings, MCP configs, harnesses). Advice rules plus system-level analysis by default; add --all for every one of the 92 rules. No LLM. Use when the user wants a fast structural health report. For a merge gate use /autonomy; for security use /security.
 allowed-tools: Bash Read
 ---
-<!-- evaluator-ignore: content/broken-references, security/mcp-least-privilege, security/ast-behavioral, content/allowed-tools-auto-approve -->
+<!-- evaluator-ignore: content/broken-references, security/ast-behavioral, content/allowed-tools-auto-approve -->
 
 # Lint Setup
 
-Run 99 deterministic rules + system-level analysis on the user's agent setup. No LLM involved. Fast, reproducible, CI-suitable.
+Run the advice rules (quality and consistency) plus system-level analysis on the user's agent setup. No LLM involved. Fast and reproducible. Add `--all` to run every one of the 92 deterministic rules; block, policy and heuristic findings then appear too.
 
 ## Hard Rules
 
@@ -31,6 +31,12 @@ Determine the setup path. If the user doesn't specify one, use the current worki
 
 ```bash
 uvx --from harness-eval harness-eval harness-lint <setup-path> --format json
+```
+
+If the user wants every rule, not only advice:
+
+```bash
+uvx --from harness-eval harness-eval harness-lint <setup-path> --all --format json
 ```
 
 If `uvx` is not available, fall back to `pip install harness-eval` and use `harness-eval` directly.

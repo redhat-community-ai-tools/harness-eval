@@ -165,6 +165,8 @@ def _parse_yaml_rule(data: dict[str, Any], source_file: str) -> YamlRule | None:
         messages={"yaml_match": message_template},
         target_type=target,
         default_suggestion=suggestion,
+        # Target-supplied regex rules are heuristics by construction.
+        effect="signal",
     )
 
     return YamlRule(meta=meta, patterns=compiled, message_template=message_template)

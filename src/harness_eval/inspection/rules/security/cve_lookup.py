@@ -127,6 +127,7 @@ def _query_osv(deps: list[dict[str, str]]) -> list[dict[str, str]] | None:
 class CveLookup:
     meta: RuleMeta = RuleMeta(
         id="security/cve-lookup",
+        effect="signal",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Check skill dependencies for known CVEs via OSV.dev",

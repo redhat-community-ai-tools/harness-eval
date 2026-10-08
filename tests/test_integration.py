@@ -35,6 +35,7 @@ class TestCLIExitCodes:
                 "harness-eval",
                 "harness-lint",
                 str(FIXTURES / "security-issues"),
+                "--all",
                 "--fail-on-error",
             ],
             capture_output=True,
@@ -50,6 +51,7 @@ class TestCLIExitCodes:
                 "harness-eval",
                 "harness-lint",
                 str(FIXTURES / "security-issues"),
+                "--all",
                 "--fail-on-warning",
             ],
             capture_output=True,
@@ -116,24 +118,6 @@ class TestDataFileLoading:
         patterns = load_tautological_patterns()
         assert isinstance(patterns, list)
         assert len(patterns) == 24
-
-    def test_generic_advice_subset(self):
-        from harness_eval.data import load_tautological_patterns
-
-        generic = load_tautological_patterns(generic_advice_only=True)
-        assert len(generic) == 12
-        labels = [label for label, _ in generic]
-        assert "write clean code" in labels
-        assert "be thorough" in labels
-
-    def test_generic_is_subset_of_all(self):
-        from harness_eval.data import load_tautological_patterns
-
-        all_patterns = load_tautological_patterns()
-        generic = load_tautological_patterns(generic_advice_only=True)
-        all_labels = {label for label, _ in all_patterns}
-        for label, _ in generic:
-            assert label in all_labels
 
     def test_builtins_json_is_valid(self):
         import json

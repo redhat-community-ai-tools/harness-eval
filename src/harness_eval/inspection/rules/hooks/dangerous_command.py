@@ -28,6 +28,7 @@ _DANGEROUS_PATTERNS = [
 class HooksDangerousCommand:
     meta = RuleMeta(
         id="hooks/dangerous-command",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Flag hooks containing dangerous shell commands",

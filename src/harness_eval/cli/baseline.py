@@ -21,9 +21,9 @@ from harness_eval.cli._helpers import exclude_option, scan_limit_options, scan_l
 )
 @click.option(
     "--preset",
-    type=click.Choice(["recommended", "strict", "security", "pre-workflow"]),
+    type=click.Choice(["recommended", "strict"]),
     default="recommended",
-    help="Rule preset to use when generating the baseline.",
+    help="Severity preset to use when generating the baseline (every rule runs).",
 )
 @click.option(
     "--user-config",

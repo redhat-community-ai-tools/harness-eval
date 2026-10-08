@@ -40,6 +40,8 @@ def _is_high_risk_tool(tool_name: str) -> bool:
 class McpAutoApproveRisk:
     meta = RuleMeta(
         id="mcp/auto-approve-risk",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.WARNING,
         fixable=False,
         description=("Flag MCP servers with autoApprove lists containing write or execute tools"),

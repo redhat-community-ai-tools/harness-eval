@@ -18,6 +18,8 @@ _VALID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+(\(.*\))?$")
 class DisallowedToolsParseable:
     meta: RuleMeta = RuleMeta(
         id="agent/disallowed-tools-parseable",
+        tier="provisional",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Each disallowedTools entry must follow ToolName or ToolName(pattern) format",

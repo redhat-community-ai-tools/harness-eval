@@ -60,6 +60,7 @@ _CONSTRAINT_MAPPINGS: list[tuple[re.Pattern, str, str]] = [
 class ConstraintBodyMatch:
     meta: RuleMeta = RuleMeta(
         id="agent/constraint-body-match",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Body constraints should be backed by disallowedTools entries",

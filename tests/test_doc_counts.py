@@ -136,6 +136,17 @@ class TestGeneratedTierScopeTables:
         assert gen.render_scope_counts() in readme, (
             "README.md scope counts are stale. Run: uv run scripts/gen_rules_reference.py"
         )
+        assert gen.render_effect_counts() in readme, (
+            "README.md effect counts are stale. Run: uv run scripts/gen_rules_reference.py"
+        )
+
+    def test_autonomy_rule_table_current(self) -> None:
+        gen = _load_gen_module()
+        content = (ROOT / "docs" / "rules-reference.md").read_text()
+        assert gen.render_autonomy_rules() in content, (
+            "docs/rules-reference.md autonomy table is stale. "
+            "Run: uv run scripts/gen_rules_reference.py"
+        )
 
 
 class TestCommandSurfaceSync:

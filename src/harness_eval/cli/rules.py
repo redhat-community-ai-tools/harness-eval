@@ -11,12 +11,12 @@ from harness_eval.cli import cli
 @click.option(
     "--category",
     default=None,
-    help="Filter by category (security, quality, content, hooks, mcp, agents, commands, etc.)",
+    help="Filter by category (security, quality, content, hooks, mcp, agents, commands, harness, etc.)",
 )
 @click.option(
     "--target",
     default=None,
-    help="Filter by target type (skill, command, claude_md, hooks, agent, mcp_config).",
+    help="Filter by target type (skill, command, claude_md, hooks, agent, mcp_config, harness).",
 )
 @click.option(
     "--framework",
@@ -28,6 +28,12 @@ from harness_eval.cli import cli
     type=click.Choice(["gating", "provisional", "advisory"]),
     default=None,
     help="Filter by evidence tier (gating, provisional, advisory).",
+)
+@click.option(
+    "--effect",
+    type=click.Choice(["block", "policy", "signal", "advice"]),
+    default=None,
+    help="Filter by effect (block, policy, signal, advice).",
 )
 @click.option(
     "--scope",
@@ -46,6 +52,7 @@ def list_rules(
     target: str | None,
     framework: str | None,
     tier: str | None,
+    effect: str | None,
     scope: str | None,
     fmt: str,
 ) -> None:
@@ -60,16 +67,14 @@ def list_rules(
     if tier:
         rules = [r for r in rules if r.meta.tier == tier]
 
+    if effect:
+        rules = [r for r in rules if r.meta.effect == effect]
+
     if scope:
         rules = [r for r in rules if r.meta.scope == scope]
 
     if target:
-        rules = [
-            r
-            for r in rules
-            if (hasattr(r.meta.target_type, "value") and r.meta.target_type.value == target)
-            or str(r.meta.target_type) == target
-        ]
+        rules = [r for r in rules if target in {t.value for t in r.meta.targets}]
 
     if framework:
         rules = [r for r in rules if r.meta.frameworks and framework in r.meta.frameworks]
@@ -82,11 +87,10 @@ def list_rules(
             entry: dict = {
                 "id": r.meta.id,
                 "severity": r.meta.default_severity.value,
-                "target": r.meta.target_type.value
-                if hasattr(r.meta.target_type, "value")
-                else str(r.meta.target_type),
+                "target": r.meta.target_label,
                 "category": r.meta.category.value,
                 "tier": r.meta.tier,
+                "effect": r.meta.effect,
                 "scope": r.meta.scope,
                 "fixable": r.meta.fixable,
                 "description": r.meta.description,
@@ -97,16 +101,14 @@ def list_rules(
         click.echo(json_mod.dumps(output, indent=2))
     else:
         categories: dict[str, int] = {}
-        click.echo(f"{'ID':<42} {'Severity':<10} {'Target':<12} Description")
-        click.echo(f"{'─' * 42} {'─' * 10} {'─' * 12} {'─' * 40}")
+        click.echo(f"{'ID':<42} {'Effect':<8} {'Severity':<10} {'Target':<12} Description")
+        click.echo(f"{'─' * 42} {'─' * 8} {'─' * 10} {'─' * 12} {'─' * 40}")
         for r in rules:
             sev = r.meta.default_severity.value
-            tgt = (
-                r.meta.target_type.value
-                if hasattr(r.meta.target_type, "value")
-                else str(r.meta.target_type)
+            tgt = r.meta.target_label
+            click.echo(
+                f"{r.meta.id:<42} {r.meta.effect:<8} {sev:<10} {tgt:<12} {r.meta.description}"
             )
-            click.echo(f"{r.meta.id:<42} {sev:<10} {tgt:<12} {r.meta.description}")
             cat = r.meta.id.split("/")[0]
             categories[cat] = categories.get(cat, 0) + 1
 

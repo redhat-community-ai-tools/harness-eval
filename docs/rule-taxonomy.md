@@ -1,10 +1,32 @@
 # Rule taxonomy
 
-Every rule is classified on two independent axes: its **evidence class** (how
-trustworthy a finding is) and its **analysis scope** (how much of the setup the
-rule must see). The axes are recorded on `RuleMeta` (`tier` and `scope`) and are
-the single source of truth; the tables in [`rules-reference.md`](rules-reference.md)
-and the README are generated from them by `scripts/gen_rules_reference.py`.
+Every rule is classified on three independent axes: its **effect** (what a
+finding means for the person reading it), its **evidence class** (how far the
+rule has been validated) and its **analysis scope** (how much of the setup the
+rule must see). The axes are recorded on `RuleMeta` (`effect`, `tier` and
+`scope`) and are the single source of truth; the tables in
+[`rules-reference.md`](rules-reference.md) and the README are generated from
+them by `scripts/gen_rules_reference.py`.
+
+## Axis 0: effect
+
+The effect is the one axis the commands select on. It answers "what should a
+reader do with this finding?" and is independent of severity.
+
+| Effect | Meaning | Who runs it |
+|--------|---------|-------------|
+| `block` | A decidable defect in the configuration: a referenced file is missing, a JSON key is duplicated, a frontmatter key is misspelt so the client ignores it, a secret is committed. Nothing to argue about. | `harness-gate` (gating tier), `harness-autonomy` (gating + provisional, as FAIL), `harness-security` (security category only) |
+| `policy` | A decidable fact whose acceptability is a trust decision: permission prompts disabled, a wildcard Bash grant, a floating container image. | `harness-autonomy` (as REVIEW_REQUIRED unless a trusted policy file accepts it), `harness-security` |
+| `signal` | A heuristic match: a text pattern, a taint flow, an AST or YARA signature. A claim for a reader, not a verdict. | `harness-security` only |
+| `advice` | Quality and style: vague descriptions, redundant guidance, token budget. | `harness-lint` |
+
+Two invariants are tested: a `signal` or `advice` rule is always `advisory`
+tier, and a `block` or `policy` rule is `gating` or `provisional`. So the
+autonomy set is exactly "decidable and corpus-passed", by construction.
+
+The effect is not the severity. A `block` rule can default to `warning`
+(`hooks/valid-structure`) and a `signal` rule to `error`
+(`security/reverse-shell`); severity says how loud, effect says what kind.
 
 ## Axis 1: evidence class (tier)
 
@@ -24,7 +46,7 @@ A rule's evidence is either **structural** or **heuristic**.
 
 Structural rules carry one of three tiers:
 
-- **gating** — safe to block a build on. `harness-gate` runs exactly this set.
+- **gating** — safe to block a build on. `harness-gate` runs exactly the block rules of this set.
   Two ways in: corpus-validated at **>=97% precision on >=50 re-derived
   findings** plus a consequence review, or a decidable FILE/FILE_FS integrity
   check whose finding is a fact about the tree.
@@ -52,12 +74,12 @@ fundamentally cannot fake.
 | `FILE` | One component's text or one settings/MCP file | `mcp/unpinned-package` reads a single `.mcp.json` server spec. |
 | `FILE_FS` | That file **plus** the filesystem around it | `claude-md/include-exists` resolves an `@import` and checks the target exists on disk. |
 | `PAIRWISE` | **Two** components compared against each other | `content/duplicate-detection` flags two skills that are near-copies. |
-| `SETUP` | The **whole** component graph or an aggregate | `content/orphan-skills` needs every reference edge in the setup to know a skill is unreferenced. |
+| `SETUP` | The **whole** component graph or an aggregate | `cross/duplicate-skill-id` needs every skill in the setup to know an id is ambiguous. |
 
 A per-file scanner sees one file at a time with no memory of the others, so it
 can decide `FILE` and `FILE_FS` rules but is **structurally blind to `PAIRWISE`
 and `SETUP` classes**: it can never notice that two skills duplicate each other,
-that a skill is orphaned, or that a credential flows from one component to a
+that two skills share an id, or that a credential flows from one component to a
 network sink in another, because those findings only exist in the relationships
 *between* files. Building the cross-component graph is the reason harness-eval
 exists.

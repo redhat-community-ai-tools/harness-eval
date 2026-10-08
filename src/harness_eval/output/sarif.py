@@ -113,6 +113,23 @@ def format_sarif(
         },
     }
 
+    evidence = metadata.evidence if metadata else None
+    if evidence is not None:
+        if evidence.vcs_revision:
+            run["versionControlProvenance"] = [{"revisionId": evidence.vcs_revision}]
+        run["properties"] = {
+            "setupFingerprint": evidence.setup_fingerprint,
+            "rulesDigest": evidence.rules_digest,
+            "rulesCount": evidence.rules_count,
+            "targetRulesLoaded": evidence.target_rules_loaded,
+            "configDigest": evidence.config_digest,
+            "preset": evidence.preset,
+            "baselineDigest": evidence.baseline_digest,
+            "baselineSuppressed": evidence.baseline_suppressed,
+            "inventoryFiles": evidence.inventory_files,
+            "excludes": list(evidence.excludes),
+        }
+
     return {
         "$schema": SARIF_SCHEMA,
         "version": SARIF_VERSION,

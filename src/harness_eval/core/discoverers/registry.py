@@ -8,6 +8,7 @@ from harness_eval.core.discoverers.cline import ClineDiscoverer
 from harness_eval.core.discoverers.codex import CodexDiscoverer
 from harness_eval.core.discoverers.copilot import CopilotDiscoverer
 from harness_eval.core.discoverers.cursor import CursorDiscoverer
+from harness_eval.core.discoverers.fullsend import FullsendDiscoverer
 from harness_eval.core.discoverers.gemini import GeminiDiscoverer
 from harness_eval.core.discoverers.opencode import OpenCodeDiscoverer
 from harness_eval.core.discoverers.third_party import ThirdPartyDiscoverer
@@ -22,6 +23,7 @@ DISCOVERERS: list[ToolDiscoverer] = [
     GeminiDiscoverer(),
     OpenCodeDiscoverer(),
     CodexDiscoverer(),
+    FullsendDiscoverer(),
     ThirdPartyDiscoverer(),
 ]
 

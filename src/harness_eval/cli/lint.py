@@ -24,8 +24,18 @@ from harness_eval.output.metadata import EvalMetadata
 @click.argument("path", type=click.Path(exists=True))
 @click.option(
     "--preset",
-    type=click.Choice(["recommended", "strict", "security", "pre-workflow"]),
+    type=click.Choice(["recommended", "strict"]),
     default="recommended",
+    help="Severity preset.",
+)
+@click.option(
+    "--all",
+    "everything",
+    is_flag=True,
+    help=(
+        "Run every rule (block, policy, signal and advice), not only advice. "
+        "The preset decides severities."
+    ),
 )
 @click.option(
     "--format", "fmt", type=click.Choice(["terminal", "json", "sarif"]), default="terminal"
@@ -97,6 +107,7 @@ from harness_eval.output.metadata import EvalMetadata
 def eval_setup_lint(
     path: str,
     preset: str,
+    everything: bool,
     fmt: str,
     output_path: str | None,
     fix: bool,
@@ -115,7 +126,9 @@ def eval_setup_lint(
     max_depth: int,
     rules_from_target: bool,
 ) -> None:
-    """Lint: deterministic rules + system analysis. No LLM, fast."""
+    """Quality lint: advice rules plus system analysis (context budget,
+    triggers, dependencies). No LLM, no network. Exits 0 unless a --fail-on
+    or --enforce flag says otherwise; add --all to run every rule."""
     if enforce and (fail_on_error or fail_on_warning):
         raise click.UsageError(
             "--enforce is mutually exclusive with --fail-on-error and --fail-on-warning"
@@ -133,6 +146,7 @@ def eval_setup_lint(
         run_watch(
             path=path,
             preset=preset,
+            everything=everything,
             fmt=fmt,
             user_config=user_config,
             recursive=recursive,
@@ -144,12 +158,12 @@ def eval_setup_lint(
 
     t0 = time.monotonic()
     from harness_eval.analysis.system import analyze_system
-    from harness_eval.config.presets import PRESETS
+    from harness_eval.config.presets import lint_rules
     from harness_eval.inspection.engine import inspect_setup
     from harness_eval.inspection.fixer import apply_fixes
     from harness_eval.output.report import format_json, format_terminal
 
-    config_rules = PRESETS.get(preset, {})
+    config_rules = lint_rules(preset, everything=everything)
     target = Path(path)
     limits = scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth)
 
@@ -162,15 +176,22 @@ def eval_setup_lint(
             exclude=exclude,
             limits=limits,
         )
-        results = inspect_setup(setup, config_rules, load_target_yaml=rules_from_target)
+        from harness_eval.inspection.engine import build_scan_catalog
+        from harness_eval.output.provenance import collect_scan_evidence
 
+        scan_catalog = build_scan_catalog(path, load_target_yaml=rules_from_target)
+        results = inspect_setup(setup, config_rules, catalog=scan_catalog)
+
+        baseline_suppressed = 0
         if baseline_path:
             import json as _json_bl
 
             from harness_eval.baseline import filter_baselined
 
             bl_data = _json_bl.loads(Path(baseline_path).read_text())
+            before = sum(len(r.diagnostics) for r in results)
             results = filter_baselined(results, bl_data)
+            baseline_suppressed = before - sum(len(r.diagnostics) for r in results)
 
         system = analyze_system(setup)
 
@@ -180,6 +201,16 @@ def eval_setup_lint(
             components_scanned=len(results),
             rules_checked=sum(len(r.rules_run) for r in results),
             invocation_source="cli",
+            evidence=collect_scan_evidence(
+                setup,
+                scan_catalog,
+                config_rules,
+                preset=f"{preset}+all" if everything else f"{preset}+advice",
+                target_rules_loaded=rules_from_target,
+                excludes=exclude,
+                baseline_path=baseline_path,
+                baseline_suppressed=baseline_suppressed,
+            ),
         )
 
         if fmt == "sarif":
@@ -311,10 +342,16 @@ def _inspect_single_file(target, config_rules):
         lint_agent,
         lint_claude_md,
         lint_command,
+        lint_harness,
         lint_hooks,
     )
 
     name = target.name.lower()
+    if target.suffix in (".yaml", ".yml") and target.parent.name == "harness":
+        from harness_eval.core.discoverers.fullsend import is_harness_file
+
+        if is_harness_file(target):
+            return [lint_harness(str(target), config_rules, source_tool="fullsend")]
     if name == "skill.md":
         return [lint(str(target.parent), config_rules)]
     elif name == "command.md":
@@ -332,10 +369,7 @@ def _inspect_single_file(target, config_rules):
     click.echo(
         f"Warning: could not detect component type for '{target.name}'. "
         f"Expected: SKILL.md, command.md, CLAUDE.md, .mdc, .cursorrules, "
-        f"settings.json, hooks.json, or an agent .md file.",
+        f"settings.json, hooks.json, an agent .md file, or a harness/*.yaml file.",
         err=True,
     )
     return []
-
-
-cli.add_command(eval_setup_lint, "lint")

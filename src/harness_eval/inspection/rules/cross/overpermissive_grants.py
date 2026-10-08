@@ -129,6 +129,7 @@ class OverpermissiveGrants:
     meta = RuleMeta(
         id="cross/overpermissive-grants",
         tier="gating",
+        effect="policy",
         scope="FILE",
         default_severity=Severity.WARNING,
         fixable=False,

@@ -118,6 +118,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
+      - name: Autonomy check (decidable rules only)
+        run: uv run harness-eval harness-autonomy .
+
+      - name: Validated gate
+        run: uv run harness-eval harness-gate .
+
       - name: Security gate (block on security errors)
         run: uv run harness-eval harness-security . --fail-on-error
 

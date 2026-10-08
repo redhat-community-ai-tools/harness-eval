@@ -34,6 +34,7 @@ class StructuralJsonDuplicateKeysMcp:
     meta = RuleMeta(
         id="mcp/json-duplicate-keys",
         tier="gating",
+        effect="block",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Flag duplicate object keys in an MCP configuration; the parser silently keeps only the last",
@@ -53,6 +54,7 @@ class StructuralJsonDuplicateKeysSettings:
     meta = RuleMeta(
         id="hooks/json-duplicate-keys",
         tier="gating",
+        effect="block",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Flag duplicate object keys in settings.json; the parser silently keeps only the last",

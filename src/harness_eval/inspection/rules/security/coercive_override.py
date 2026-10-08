@@ -48,6 +48,7 @@ _COERCIVE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 class CoerciveOverride:
     meta = RuleMeta(
         id="security/coercive-override",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect patterns forcing the agent to comply unconditionally",

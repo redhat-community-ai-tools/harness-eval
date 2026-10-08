@@ -55,6 +55,7 @@ _EXFIL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 class PromptExfiltration:
     meta = RuleMeta(
         id="security/prompt-exfiltration",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect instructions that leak system prompts or configuration to outputs",

@@ -69,6 +69,5 @@ def test_recommended_keeps_extras_off() -> None:
     for rid in (
         "security/yara-signatures",
         "security/cve-lookup",
-        "submission/file-completeness",
     ):
         assert RECOMMENDED[rid] == "off"

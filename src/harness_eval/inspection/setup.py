@@ -16,6 +16,7 @@ from harness_eval.inspection.parsers import (
     parse_claude_md,
     parse_command,
     parse_config_file,
+    parse_harness,
     parse_hooks,
     parse_mcp_config_file,
     parse_skill,
@@ -26,6 +27,7 @@ from harness_eval.inspection.types import (
     ParsedCommand,
     ParsedConfig,
     ParsedFile,
+    ParsedHarness,
     ParsedHooks,
     ParsedMcpConfig,
     ParsedSkill,
@@ -49,6 +51,7 @@ class ParsedSetup:
     agents: tuple[ParsedAgent, ...] = ()
     mcp_configs: tuple[ParsedMcpConfig, ...] = ()
     configs: tuple[ParsedConfig, ...] = ()
+    harnesses: tuple[ParsedHarness, ...] = ()
 
     def core_by_type(self, component_type: ComponentType) -> tuple[ParsedComponent, ...]:
         return tuple(c for c in self.components if c.component_type == component_type)
@@ -63,6 +66,7 @@ class ParsedSetup:
             ComponentType.AGENT: self.agents,
             ComponentType.MCP_CONFIG: self.mcp_configs,
             ComponentType.CONFIG: self.configs,
+            ComponentType.HARNESS: self.harnesses,
         }
         return by_type.get(component_type, ())
 
@@ -77,6 +81,7 @@ def parse_setup(setup: Setup) -> ParsedSetup:
     agents: list[ParsedAgent] = []
     mcp_configs: list[ParsedMcpConfig] = []
     configs: list[ParsedConfig] = []
+    harnesses: list[ParsedHarness] = []
 
     for component in setup.components:
         parsed: ParsedFile | None = None
@@ -102,6 +107,9 @@ def parse_setup(setup: Setup) -> ParsedSetup:
         elif ctype is ComponentType.CONFIG:
             parsed = parse_config_file(component.path)
             configs.append(parsed)
+        elif ctype is ComponentType.HARNESS:
+            parsed = parse_harness(component.path, component.source_tool)
+            harnesses.append(parsed)
         components.append(replace(component, parsed=parsed) if parsed is not None else component)
 
     return ParsedSetup(
@@ -114,6 +122,7 @@ def parse_setup(setup: Setup) -> ParsedSetup:
         agents=tuple(agents),
         mcp_configs=tuple(mcp_configs),
         configs=tuple(configs),
+        harnesses=tuple(harnesses),
     )
 
 

@@ -77,6 +77,7 @@ class ClaudeMdIncludeExists:
     meta = RuleMeta(
         id="claude-md/include-exists",
         tier="gating",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

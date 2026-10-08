@@ -44,10 +44,10 @@ SKILL_NAME_MAP = {
     "harness-lint": "lint",
     "harness-review": "review",
     "harness-security": "security",
-    "skill-review": "eval-skill",
+    "harness-autonomy": "autonomy",
 }
 
-SKIP_GENERATION = {"skill-verify"}
+SKIP_GENERATION: set[str] = set()
 
 
 def extract_description(content: str) -> str:

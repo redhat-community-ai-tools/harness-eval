@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 
+from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.security._shared import (
-    extract_all_skill_md_content,
+    extract_component_texts,
     scan_lines_for_credential_patterns,
 )
 from harness_eval.inspection.types import (
@@ -60,13 +61,18 @@ _DANGEROUS_COMMANDS = [
 ]
 
 
+_INSTRUCTION_TARGETS = (ComponentType.SKILL, ComponentType.COMMAND, ComponentType.AGENT)
+
+
 class NoCredentialAccess:
     meta: RuleMeta = RuleMeta(
         id="security/no-credential-access",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
-        description="Skill should not reference sensitive file paths or environment variables",
+        description="Instruction content should not reference sensitive file paths or environment variables",
         category=RuleCategory.SECURITY,
+        target_type=_INSTRUCTION_TARGETS,
         messages={
             "sensitive_path": "References sensitive path '{{match}}' at line {{line}}",
             "sensitive_env": "References sensitive environment variable '{{match}}' at line {{line}}",
@@ -77,7 +83,7 @@ class NoCredentialAccess:
     )
 
     def create(self, context: RuleContext) -> None:
-        for content, file_path in extract_all_skill_md_content(context):
+        for content, file_path in extract_component_texts(context):
             scan_lines_for_credential_patterns(
                 content,
                 file_path,

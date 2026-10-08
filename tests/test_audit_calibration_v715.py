@@ -364,7 +364,7 @@ class TestThirdRound:
             for x in _diags(result, "content/allowed-tools-auto-approve")
             if "shell execution" in x.message
         ]
-        assert [x.message.split("'")[1] for x in high] == ["Bash(python:*)"]
+        assert [x.data["tools"] for x in high] == ["Bash(python:*)"]
 
     def test_uppercase_docs_in_agents_dir_are_not_agents(self, tmp_path: Path) -> None:
         d = tmp_path / ".claude" / "agents"

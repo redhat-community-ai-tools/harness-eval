@@ -15,6 +15,7 @@ class CommandDescriptionRequired:
     meta = RuleMeta(
         id="command/description-required",
         tier="gating",
+        effect="block",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Commands must have a description in frontmatter for the UI menu",
@@ -44,6 +45,7 @@ class CommandDescriptionRequired:
 class CommandDescriptionQuality:
     meta = RuleMeta(
         id="command/description-quality",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Command descriptions should say what the command does in more than two words",

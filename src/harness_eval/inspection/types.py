@@ -10,6 +10,7 @@ from harness_eval.core.types import ComponentType, ScanLimits
 
 if TYPE_CHECKING:
     from harness_eval.analysis.component_graph import ComponentGraph
+    from harness_eval.inspection.harness_formats import HarnessFields
 
 
 class Severity(str, Enum):
@@ -100,7 +101,9 @@ class RuleMeta:
     description: str
     category: RuleCategory
     messages: dict[str, str]
-    target_type: ComponentType = ComponentType.SKILL
+    # One component type, or several when the same check applies to each
+    # (``targets`` normalizes both forms).
+    target_type: ComponentType | tuple[ComponentType, ...] = ComponentType.SKILL
     tools: tuple[str, ...] | None = None
     frameworks: dict[str, str] | None = None
     default_suggestion: str | None = None
@@ -111,6 +114,23 @@ class RuleMeta:
     # config file; FILE_FS = also touches the filesystem; PAIRWISE = compares two
     # components; SETUP = needs the whole component graph or an aggregate.
     scope: Literal["FILE", "FILE_FS", "PAIRWISE", "SETUP"] = "FILE"
+    # What a finding means for the person reading it. The single axis the
+    # commands select on (see docs/rule-taxonomy.md):
+    #   block  - a decidable defect in the configuration; nothing to argue about
+    #   policy - a decidable fact whose acceptability is a trust decision
+    #   signal - a heuristic match (text pattern, taint, signature); needs a reader
+    #   advice - quality or style; never gates anything
+    effect: Literal["block", "policy", "signal", "advice"] = "advice"
+
+    @property
+    def targets(self) -> tuple[ComponentType, ...]:
+        if isinstance(self.target_type, tuple):
+            return self.target_type
+        return (self.target_type,)
+
+    @property
+    def target_label(self) -> str:
+        return ",".join(t.value for t in self.targets)
 
 
 @dataclass
@@ -214,6 +234,26 @@ class ParsedConfig:
     tokens: int = 0
 
 
+@dataclass
+class ParsedHarness:
+    """A pipeline agent harness: the definition that runs an agent unattended.
+
+    ``fields`` is the format-neutral view produced by the mapper registered for
+    ``source_tool`` (see ``inspection.harness_formats``). It is None when the
+    file did not parse as a mapping or no mapper knows the format; rules must
+    return early in that case.
+    """
+
+    file_path: str
+    name: str
+    raw_content: str
+    data: dict[str, Any]
+    source_tool: str | None
+    fields: HarnessFields | None
+    parse_errors: list[str] = field(default_factory=list)
+    tokens: int = 0
+
+
 ParsedFile = (
     ParsedSkill
     | ParsedCommand
@@ -222,6 +262,7 @@ ParsedFile = (
     | ParsedAgent
     | ParsedMcpConfig
     | ParsedConfig
+    | ParsedHarness
 )
 
 
@@ -296,6 +337,32 @@ class ScanArtifacts:
         return True
 
     @property
+    def harness_managed_paths(self) -> frozenset[str]:
+        """Resolved paths of components a pipeline harness runs (its agent
+        prompt and the skill directories it ships). Those run inside the
+        harness's sandbox, where the harness policy, not Claude Code
+        permission fields, is the boundary."""
+        return self.state.get("harness_managed_paths") or frozenset()
+
+    @harness_managed_paths.setter
+    def harness_managed_paths(self, value: frozenset[str]) -> None:
+        self.state["harness_managed_paths"] = value
+
+    def is_harness_managed(self, path: str | Path) -> bool:
+        managed = self.harness_managed_paths
+        if not managed:
+            return False
+        try:
+            p = Path(path).resolve()
+        except OSError:
+            return False
+        for m in managed:
+            mp = Path(m)
+            if p == mp or mp in p.parents:
+                return True
+        return False
+
+    @property
     def scan_limits(self) -> ScanLimits | None:
         limits: ScanLimits | None = self.state.get("scan_limits")
         return limits
@@ -354,6 +421,8 @@ class RuleContext:
             return t.raw_content, t.agent_md_path
         if isinstance(t, (ParsedClaudeMd, ParsedHooks, ParsedMcpConfig, ParsedConfig)):
             return t.raw_content, t.file_path
+        if isinstance(t, ParsedHarness):
+            return t.raw_content, t.file_path
         if self.skill is not None:
             return self.skill.raw_content, self.skill.skill_md_path
         return "", ""
@@ -381,6 +450,10 @@ class RuleContext:
     @property
     def config(self) -> ParsedConfig | None:
         return self.target if isinstance(self.target, ParsedConfig) else None
+
+    @property
+    def harness(self) -> ParsedHarness | None:
+        return self.target if isinstance(self.target, ParsedHarness) else None
 
 
 @dataclass

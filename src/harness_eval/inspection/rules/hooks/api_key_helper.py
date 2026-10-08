@@ -16,6 +16,8 @@ from harness_eval.inspection.types import (
 class HooksApiKeyHelper:
     meta = RuleMeta(
         id="hooks/api-key-helper",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.ERROR,
         fixable=False,
         description=(

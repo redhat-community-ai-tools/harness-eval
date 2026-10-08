@@ -72,6 +72,7 @@ class HooksPermissionContradiction:
     meta = RuleMeta(
         id="hooks/permission-contradiction",
         tier="gating",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

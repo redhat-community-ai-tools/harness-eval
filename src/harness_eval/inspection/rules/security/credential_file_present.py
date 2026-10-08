@@ -55,6 +55,7 @@ class SecurityCredentialFilePresent:
     meta = RuleMeta(
         id="security/credential-file-present",
         tier="gating",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

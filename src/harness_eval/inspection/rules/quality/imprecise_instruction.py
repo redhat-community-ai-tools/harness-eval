@@ -43,6 +43,7 @@ _CATEGORY_ADVICE = {
 class ImpreciseInstruction:
     meta = RuleMeta(
         id="quality/imprecise-instruction",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Instructions should use direct, unambiguous language",

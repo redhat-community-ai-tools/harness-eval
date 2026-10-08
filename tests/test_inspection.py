@@ -382,15 +382,15 @@ class TestFrontmatterRules:
 
 
 class TestPresets:
-    def test_security_preset_skips_structural(self, tmp_path: Path) -> None:
-        from harness_eval.config.presets import PRESETS
+    def test_security_rules_skip_advice(self, tmp_path: Path) -> None:
+        from harness_eval.config.presets import security_rules
 
         skill_dir = tmp_path / "test-skill"
         skill_dir.mkdir()
         (skill_dir / "SKILL.md").write_text(
             "---\nname: test-skill\ndescription: A short desc\n---\n\nBody."
         )
-        result = lint(str(skill_dir), config_rules=PRESETS["security"])
+        result = lint(str(skill_dir), config_rules=security_rules())
         rule_ids = {d.rule_id for d in result.diagnostics}
         assert "frontmatter/description-quality" not in rule_ids
 

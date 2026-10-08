@@ -18,7 +18,13 @@ _CAPABILITIES = [
     ("tiktoken", "[tiktoken]", "Accurate token counting", 'pip install "harness-eval[tiktoken]"'),
 ]
 
-_ENV_VARS = ["GEMINI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]
+_ENV_VARS = [
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+]
 
 
 def _check_import(module: str) -> bool:

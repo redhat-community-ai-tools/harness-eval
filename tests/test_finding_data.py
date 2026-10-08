@@ -73,7 +73,7 @@ def test_json_and_sarif_include_endpoint_data(tmp_path: Path) -> None:
     ]
     assert any(item["data"]["host"] == "evil.example" for item in details)
 
-    lint = runner.invoke(cli, ["harness-lint", str(tmp_path), "--format", "json"])
+    lint = runner.invoke(cli, ["harness-lint", str(tmp_path), "--all", "--format", "json"])
     assert lint.exit_code == 0
     lint_body = json.loads(lint.output)
     lint_findings = [

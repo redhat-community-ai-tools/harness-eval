@@ -1,5 +1,5 @@
 name: "harness-eval"
-description: "Lint and security-scan AI agent setups (instructions, skills, commands, hooks, settings, MCP configs, agents). 99 deterministic rules, no LLM required."
+description: "Check AI agent setups (instructions, skills, commands, hooks, settings, MCP configs, agents, harnesses): autonomy check for auto-merge, validated gate, security scan, quality lint. 92 deterministic rules, no LLM required."
 author: "redhat-community-ai-tools"
 
 branding:
@@ -11,8 +11,20 @@ inputs:
     description: "Directories to scan, one per line. Default scans the repo root."
     default: "."
   preset:
-    description: "Rule preset: recommended, strict, security, or pre-workflow"
+    description: "Severity preset for the lint step: recommended or strict"
     default: "recommended"
+  autonomy:
+    description: "Run harness-autonomy (block and policy rules at gating or provisional tier; fails on FAIL and on REVIEW_REQUIRED). Set to 'false' to skip."
+    default: "true"
+  autonomy-policy:
+    description: "Path of a trusted policy file passed to harness-autonomy --policy (accepted policy findings become waived)."
+    default: ""
+  autonomy-allow-review:
+    description: "Treat REVIEW_REQUIRED (exit 2) as success for the autonomy step; the findings still appear in the output. Default fails on it."
+    default: "false"
+  autonomy-changed-only:
+    description: "On pull requests, compare against the PR base so only findings the change introduced decide the verdict; pre-existing ones are listed, not counted. Set to 'false' to judge the whole tree."
+    default: "true"
   gate:
     description: "Run the validated gate (harness-gate: gating-tier rules only, exits 1 on any finding, no LLM). Set to 'false' to skip."
     default: "true"
@@ -23,8 +35,11 @@ inputs:
     description: "Run security scan (--fail-on-warning). Set to 'false' to skip."
     default: "true"
   lint-gate:
-    description: "Run lint scan (--fail-on-error). Set to 'false' to skip."
+    description: "Run the quality lint (--fail-on-error). Set to 'false' to skip."
     default: "true"
+  lint-all:
+    description: "Pass --all to harness-lint so every rule runs, not only advice rules."
+    default: "false"
   lint-fail-on:
     description: "Lint failure threshold: 'error' (default) or 'warning' (strict)"
     default: "error"
@@ -45,6 +60,12 @@ inputs:
     default: ""
 
 outputs:
+  autonomy-verdict:
+    description: "PASS, FAIL or REVIEW_REQUIRED from harness-autonomy (empty when skipped; for several paths, the worst verdict)"
+    value: ${{ steps.autonomy.outputs.verdict }}
+  autonomy-passed:
+    description: "Whether the autonomy step passed"
+    value: ${{ steps.autonomy.outcome == 'success' || inputs.autonomy != 'true' }}
   gate-passed:
     description: "Whether the validated gate passed"
     value: ${{ steps.gate.outcome == 'success' || inputs.gate != 'true' }}
@@ -71,12 +92,77 @@ runs:
         fi
         echo "Installed: $(harness-eval --version)"
 
-    - name: Gate
-      id: gate
-      if: inputs.gate == 'true'
+    - name: Autonomy check
+      id: autonomy
+      if: inputs.autonomy == 'true'
       shell: bash
       run: |
-        echo "=== Harness Gate (validated rules) ==="
+        echo "=== Harness Autonomy (decidable rules only) ==="
+        recursive_flag=""
+        if [ "${{ inputs.recursive }}" = "true" ]; then
+          recursive_flag="--recursive"
+        fi
+        policy_flag=""
+        if [ -n "${{ inputs.autonomy-policy }}" ]; then
+          policy_flag="--policy ${{ inputs.autonomy-policy }}"
+        fi
+        exclude_flags=""
+        while IFS= read -r pat; do
+          pat=$(echo "$pat" | xargs)
+          [ -z "$pat" ] && continue
+          exclude_flags="$exclude_flags --exclude $pat"
+        done <<< "${{ inputs.exclude }}"
+        # On a pull request, judge the change: check out the base revision next to
+        # the workspace and let harness-autonomy list what already existed there.
+        base_dir=""
+        base_sha="${{ github.event.pull_request.base.sha }}"
+        if [ "${{ inputs.autonomy-changed-only }}" = "true" ] && [ -n "$base_sha" ] && git rev-parse --git-dir >/dev/null 2>&1; then
+          base_dir="${{ runner.temp }}/harness-eval-base"
+          if git fetch -q --depth=1 origin "$base_sha" 2>/dev/null && git worktree add -q --detach "$base_dir" "$base_sha" 2>/dev/null; then
+            echo "Comparing against base $base_sha"
+          else
+            echo "::notice::Could not check out base $base_sha; judging the whole tree"
+            base_dir=""
+          fi
+        fi
+        worst=0
+        json_dir="${{ runner.temp }}/harness-eval-autonomy"
+        mkdir -p "$json_dir"
+        i=0
+        while IFS= read -r dir; do
+          dir=$(echo "$dir" | xargs)
+          [ -z "$dir" ] && continue
+          compare_flag=""
+          if [ -n "$base_dir" ] && [ -d "$base_dir/$dir" ]; then
+            compare_flag="--compare $base_dir/$dir"
+          fi
+          set +e
+          harness-eval harness-autonomy "$dir" $recursive_flag $policy_flag $compare_flag $exclude_flags --format json --output "$json_dir/autonomy-$i.json"
+          rc=$?
+          set -e
+          python3 -c "import json; d=json.load(open('$json_dir/autonomy-$i.json')); print(d['verdict']); [print('  BLOCK', f['rule'], f['file'], f['message']) for f in d['blocking']]; [print('  POLICY', f['rule'], f['file'], f['message']) for f in d['policy']]; [print('  WAIVED', f['rule'], f['file'], f['accepted_by']['reason']) for f in d['waived']]; [print('  PRE-EXISTING', f['rule'], f['file']) for f in d.get('pre_existing', [])]" || true
+          # exit 1 (FAIL) outranks exit 2 (REVIEW_REQUIRED)
+          if [ $rc -eq 1 ] || [ $worst -eq 1 ]; then worst=1; elif [ $rc -ne 0 ]; then worst=$rc; fi
+          i=$((i + 1))
+        done <<< "${{ inputs.path }}"
+        case $worst in
+          0) verdict=PASS ;;
+          1) verdict=FAIL ;;
+          *) verdict=REVIEW_REQUIRED ;;
+        esac
+        echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+        echo "json-dir=$json_dir" >> "$GITHUB_OUTPUT"
+        if [ $worst -eq 2 ] && [ "${{ inputs.autonomy-allow-review }}" = "true" ]; then
+          exit 0
+        fi
+        exit $worst
+
+    - name: Gate
+      id: gate
+      if: inputs.gate == 'true' && always()
+      shell: bash
+      run: |
+        echo "=== Harness Gate (validated block rules) ==="
         recursive_flag=""
         if [ "${{ inputs.recursive }}" = "true" ]; then
           recursive_flag="--recursive"
@@ -139,6 +225,10 @@ runs:
         if [ "${{ inputs.lint-fail-on }}" = "warning" ]; then
           fail_flag="--fail-on-warning"
         fi
+        all_flag=""
+        if [ "${{ inputs.lint-all }}" = "true" ]; then
+          all_flag="--all"
+        fi
         recursive_flag=""
         if [ "${{ inputs.recursive }}" = "true" ]; then
           recursive_flag="--recursive"
@@ -156,9 +246,9 @@ runs:
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
-          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format json --output "$json_dir/lint-$i.json" || true
+          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $all_flag $recursive_flag $exclude_flags --format json --output "$json_dir/lint-$i.json" || true
           set +e
-          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags $fail_flag
+          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $all_flag $recursive_flag $exclude_flags $fail_flag
           rc=$?
           set -e
           if [ $rc -ne 0 ]; then
@@ -191,7 +281,7 @@ runs:
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
-          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" $recursive_flag $exclude_flags --format sarif --output "$sarif_dir/results-$i.sarif" || true
+          harness-eval harness-lint "$dir" --preset "${{ inputs.preset }}" --all $recursive_flag $exclude_flags --format sarif --output "$sarif_dir/results-$i.sarif" || true
           count=$(python3 -c "import json; d=json.load(open('$sarif_dir/results-$i.sarif')); print(len(d['runs'][0]['results']))" 2>/dev/null || echo "0")
           total_results=$((total_results + count))
           i=$((i + 1))
@@ -279,13 +369,17 @@ runs:
         total_errors=$(echo "$details" | grep "^total_errors=" | cut -d= -f2)
         total_warnings=$(echo "$details" | grep "^total_warnings=" | cut -d= -f2)
 
-        sec_icon="✓"; sec_msg="passed (19 security rules)"
+        auto_icon="✓"; auto_msg="${{ steps.autonomy.outputs.verdict }}"
+        [ "${{ inputs.autonomy }}" != "true" ] && { auto_icon="○"; auto_msg="skipped"; }
+        [ "${{ steps.autonomy.outcome }}" != "success" ] && [ "${{ inputs.autonomy }}" = "true" ] && auto_icon="✗"
+
+        sec_icon="✓"; sec_msg="passed (policy + heuristic security rules)"
         [ "${{ inputs.security-gate }}" != "true" ] && { sec_icon="○"; sec_msg="skipped"; }
         [ "${{ steps.security.outcome }}" != "success" ] && [ "${{ inputs.security-gate }}" = "true" ] && { sec_icon="✗"; sec_msg="findings detected"; }
 
         warnings_note=""
         [ "${total_warnings:-0}" -gt 0 ] && warnings_note=", ${total_warnings} warnings (non-blocking)"
-        lint_icon="✓"; lint_msg="passed (99 rules, ${total_errors:-0} errors${warnings_note})"
+        lint_icon="✓"; lint_msg="passed (${total_errors:-0} errors${warnings_note})"
         [ "${{ inputs.lint-gate }}" != "true" ] && { lint_icon="○"; lint_msg="skipped"; }
         [ "${{ steps.lint.outcome }}" != "success" ] && [ "${{ inputs.lint-gate }}" = "true" ] && { lint_icon="✗"; lint_msg="${total_errors:-0} errors${warnings_note}"; }
 
@@ -332,6 +426,7 @@ runs:
         # Assemble final body
         body="## Harness Eval Results
 
+        ${auto_icon} **Autonomy check** (decidable rules only): ${auto_msg}
         ${sec_icon} **Security checks**: ${sec_msg}
         ${lint_icon} **Lint checks**: ${lint_msg}
         ${sarif_icon} **Code scanning**: ${sarif_msg}
@@ -339,7 +434,7 @@ runs:
         ${cat_table}
 
         ---
-        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 99 rules | preset: ${{ inputs.preset }}*"
+        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 92 rules | lint preset: ${{ inputs.preset }}*"
 
         body=$(echo "$body" | sed 's/^        //')
 

@@ -58,6 +58,7 @@ _STALE_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
 class StaleReferences:
     meta = RuleMeta(
         id="quality/stale-references",
+        effect="advice",
         default_severity=Severity.INFO,
         fixable=False,
         description="Detect deprecated models, sunset APIs, and outdated tool references",

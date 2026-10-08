@@ -8,8 +8,25 @@ while baselined ones are suppressed.
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 
-from harness_eval.inspection.types import InspectionResult
+from harness_eval.inspection.types import Finding, InspectionResult
+
+
+def finding_key(finding: Finding, scan_root: Path | str) -> tuple[str, str, str]:
+    """Identity of a finding that survives moving the tree: the rule, the
+    file relative to the scan root, and a hash of the message with every
+    occurrence of the root path blanked. Two checkouts of the same revision
+    yield the same keys, which is what comparing a head against its base needs.
+    """
+    root = Path(scan_root).resolve()
+    file = finding.location.file
+    try:
+        rel = str(Path(file).resolve().relative_to(root))
+    except (ValueError, OSError):
+        rel = file
+    message = finding.message.replace(str(root), "<root>").replace(str(scan_root), "<root>")
+    return (finding.rule_id, rel, hashlib.sha256(message.encode()).hexdigest()[:16])
 
 
 def create_baseline(results: list[InspectionResult]) -> dict:

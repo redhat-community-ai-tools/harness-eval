@@ -48,6 +48,7 @@ class McpEndpointIntegrity:
     meta = RuleMeta(
         id="mcp/endpoint-integrity",
         tier="gating",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

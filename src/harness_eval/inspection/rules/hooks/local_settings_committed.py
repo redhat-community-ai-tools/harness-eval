@@ -42,6 +42,7 @@ class HooksLocalSettingsCommitted:
     meta = RuleMeta(
         id="hooks/local-settings-committed",
         tier="gating",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.WARNING,
         fixable=False,

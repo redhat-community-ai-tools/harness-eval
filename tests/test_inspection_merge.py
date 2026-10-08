@@ -1,4 +1,4 @@
-"""skill-verify keeps distinct findings and the higher severity of a duplicate."""
+"""merge_inspection_results keeps distinct findings and the higher severity of a duplicate."""
 
 from __future__ import annotations
 

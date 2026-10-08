@@ -14,6 +14,7 @@ class DescriptionRequired:
     meta: RuleMeta = RuleMeta(
         id="frontmatter/description-required",
         tier="gating",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description="The 'description' field is required in frontmatter",

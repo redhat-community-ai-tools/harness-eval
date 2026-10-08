@@ -15,6 +15,7 @@ from harness_eval.inspection.parsers import (
     parse_claude_md,
     parse_command,
     parse_config_file,
+    parse_harness,
     parse_hooks,
     parse_mcp_config_file,
     parse_skill,
@@ -34,6 +35,7 @@ from harness_eval.inspection.types import (
     ParsedClaudeMd,
     ParsedCommand,
     ParsedConfig,
+    ParsedHarness,
     ParsedHooks,
     ParsedMcpConfig,
     ParsedSkill,
@@ -576,6 +578,42 @@ def lint_config(
     )
 
 
+def lint_harness(
+    harness_path: str,
+    config_rules: dict[str, str | list[Any]] | None = None,
+    scan_state: dict[str, Any] | None = None,
+    source_tool: str | None = None,
+    parsed: ParsedHarness | None = None,
+    catalog: RuleCatalog | None = None,
+    artifacts: ScanArtifacts | None = None,
+) -> InspectionResult:
+    """Lint a pipeline agent harness definition."""
+    harness = parsed if parsed is not None else parse_harness(harness_path, source_tool)
+    diagnostics = _parse_errors_to_findings(harness.parse_errors, harness.file_path)
+    rule_diags, suppression_count, rules_run = _run_rules(
+        ComponentType.HARNESS,
+        harness.file_path,
+        harness.raw_content,
+        skill=None,
+        target=harness,
+        config_rules=config_rules,
+        scan_state=scan_state,
+        source_tool=source_tool,
+        catalog=catalog,
+        artifacts=artifacts,
+    )
+    diagnostics.extend(rule_diags)
+    return _build_result(
+        harness.file_path,
+        harness.name,
+        harness.tokens,
+        "harness",
+        diagnostics,
+        suppression_count,
+        rules_run,
+    )
+
+
 _SECURITY_ONLY_RULES = {
     "security/no-prompt-injection",
     "security/no-credential-access",
@@ -614,7 +652,7 @@ def lint_text_file(
     if base:
         # An explicit rule set (a preset or the gate) was passed: honor it, so a
         # security rule runs only if the set enables it; disable the rest. Without
-        # this, presets that omit these rules on purpose (gate, scan, pre-workflow)
+        # this, rule sets that omit these rules on purpose (gate, autonomy, lint)
         # would still fire them on generic text files (CI workflows, shell scripts)
         # and leak false positives. Keep every key present (unlisted -> "off") so the
         # config stays non-empty: an empty config means "no filter, run everything".
@@ -707,14 +745,49 @@ def inspect_setup(
     *load_target_yaml* is true. Target rules are loaded into a scan-local
     catalog so they cannot leak into a later scan in the same process.
     """
-    # Every scan gets an isolated catalog.  This makes target-local YAML rules
-    # safe to load in repeated or concurrent in-process scans.
+    scan_catalog = build_scan_catalog(
+        setup.path, load_target_yaml=load_target_yaml, catalog=catalog
+    )
+    return _inspect_setup(setup, config_rules, catalog=scan_catalog)
+
+
+def build_scan_catalog(
+    setup_path: str,
+    *,
+    load_target_yaml: bool = False,
+    catalog: RuleCatalog | None = None,
+) -> RuleCatalog:
+    """The isolated rule catalog one scan of *setup_path* runs with.
+
+    Every scan gets its own copy, which makes target-local YAML rules safe to
+    load in repeated or concurrent in-process scans. Callers that need to
+    record which rules were in force (``output.provenance``) build the
+    catalog here and pass it to ``inspect_setup``.
+    """
     scan_catalog = (catalog or get_default_catalog()).copy()
     if load_target_yaml:
         from harness_eval.inspection.yaml_rules import load_yaml_rules_from_dir
 
-        load_yaml_rules_from_dir(Path(setup.path) / ".harness-eval" / "rules", catalog=scan_catalog)
-    return _inspect_setup(setup, config_rules, catalog=scan_catalog)
+        load_yaml_rules_from_dir(Path(setup_path) / ".harness-eval" / "rules", catalog=scan_catalog)
+    return scan_catalog
+
+
+def _harness_managed_paths(harnesses: Any) -> frozenset[str]:
+    """Agent prompts and skill directories that a harness runs in its sandbox."""
+    managed: set[str] = set()
+    for h in harnesses:
+        fields = getattr(h, "fields", None)
+        if fields is None:
+            continue
+        root = Path(fields.root_dir)
+        for rel in [fields.instructions, *fields.skills]:
+            if not rel or "${" in rel or "://" in rel or rel.startswith(("/", "~")):
+                continue
+            try:
+                managed.add(str((root / rel).resolve()))
+            except OSError:
+                continue
+    return frozenset(managed)
 
 
 def _inspect_setup(
@@ -749,6 +822,7 @@ def _inspect_setup(
     agent_comps = list(parsed_setup.core_by_type(CT.AGENT))
     mcp_comps = list(parsed_setup.core_by_type(CT.MCP_CONFIG))
     config_comps = list(parsed_setup.core_by_type(CT.CONFIG))
+    harness_comps = list(parsed_setup.core_by_type(CT.HARNESS))
 
     all_skills = list(parsed_setup.skills)
     all_commands = list(parsed_setup.commands)
@@ -757,6 +831,8 @@ def _inspect_setup(
     all_agents = list(parsed_setup.agents)
     all_mcp = list(parsed_setup.mcp_configs)
     all_configs = list(parsed_setup.configs)
+    artifacts.harness_managed_paths = _harness_managed_paths(parsed_setup.harnesses)
+    all_harnesses = list(parsed_setup.harnesses)
 
     artifacts.component_graph = build_component_graph(
         all_skills,
@@ -838,6 +914,15 @@ def _inspect_setup(
             catalog=catalog,
             artifacts=artifacts,
         ),
+        CT.HARNESS: lambda comp, parsed: lint_harness(
+            parsed.file_path,
+            config_rules,
+            scan_state=scan_state,
+            source_tool=comp.source_tool,
+            parsed=parsed,
+            catalog=catalog,
+            artifacts=artifacts,
+        ),
     }
 
     parsed_by_type: list[tuple[CT, list[Any], list[Any]]] = [
@@ -848,6 +933,7 @@ def _inspect_setup(
         (CT.AGENT, agent_comps, all_agents),
         (CT.MCP_CONFIG, mcp_comps, all_mcp),
         (CT.CONFIG, config_comps, all_configs),
+        (CT.HARNESS, harness_comps, all_harnesses),
     ]
     for ctype, comps, parsed_list in parsed_by_type:
         run = lint_dispatch[ctype]

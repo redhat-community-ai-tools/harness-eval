@@ -94,6 +94,7 @@ class HooksCommandScriptExists:
     meta = RuleMeta(
         id="hooks/command-script-exists",
         tier="gating",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

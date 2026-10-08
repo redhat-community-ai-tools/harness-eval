@@ -50,7 +50,7 @@ class TestSecurityFixture:
     def test_deploy_command_fires_reverse_shell_rule(self) -> None:
         result = lint_command(str(SECURITY_SETUP / "commands/deploy"))
         rule_ids = {d.rule_id for d in result.diagnostics}
-        assert "command/reverse-shell" in rule_ids
+        assert "security/reverse-shell" in rule_ids
 
     def test_full_setup_security_findings_count(self) -> None:
         setup = discover_setup(name="security-issues", path=str(SECURITY_SETUP))
@@ -77,8 +77,7 @@ class TestSecurityFixtureE2E:
             [
                 "harness-lint",
                 str(SECURITY_SETUP),
-                "--preset",
-                "security",
+                "--all",
             ],
         )
         assert result.exit_code == 0
@@ -95,8 +94,7 @@ class TestSecurityFixtureE2E:
             [
                 "harness-lint",
                 str(SECURITY_SETUP),
-                "--preset",
-                "security",
+                "--all",
                 "--fail-on-error",
             ],
         )
@@ -115,6 +113,7 @@ class TestSecurityFixtureE2E:
             [
                 "harness-lint",
                 str(SECURITY_SETUP),
+                "--all",
                 "--format",
                 "json",
             ],

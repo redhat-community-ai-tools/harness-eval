@@ -56,6 +56,7 @@ _SCOPE_GRAB_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 class ScopeGrabDescription:
     meta = RuleMeta(
         id="quality/scope-grab-description",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

@@ -1,5 +1,5 @@
 ---
-description: "Run 99 deterministic rules + system-level analysis on the agent setup. No LLM. Fast, reproducible, CI-suitable"
+description: "Run the quality lint (advice rules + system-level analysis) on the agent setup; add --all for every one of the 92 deterministic rules. No LLM. Fast, reproducible"
 ---
 
 # Eval Setup Lint

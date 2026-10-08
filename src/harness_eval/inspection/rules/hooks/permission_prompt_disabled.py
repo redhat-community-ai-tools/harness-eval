@@ -31,6 +31,7 @@ class HooksPermissionPromptDisabled:
     meta = RuleMeta(
         id="hooks/permission-prompt-disabled",
         tier="gating",
+        effect="policy",
         default_severity=Severity.ERROR,
         fixable=False,
         description=(

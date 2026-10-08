@@ -85,6 +85,7 @@ _CATEGORY_MAP = {
 class YaraScan:
     meta: RuleMeta = RuleMeta(
         id="security/yara-signatures",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Scan skill files for malware, webshell, cryptominer, and hack tool signatures using YARA",

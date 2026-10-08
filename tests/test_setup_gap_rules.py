@@ -35,43 +35,6 @@ def _make_hooks_context(
     return ctx, reports
 
 
-class TestNoCommitGuard:
-    def test_hooks_without_commit_guard_fires(self, tmp_path: Path) -> None:
-        _ensure_rules()
-        from harness_eval.inspection.rules.hooks.no_commit_guard import HooksNoCommitGuard
-
-        rule = HooksNoCommitGuard()
-        ctx, reports = _make_hooks_context(
-            tmp_path,
-            {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": ["echo hi"]}]}},
-        )
-        rule.create(ctx)
-        assert len(reports) == 1
-
-    def test_commit_guard_present_clean(self, tmp_path: Path) -> None:
-        from harness_eval.inspection.rules.hooks.no_commit_guard import HooksNoCommitGuard
-
-        rule = HooksNoCommitGuard()
-        ctx, reports = _make_hooks_context(
-            tmp_path,
-            {
-                "hooks": {
-                    "PreToolUse": [{"matcher": "Bash(git commit*)", "hooks": ["gitleaks protect"]}]
-                }
-            },
-        )
-        rule.create(ctx)
-        assert len(reports) == 0
-
-    def test_no_hooks_section_clean(self, tmp_path: Path) -> None:
-        from harness_eval.inspection.rules.hooks.no_commit_guard import HooksNoCommitGuard
-
-        rule = HooksNoCommitGuard()
-        ctx, reports = _make_hooks_context(tmp_path, {"env": {"FOO": "bar"}})
-        rule.create(ctx)
-        assert len(reports) == 0
-
-
 class TestDangerousPermissionGrant:
     def test_flags_sudo(self, tmp_path: Path) -> None:
         _ensure_rules()
@@ -125,50 +88,3 @@ class TestDangerousPermissionGrant:
         )
         rule.create(ctx)
         assert len(reports) == 0
-
-
-class TestNoAuditTrail:
-    def test_no_telemetry_fires(self, tmp_path: Path) -> None:
-        _ensure_rules()
-        from harness_eval.inspection.rules.hooks.no_audit_trail import HooksNoAuditTrail
-
-        rule = HooksNoAuditTrail()
-        ctx, reports = _make_hooks_context(
-            tmp_path, {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": ["echo"]}]}}
-        )
-        rule.create(ctx)
-        assert len(reports) == 1
-
-    def test_otel_configured_clean(self, tmp_path: Path) -> None:
-        from harness_eval.inspection.rules.hooks.no_audit_trail import HooksNoAuditTrail
-
-        rule = HooksNoAuditTrail()
-        ctx, reports = _make_hooks_context(
-            tmp_path,
-            {"env": {"OTEL_EXPORTER_OTLP_ENDPOINT": "http://collector:4317"}},
-        )
-        rule.create(ctx)
-        assert len(reports) == 0
-
-
-class TestMissingBoundaryPolicy:
-    def test_boundary_policy_is_semantic_not_deterministic(self, tmp_path: Path) -> None:
-        _ensure_rules()
-        from harness_eval.inspection.engine import lint_claude_md
-
-        claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("# Project\n\nUse Python 3.11. Follow PEP 8.")
-        result = lint_claude_md(str(claude_md))
-        findings = [d for d in result.diagnostics if d.rule_id == "content/missing-boundary-policy"]
-        assert len(findings) == 0
-
-    def test_boundary_present_clean(self, tmp_path: Path) -> None:
-        from harness_eval.inspection.engine import lint_claude_md
-
-        claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text(
-            "# Project\n\nDo not touch the deploy/ directory. Only work within src/ and tests/."
-        )
-        result = lint_claude_md(str(claude_md))
-        findings = [d for d in result.diagnostics if d.rule_id == "content/missing-boundary-policy"]
-        assert len(findings) == 0
