@@ -70,7 +70,7 @@ Add `<!-- evaluator-ignore: rule/id -->` to any file for file-wide suppression, 
 
 ## GitHub Action
 
-Add one file to your repo. Every PR gets security + lint checks with inline annotations on the diff.
+Add one file to your repo. Every pull request gets the autonomy check (judged against the PR base), the validated gate, the security scan and the quality lint, with inline annotations on the diff.
 
 Create `.github/workflows/harness-eval.yml`:
 
@@ -93,7 +93,7 @@ jobs:
       - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@main
 ```
 
-No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on the PR showing which components were scanned, which rules ran, and pass/fail status.
+No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on the PR with the autonomy verdict (PASS / FAIL / REVIEW_REQUIRED), the security and lint results, which components were scanned and which rules ran. The step exposes `autonomy-verdict` and `autonomy-passed` outputs for a downstream policy step.
 
 ### Options
 
@@ -104,6 +104,7 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
           autonomy: "true"       # harness-autonomy: block + policy rules; fails on FAIL and REVIEW_REQUIRED
           autonomy-policy: ""    # path of a trusted policy file for harness-autonomy
           autonomy-changed-only: "true"  # on PRs, judge only what the change introduced
+          autonomy-allow-review: "false" # "true": REVIEW_REQUIRED passes the step (a human gates it elsewhere)
           preset: "recommended"  # severity preset for lint: recommended or strict
           security-gate: "true"  # run security checks
           lint-gate: "true"      # run the quality lint (advice rules; lint-all: "true" for all 92)
@@ -153,6 +154,7 @@ Note: `--recursive` follows symlinks within the project directory but skips syml
 ### What appears on the PR
 
 The action posts a comment showing:
+- **Autonomy check**: PASS, FAIL or REVIEW_REQUIRED (decidable rules only)
 - **Security checks**: pass/fail with rule count
 - **Lint checks**: pass/fail with error and warning counts (warnings are non-blocking)
 - **Code scanning**: SARIF upload status and finding count
@@ -167,6 +169,7 @@ If you prefer manual setup over the action:
 
 ```yaml
 - run: pip install harness-eval
+- run: harness-eval harness-autonomy .            # exit 1 FAIL, 2 REVIEW_REQUIRED
 - run: harness-eval harness-security . --fail-on-warning
 - run: harness-eval harness-lint . --fail-on-error
 - run: harness-eval harness-lint . --format sarif --output results.sarif
@@ -211,7 +214,7 @@ The 5 commands appear in the `/` menu:
 
 No API key needed for harness-autonomy/harness-gate/harness-lint/harness-security. Claude evaluates in-session for harness-review.
 
-To update: re-run the install command. `uvx` always picks up the latest version from PyPI unless you pin it (e.g., `uvx --from harness-eval==7.13.0`).
+To update: re-run the install command. `uvx` always picks up the latest version from PyPI unless you pin it (e.g., `uvx --from harness-eval==8.0.0`).
 
 ## Cursor commands
 
@@ -235,8 +238,9 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/redhat-community-ai-tools/harness-eval
-    rev: v7.13.0  # pin to a release tag
+    rev: v8.0.0  # pin to a release tag
     hooks:
+      - id: harness-autonomy  # decidable checks; exit 1 FAIL, 2 REVIEW_REQUIRED
       - id: harness-gate
       - id: harness-lint
       - id: harness-security  # optional: security scan
