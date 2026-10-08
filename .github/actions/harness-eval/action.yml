@@ -1,5 +1,5 @@
 name: "harness-eval"
-description: "Check AI agent setups (instructions, skills, commands, hooks, settings, MCP configs, agents, harnesses): autonomy check for auto-merge, validated gate, security scan, quality lint. 93 deterministic rules, no LLM required."
+description: "Check AI agent setups (instructions, skills, commands, hooks, settings, MCP configs, agents, harnesses): autonomy check for auto-merge, validated gate, security scan, quality lint. 92 deterministic rules, no LLM required."
 author: "redhat-community-ai-tools"
 
 branding:
@@ -434,7 +434,7 @@ runs:
         ${cat_table}
 
         ---
-        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 93 rules | lint preset: ${{ inputs.preset }}*"
+        *[harness-eval](https://github.com/redhat-community-ai-tools/harness-eval) v${ver} | 92 rules | lint preset: ${{ inputs.preset }}*"
 
         body=$(echo "$body" | sed 's/^        //')
 

@@ -3,10 +3,10 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-93-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
+[![Rules](https://img.shields.io/badge/rules-92-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Codex, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf/Devin, Cline, OpenCode, and fullsend pipeline harnesses), builds a component graph across them, and runs 93 deterministic rules. Each rule declares what a finding means (block, policy, signal or advice), and four commands select on that one axis: a merge-safe autonomy check, a validated gate, a security audit and a quality lint. It catches client-specific schema problems plus cross-component failures such as disabled skills, unreachable MCP servers, ambiguous duplicate skill IDs, and explicit credential-to-network paths.
+A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Codex, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf/Devin, Cline, OpenCode, and fullsend pipeline harnesses), builds a component graph across them, and runs 92 deterministic rules. Each rule declares what a finding means (block, policy, signal or advice), and four commands select on that one axis: a merge-safe autonomy check, a validated gate, a security audit and a quality lint. It catches client-specific schema problems plus cross-component failures such as disabled skills, unreachable MCP servers, ambiguous duplicate skill IDs, and explicit credential-to-network paths.
 
 Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`, `.codex/`.
 
@@ -150,7 +150,7 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 
 ## Inspection rules
 
-93 deterministic rules across 13 categories: structural, frontmatter, content, quality, security, cross-component, commands, instruction files, configuration, MCP, hooks, agents, and harness definitions. Two severity presets, `recommended` (default) and `strict`. Which rules a command runs is not a preset: it is derived from each rule's declared **effect**.
+92 deterministic rules across 13 categories: structural, frontmatter, content, quality, security, cross-component, commands, instruction files, configuration, MCP, hooks, agents, and harness definitions. Two severity presets, `recommended` (default) and `strict`. Which rules a command runs is not a preset: it is derived from each rule's declared **effect**.
 
 **Effect.** `block` is a decidable defect; `policy` is a decidable fact that needs a trust decision; `signal` is a heuristic match; `advice` is quality. The commands select on this axis, so a rule changes what gates a merge only by changing its own declaration. **Tier** is the evidence class: `gating` (corpus-validated at >=97% precision, or a decidable integrity fact), `provisional` (no observed false positives, fewer than 50 findings), `advisory` (every heuristic). Signal and advice rules are always advisory; block and policy rules are gating or provisional. Rules are also tagged by analysis scope (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`); the last two are findings a per-file linter structurally cannot see. See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
 
@@ -159,7 +159,7 @@ Rules by effect:
 <!-- BEGIN GENERATED: effect-counts -->
 | Effect | Rules | Run by |
 |--------|-------|--------|
-| block | 35 | `harness-gate`, `harness-autonomy`, `harness-security` (security category) |
+| block | 34 | `harness-gate`, `harness-autonomy`, `harness-security` (security category) |
 | policy | 13 | `harness-autonomy` (REVIEW_REQUIRED), `harness-security` |
 | signal | 21 | `harness-security` |
 | advice | 24 | `harness-lint` |
@@ -171,7 +171,7 @@ Rules by tier:
 | Tier | Rules |
 |------|-------|
 | gating | 22 |
-| provisional | 26 |
+| provisional | 25 |
 | advisory | 45 |
 <!-- END GENERATED: tier-counts -->
 
@@ -181,7 +181,7 @@ Rules by scope:
 | Scope | Rules |
 |-------|-------|
 | FILE | 66 |
-| FILE_FS | 13 |
+| FILE_FS | 12 |
 | PAIRWISE | 9 |
 | SETUP | 5 |
 <!-- END GENERATED: scope-counts -->

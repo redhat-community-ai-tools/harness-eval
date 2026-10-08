@@ -86,9 +86,6 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.harness.host_file_dest_collision import (
         HarnessHostFileDestCollision,
     )
-    from harness_eval.inspection.rules.harness.host_file_env_syntax import (
-        HarnessHostFileEnvSyntax,
-    )
     from harness_eval.inspection.rules.harness.image_unpinned import HarnessImageUnpinned
     from harness_eval.inspection.rules.harness.output_contract_instructed import (
         HarnessOutputContractInstructed,
@@ -278,7 +275,6 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         AgentToolsDisallowedOverlap,
         McpArgsReferenceMissingFile,
         HarnessImageUnpinned,
-        HarnessHostFileEnvSyntax,
     ]
     for rule_cls in builtin_rules:
         target.register(rule_cls())
