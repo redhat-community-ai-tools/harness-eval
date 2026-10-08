@@ -11,7 +11,7 @@
       "name": "harness-eval",
       "source": "./",
       "version": "8.0.0",
-      "description": "Evaluate AI agent setups for best practices, redundancy, security, and cross-component issues. 92 deterministic rules on one axis (block, policy, signal, advice), four commands: autonomy check for auto-merge, validated gate, security audit, quality lint; plus LLM rubric review."
+      "description": "Evaluate AI agent setups for best practices, redundancy, security, and cross-component issues. 93 deterministic rules on one axis (block, policy, signal, advice), four commands: autonomy check for auto-merge, validated gate, security audit, quality lint; plus LLM rubric review."
     }
   ]
 }

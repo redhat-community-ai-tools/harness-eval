@@ -48,6 +48,12 @@ See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
   autonomy line in the PR comment. Pre-commit: a `harness-autonomy` hook; the
   hook file patterns include `agents/` and `harness/`.
 - Plugin skill and command `harness-autonomy` (Claude Code and Cursor).
+- `harness/host-file-env-syntax` (block, provisional): a host file delivered
+  as a `.env` file must contain only `KEY=value` assignments and comments,
+  because the sandbox sources it with the shell.
+- `harness/output-schema-valid` also reports a `required` key that the
+  schema can never carry (`additionalProperties: false`, no such property, no
+  `patternProperties`), at any depth.
 - `harness-autonomy --compare <base checkout>`: findings that already exist
   on the base revision are listed as `pre_existing` and do not decide the
   verdict, so the verdict is about the change. The GitHub Action does this

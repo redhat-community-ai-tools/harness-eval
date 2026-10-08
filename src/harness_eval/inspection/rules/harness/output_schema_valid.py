@@ -34,11 +34,18 @@ class HarnessOutputSchemaValid:
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,
-        description="A declared output schema must parse as a JSON object",
+        description=(
+            "A declared output schema must parse as a JSON object, and an object that "
+            "forbids additional properties must not require a key it does not define"
+        ),
         category=RuleCategory.STRUCTURAL,
         messages={
             "invalid_json": "Output schema '{{ref}}' is not valid JSON: {{error}}",
             "not_object": "Output schema '{{ref}}' must be a JSON object, got {{kind}}",
+            "unsatisfiable_required": (
+                "Output schema '{{ref}}': {{path}} requires '{{key}}' but defines no such "
+                "property and sets additionalProperties: false; no output can ever validate."
+            ),
         },
         target_type=ComponentType.HARNESS,
         default_suggestion="Fix the schema file so it parses as a JSON Schema object.",
@@ -79,3 +86,50 @@ class HarnessOutputSchemaValid:
                         location=Location(file=harness.file_path),
                     )
                 )
+                continue
+            for path, key in unsatisfiable_required(loaded):
+                context.report(
+                    ReportDescriptor(
+                        message_id="unsatisfiable_required",
+                        data={"ref": ref.value, "path": path, "key": key},
+                        location=Location(file=harness.file_path),
+                    )
+                )
+
+
+def unsatisfiable_required(schema: object, path: str = "root") -> list[tuple[str, str]]:
+    """Keys an object schema requires but can never carry: ``required`` names a
+    key absent from ``properties`` while ``additionalProperties`` is ``false``
+    and no ``patternProperties`` could admit it. Walks nested object schemas,
+    arrays and combinators; anything it does not understand is left alone."""
+    out: list[tuple[str, str]] = []
+    if isinstance(schema, list):
+        for i, item in enumerate(schema):
+            out.extend(unsatisfiable_required(item, f"{path}[{i}]"))
+        return out
+    if not isinstance(schema, dict):
+        return out
+    required = schema.get("required")
+    props = schema.get("properties")
+    if (
+        isinstance(required, list)
+        and schema.get("additionalProperties") is False
+        and not schema.get("patternProperties")
+        and (props is None or isinstance(props, dict))
+    ):
+        defined = set(props or {})
+        for key in required:
+            if isinstance(key, str) and key not in defined:
+                out.append((path, key))
+    if isinstance(props, dict):
+        for name, sub in props.items():
+            out.extend(unsatisfiable_required(sub, f"{path}.{name}"))
+    for key in ("items", "additionalProperties", "not", "if", "then", "else"):
+        out.extend(unsatisfiable_required(schema.get(key), f"{path}.{key}"))
+    for key in ("allOf", "anyOf", "oneOf", "prefixItems"):
+        out.extend(unsatisfiable_required(schema.get(key), f"{path}.{key}"))
+    defs = schema.get("$defs") or schema.get("definitions")
+    if isinstance(defs, dict):
+        for name, sub in defs.items():
+            out.extend(unsatisfiable_required(sub, f"{path}.$defs.{name}"))
+    return out

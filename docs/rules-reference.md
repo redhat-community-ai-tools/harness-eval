@@ -1,6 +1,6 @@
 # Rules Reference
 
-Complete reference for all 92 deterministic lint rules and the LLM-based review system.
+Complete reference for all 93 deterministic lint rules and the LLM-based review system.
 
 ## How rules work
 
@@ -64,8 +64,9 @@ The exact set, derived from the registry (effect block or policy, tier gating or
 | `frontmatter/format-valid` | block | gating | skill | Frontmatter must be valid YAML with the fields the Agent Skills spec requires |
 | `frontmatter/near-miss-key` | block | provisional | skill,command,agent | Flag a frontmatter key that differs from a key the client reads only by case or separator; the client ignores it silently |
 | `harness/host-file-dest-collision` | block | provisional | harness | Two non-optional host files must not map to the same sandbox destination |
+| `harness/host-file-env-syntax` | block | provisional | harness | A host file delivered as a .env file must contain only KEY=value assignments and comments; the sandbox sources it with the shell |
 | `harness/output-contract-instructed` | block | provisional | harness | A harness that declares an output contract (schema or output file) must have instructions that mention it; otherwise the validator looks for a file the agent was never told to write |
-| `harness/output-schema-valid` | block | provisional | harness | A declared output schema must parse as a JSON object |
+| `harness/output-schema-valid` | block | provisional | harness | A declared output schema must parse as a JSON object, and an object that forbids additional properties must not require a key it does not define |
 | `harness/referenced-file-exists` | block | provisional | harness | Every path a harness references (agent prompt, policy, scripts, skills, plugins, host files, output schema, base) must exist in the tree |
 | `hooks/command-script-exists` | block | gating | hooks | Flag a hook command that references a relative or project-dir script path that does not exist |
 | `hooks/event-name-near-miss` | block | provisional | hooks | Flag a hooks event key that differs from a Claude Code event name only by case or separator; the hooks under it never run |
@@ -149,6 +150,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `frontmatter/format-valid` | block | gating | FILE | skill |
 | `frontmatter/near-miss-key` | block | provisional | FILE | skill,command,agent |
 | `harness/host-file-dest-collision` | block | provisional | FILE | harness |
+| `harness/host-file-env-syntax` | block | provisional | FILE_FS | harness |
 | `harness/image-unpinned` | policy | provisional | FILE | harness |
 | `harness/output-contract-instructed` | block | provisional | PAIRWISE | harness |
 | `harness/output-schema-valid` | block | provisional | FILE_FS | harness |
@@ -326,6 +328,7 @@ A pipeline agent harness is the definition that runs an agent unattended in CI: 
 | `harness/output-contract-instructed` | content | When the harness declares an output contract (a schema or an output file the validator expects), the instructions the agent reads from this tree (its prompt, every markdown file of each listed skill and plugin, the scaffold's shared instruction files) must mention it: the output file name, the schema name, or the runtime's contract variables and self-check tool. Otherwise the validator looks for a file nobody was told to write and the run fails after the agent finished. Silent whenever instructions can come from outside the tree (`base`, `agent_input`, runtime fetching, an incomplete layer, a listed instruction file that is missing). | Harness adds `validation_loop` with `code-result.schema.json`; `agents/code.md` and its skills never mention the output file | Token search over the instruction closure |
 | `harness/output-schema-valid` | structural | A declared output schema that resolves to a file in the tree must parse as a JSON object, because the validator loads it with a JSON parser. A missing schema is `harness/referenced-file-exists`' finding. | `schemas/triage-result.schema.json` has a trailing comma | JSON parse |
 | `harness/host-file-dest-collision` | structural | Two non-optional `host_files` entries must not deliver to the same sandbox destination; the later one silently overwrites the earlier one. | Two entries with `dest: /tmp/.gcp-credentials.json` | Destination set |
+| `harness/host-file-env-syntax` | structural | A host file delivered as a `.env` file (sourced by the sandbox shell) must contain only `KEY=value` assignments, comments, and quoted continuations; anything else runs as a command or stops the sourcing. | `source other.env` inside `env/vertex.env` | Line parser with quote tracking |
 | `harness/image-unpinned` | config | The sandbox image has no tag or the `latest` tag and no digest, so the agent runs in whatever image is current at dispatch time. A policy rule: `harness-autonomy` reports it as REVIEW_REQUIRED until a policy file accepts it. | `image: ghcr.io/example/sandbox:latest` | Image reference parsing |
 
 ## Cross-component rules
