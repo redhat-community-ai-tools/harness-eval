@@ -427,12 +427,6 @@ class BashTaintTracking:
         if not skill_dir.is_dir():
             return
 
-        for bash_file in sorted(skill_dir.rglob("*.sh")):
-            if ".git" in bash_file.parts or "__pycache__" in bash_file.parts:
-                continue
-            _analyze_bash_file(bash_file, context, skill.skill_md_path)
-
-        for bash_file in sorted(skill_dir.rglob("*.bash")):
-            if ".git" in bash_file.parts or "__pycache__" in bash_file.parts:
-                continue
-            _analyze_bash_file(bash_file, context, skill.skill_md_path)
+        for pattern in ("*.sh", "*.bash"):
+            for bash_file in context.artifacts.iter_files(skill_dir, pattern):
+                _analyze_bash_file(bash_file, context, skill.skill_md_path)

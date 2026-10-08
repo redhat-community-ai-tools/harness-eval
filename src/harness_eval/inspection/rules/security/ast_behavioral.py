@@ -178,7 +178,5 @@ class AstBehavioral:
         if not skill_dir.is_dir():
             return
 
-        for py_file in sorted(skill_dir.rglob("*.py")):
-            if ".git" in py_file.parts or "__pycache__" in py_file.parts:
-                continue
+        for py_file in context.artifacts.iter_files(skill_dir, "*.py"):
             _analyze_file(py_file, context, skill.skill_md_path)

@@ -375,6 +375,36 @@ class ScanArtifacts:
             self.state["scan_limits"] = value
 
     @property
+    def excludes(self) -> tuple[str, ...]:
+        """Exclude patterns in force for the scan (defaults plus ``--exclude``)."""
+        return tuple(self.state.get("excludes") or ())
+
+    @excludes.setter
+    def excludes(self, value: tuple[str, ...]) -> None:
+        self.state["excludes"] = tuple(value)
+
+    def iter_files(
+        self, root_dir: Path | str, pattern: str = "*", *, names_only: bool = False
+    ) -> list[Path]:
+        """Paths under *root_dir* matching *pattern* that the scan may read:
+        never inside ``.git`` or ``__pycache__``, never matching an exclude
+        pattern. Every rule that walks a directory goes through this, so
+        ``--exclude`` means the same thing everywhere.
+
+        The default exclude patterns keep secret-named files (``.env``,
+        ``*.pem``, ``id_rsa``) from being *read*. A rule that only looks at
+        names or link targets, never contents, passes ``names_only=True`` and
+        then honors only the user's own ``--exclude`` patterns; otherwise a
+        committed ``id_rsa`` could never be reported."""
+        from harness_eval.core.setup import DEFAULT_SCAN_EXCLUDES
+        from harness_eval.inspection._fswalk import iter_files
+
+        excludes = self.excludes
+        if names_only:
+            excludes = tuple(p for p in excludes if p not in DEFAULT_SCAN_EXCLUDES)
+        return iter_files(root_dir, pattern, excludes=excludes, project_root=self.project_root)
+
+    @property
     def allowed_paths(self) -> frozenset[str] | None:
         paths = self.state.get("allowed_paths")
         return frozenset(paths) if paths is not None else None

@@ -70,6 +70,17 @@ See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
   `harness/referenced-file-exists` covers them.
 
 ### Fixed
+- `--exclude` is authoritative everywhere. Discovery already filtered the
+  inventory, but the component graph, the skill parser's sub-file reads and
+  every rule that walks a skill directory (`structural/symlink-escape`,
+  `security/credential-file-present`, YARA, AST, taint, bash taint,
+  `harness/output-contract-instructed`) used their own `rglob` and could read
+  an excluded file. They now share one walk (`inspection/_fswalk.iter_files`)
+  that applies the scan's exclude patterns; `Setup.excludes` records them.
+- A `harness/*.yaml` that no longer parses is still discovered as a harness
+  and reported as a parse error (a `block` finding) instead of disappearing
+  from the scan, so a change that corrupts a harness file cannot pass
+  `harness-autonomy`.
 - SARIF output: `versionControlProvenance` now carries the `repositoryUri`
   the SARIF 2.1.0 schema requires (the `origin` remote read from
   `.git/config`, or the scan root as a `file://` URI); GitHub code scanning

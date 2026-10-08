@@ -42,8 +42,14 @@ def is_harness_file(path: Path) -> bool:
         return False
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8", errors="replace"))
-    except (yaml.YAMLError, OSError):
+    except OSError:
         return False
+    except yaml.YAMLError:
+        # A file in harness/ that no longer parses is still a harness, now a
+        # broken one. Dropping it here would let the parse error vanish from
+        # the result and a gate pass on a change that broke the file; the
+        # parser records the error and the engine reports it instead.
+        return path.parent.name == "harness"
     return isinstance(data, dict) and any(isinstance(data.get(k), str) for k in _MARKER_KEYS)
 
 

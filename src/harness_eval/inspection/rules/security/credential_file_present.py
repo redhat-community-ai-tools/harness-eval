@@ -73,7 +73,7 @@ class SecurityCredentialFilePresent:
         if skill is None:
             return
         skill_dir = Path(skill.skill_md_path).parent
-        for p in skill_dir.rglob("*"):
+        for p in context.artifacts.iter_files(skill_dir, names_only=True):
             if not p.is_file() or any(fnmatch.fnmatch(p.name, a) for a in _ALLOW):
                 continue
             for g in _GLOBS:

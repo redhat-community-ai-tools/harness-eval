@@ -70,14 +70,19 @@ class ComponentGraph:
         return visited
 
 
-def _detect_capabilities_for_dir(skill_dir: Path) -> dict[str, list[str]]:
+def _detect_capabilities_for_dir(
+    skill_dir: Path,
+    *,
+    excludes: tuple[str, ...] = (),
+    project_root: Path | str | None = None,
+) -> dict[str, list[str]]:
+    from harness_eval.inspection._fswalk import iter_files
+
     caps = load_capabilities()
     cap_patterns = caps.capability_patterns()
     found: dict[str, list[str]] = {}
 
-    for py_file in sorted(skill_dir.rglob("*.py")):
-        if ".git" in py_file.parts or "__pycache__" in py_file.parts:
-            continue
+    for py_file in iter_files(skill_dir, "*.py", excludes=excludes, project_root=project_root):
         try:
             content = py_file.read_text(encoding="utf-8", errors="replace")
         except OSError:
@@ -88,9 +93,7 @@ def _detect_capabilities_for_dir(skill_dir: Path) -> dict[str, list[str]]:
                     found.setdefault(cap, []).append(py_file.name)
                     break
 
-    for sh_file in sorted(skill_dir.rglob("*.sh")):
-        if ".git" in sh_file.parts:
-            continue
+    for sh_file in iter_files(skill_dir, "*.sh", excludes=excludes, project_root=project_root):
         found.setdefault("shell", []).append(sh_file.name)
 
     return found
@@ -161,6 +164,8 @@ def build_component_graph(
     hooks: ParsedHooks | Sequence[ParsedHooks] | None = None,
     mcp_config_path: str | Sequence[str] | None = None,
     mcp_config_paths: Sequence[str] | None = None,
+    excludes: tuple[str, ...] = (),
+    project_root: Path | str | None = None,
 ) -> ComponentGraph:
     """Build a unified component graph from all discovered components."""
     from harness_eval.inspection.rules.content._skill_refs import extract_references
@@ -177,7 +182,9 @@ def build_component_graph(
         skill_names.add(name)
         skill_dir = Path(skill.dir_path) if skill.dir_path else None
         detected = (
-            _detect_capabilities_for_dir(skill_dir) if skill_dir and skill_dir.is_dir() else {}
+            _detect_capabilities_for_dir(skill_dir, excludes=excludes, project_root=project_root)
+            if skill_dir and skill_dir.is_dir()
+            else {}
         )
 
         allowed_tools = skill.frontmatter.get("allowed-tools", [])

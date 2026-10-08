@@ -190,3 +190,26 @@ def test_compare_still_requires_review_for_a_new_policy_fact(tmp_path: Path) -> 
     data = json.loads(result.output)
     assert [f["data"]["image"] for f in data["policy"]] == ["ghcr.io/example/other:latest"]
     assert data["pre_existing"] == []
+
+
+# --- fail closed ------------------------------------------------------------------
+
+
+def test_unparseable_harness_file_fails_instead_of_disappearing(tmp_path: Path) -> None:
+    root = _scaffold(tmp_path)
+    (root / "harness" / "triage.yaml").write_text("agent: agents/triage.md\nmodel: [unclosed\n")
+    result = CliRunner().invoke(cli, ["harness-autonomy", str(root), "--format", "json"])
+    assert result.exit_code == EXIT_FAIL, result.output
+    data = json.loads(result.output)
+    assert data["coverage"]["components"].get("harness") == 1
+    parser = [f for f in data["blocking"] if f["rule"] == "parser"]
+    assert parser and "YAML" in parser[0]["message"]
+
+
+def test_unparseable_non_harness_yaml_is_still_ignored(tmp_path: Path) -> None:
+    root = _scaffold(tmp_path)
+    (root / "policies" / "base.yaml").write_text("filesystem_policy: [unclosed\n")
+    result = CliRunner().invoke(cli, ["harness-autonomy", str(root), "--format", "json"])
+    data = json.loads(result.output)
+    assert data["coverage"]["components"].get("harness") == 1
+    assert not [f for f in data["blocking"] if f["rule"] == "parser"]

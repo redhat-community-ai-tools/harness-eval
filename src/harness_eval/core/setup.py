@@ -208,6 +208,7 @@ def discover_setup(
         detected_tools=detected,
         limits=applied_limits,
         inventory_paths=tuple(str(p.resolve()) for p in inventory),
+        excludes=tuple(exclude),
     )
 
 
