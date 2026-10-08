@@ -10,6 +10,7 @@ filesystem; no subprocess, no network.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import re
@@ -155,10 +156,8 @@ def git_remote_url(root: Path | str, remote: str = "origin") -> str | None:
     candidates = [git_dir / "config"]
     common = git_dir / "commondir"
     if common.is_file():
-        try:
+        with contextlib.suppress(OSError):
             candidates.append((git_dir / common.read_text().strip()).resolve() / "config")
-        except OSError:
-            pass
     for cfg in candidates:
         try:
             lines = cfg.read_text(encoding="utf-8", errors="replace").splitlines()
