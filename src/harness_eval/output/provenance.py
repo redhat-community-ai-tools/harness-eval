@@ -36,6 +36,7 @@ class ScanEvidence:
     rules_count: int
     target_rules_loaded: bool
     config_digest: str
+    vcs_remote: str | None = None
     preset: str | None = None
     baseline_digest: str | None = None
     baseline_suppressed: int = 0
@@ -47,7 +48,7 @@ class ScanEvidence:
         return {
             "setup_fingerprint": self.setup_fingerprint,
             "scan_root": self.scan_root,
-            "vcs": {"revision": self.vcs_revision},
+            "vcs": {"revision": self.vcs_revision, "remote": self.vcs_remote},
             "rules": {
                 "digest": self.rules_digest,
                 "count": self.rules_count,
@@ -142,6 +143,52 @@ def git_revision(root: Path | str) -> str | None:
     return text if _SHA_RE.match(text) else None
 
 
+_SSH_REMOTE_RE = re.compile(r"^(?:ssh://)?(?:[\w.-]+@)?([\w.-]+)[:/](.+?)(?:\.git)?/?$")
+
+
+def git_remote_url(root: Path | str, remote: str = "origin") -> str | None:
+    """The fetch URL of *remote* from ``.git/config``, as an https URL without
+    credentials, or None. Read from the file; no git binary involved."""
+    git_dir = _git_dir(Path(root))
+    if git_dir is None:
+        return None
+    candidates = [git_dir / "config"]
+    common = git_dir / "commondir"
+    if common.is_file():
+        try:
+            candidates.append((git_dir / common.read_text().strip()).resolve() / "config")
+        except OSError:
+            pass
+    for cfg in candidates:
+        try:
+            lines = cfg.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        section = None
+        for raw in lines:
+            line = raw.strip()
+            if line.startswith("["):
+                section = line
+                continue
+            if section == f'[remote "{remote}"]' and line.startswith("url"):
+                _, _, value = line.partition("=")
+                return _normalize_remote(value.strip())
+    return None
+
+
+def _normalize_remote(url: str) -> str | None:
+    if not url:
+        return None
+    if url.startswith(("http://", "https://")):
+        scheme, _, rest = url.partition("://")
+        rest = rest.rsplit("@", 1)[-1]  # drop embedded credentials
+        return f"{scheme}://{rest.removesuffix('.git').rstrip('/')}"
+    m = _SSH_REMOTE_RE.match(url)
+    if m and "." in m.group(1):
+        return f"https://{m.group(1)}/{m.group(2)}"
+    return None
+
+
 def rules_digest(rules: Iterable[Rule]) -> str:
     """Order-independent sha256 over (id, tier, scope, default severity) of *rules*."""
     lines = sorted(
@@ -179,6 +226,7 @@ def collect_scan_evidence(
         setup_fingerprint=setup.fingerprint,
         scan_root=str(Path(setup.path).resolve()),
         vcs_revision=git_revision(setup.path),
+        vcs_remote=git_remote_url(setup.path),
         rules_digest=rules_digest(catalog.all()),
         rules_count=len(catalog.all()),
         target_rules_loaded=target_rules_loaded,
@@ -206,6 +254,7 @@ __all__ = [
     "collect_scan_evidence",
     "config_digest",
     "file_digest",
+    "git_remote_url",
     "git_revision",
     "rules_digest",
 ]

@@ -224,7 +224,9 @@ def test_sarif_carries_provenance(tmp_path: Path) -> None:
         result = CliRunner().invoke(cli, cmd)
         assert result.exit_code == 0, result.output
         run = json.loads(result.output)["runs"][0]
-        assert run["versionControlProvenance"] == [{"revisionId": SHA}]
+        (vcp,) = run["versionControlProvenance"]
+        assert vcp["revisionId"] == SHA
+        assert vcp["repositoryUri"].startswith(("https://", "file://"))
         assert run["properties"]["setupFingerprint"] == discover_setup("s", str(root)).fingerprint
         assert len(run["properties"]["rulesDigest"]) == 64
     assert json.loads(result.output)["runs"][0]["properties"]["preset"] == "gate"
@@ -259,3 +261,46 @@ def test_evidence_to_dict_shape() -> None:
         EvalMetadata(version="1", evidence=ev).to_dict()["evidence"]["rules"]["target_rules_loaded"]
         is True
     )
+
+
+def test_git_remote_url_is_read_from_config_and_normalized(tmp_path: Path) -> None:
+    from harness_eval.output.provenance import git_remote_url
+
+    git_dir = tmp_path / ".git"
+    git_dir.mkdir()
+    (git_dir / "HEAD").write_text("ref: refs/heads/main\n")
+    for url, expected in [
+        ("git@github.com:org/repo.git", "https://github.com/org/repo"),
+        ("https://token@github.com/org/repo.git", "https://github.com/org/repo"),
+        ("ssh://git@gitlab.example.com/group/repo.git", "https://gitlab.example.com/group/repo"),
+        ("https://github.com/org/repo", "https://github.com/org/repo"),
+    ]:
+        (git_dir / "config").write_text(
+            f'[core]\n\tbare = false\n[remote "origin"]\n\turl = {url}\n'
+        )
+        assert git_remote_url(tmp_path) == expected, url
+    (git_dir / "config").write_text("[core]\n\tbare = false\n")
+    assert git_remote_url(tmp_path) is None
+
+
+def test_sarif_provenance_has_repository_uri_without_a_remote(tmp_path: Path) -> None:
+    from harness_eval.output.metadata import EvalMetadata
+    from harness_eval.output.provenance import ScanEvidence
+    from harness_eval.output.sarif import format_sarif
+
+    evidence = ScanEvidence(
+        setup_fingerprint="f",
+        scan_root=str(tmp_path),
+        vcs_revision="a" * 40,
+        rules_digest="d",
+        rules_count=1,
+        target_rules_loaded=False,
+        config_digest="c",
+    )
+    metadata = EvalMetadata(
+        version="x", duration_seconds=0.0, components_scanned=0, invocation_source="cli"
+    )
+    metadata.evidence = evidence
+    doc = format_sarif([], metadata, scan_root=str(tmp_path))
+    (vcp,) = doc["runs"][0]["versionControlProvenance"]
+    assert vcp == {"repositoryUri": tmp_path.resolve().as_uri(), "revisionId": "a" * 40}
