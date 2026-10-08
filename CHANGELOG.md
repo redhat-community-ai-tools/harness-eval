@@ -69,6 +69,12 @@ See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
   providers, policy, profiles, validation loop), so
   `harness/referenced-file-exists` covers them.
 
+### Fixed
+- SARIF output: `versionControlProvenance` now carries the `repositoryUri`
+  the SARIF 2.1.0 schema requires (the `origin` remote read from
+  `.git/config`, or the scan root as a `file://` URI); GitHub code scanning
+  rejected the file without it. The JSON evidence block gains `vcs.remote`.
+
 ### Changed
 - `harness-gate` runs block rules at gating tier (plus provisional with
   `--include-provisional`); the set is derived from the registry.

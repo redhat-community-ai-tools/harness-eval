@@ -116,7 +116,13 @@ def format_sarif(
     evidence = metadata.evidence if metadata else None
     if evidence is not None:
         if evidence.vcs_revision:
-            run["versionControlProvenance"] = [{"revisionId": evidence.vcs_revision}]
+            # SARIF 2.1.0 requires repositoryUri on every versionControlDetails;
+            # GitHub code scanning rejects the file without it. Fall back to the
+            # scan root as a file URI when the checkout has no remote.
+            repository_uri = evidence.vcs_remote or Path(evidence.scan_root).resolve().as_uri()
+            run["versionControlProvenance"] = [
+                {"repositoryUri": repository_uri, "revisionId": evidence.vcs_revision}
+            ]
         run["properties"] = {
             "setupFingerprint": evidence.setup_fingerprint,
             "rulesDigest": evidence.rules_digest,
