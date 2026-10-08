@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Removed
+- `inspection/merge.py` (`merge_inspection_results`), which only the removed
+  `skill-verify` command used, and `docs/modernization-audit-2026.md`, a
+  point-in-time audit of the 7.16 rule set that named rules 8.0 removed.
+
 ## [8.0.0] - 2026-10-08
 
 Four tools, one axis. Every rule now declares what a finding means, and the
