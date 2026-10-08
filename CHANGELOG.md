@@ -24,6 +24,15 @@ All notable changes to this project will be documented in this file.
   declared output schema that exists must parse as a JSON object.
 - `harness/host-file-dest-collision` (structural, FILE, provisional): two
   non-optional host files must not share a sandbox destination.
+- Scan evidence in `harness-lint` JSON (`metadata.evidence`) and in SARIF
+  (`run.versionControlProvenance`, `run.properties`) for `harness-lint` and
+  `harness-gate`: the setup fingerprint, the enclosing git revision (read
+  from `.git`, no subprocess), a digest of the effective rule catalog and of
+  the severity configuration, whether target YAML rules were loaded, what a
+  baseline suppressed, and the inventory size, excludes, and limits. A
+  result can now be bound to exactly what it was computed from.
+- `inspection.engine.build_scan_catalog` exposes the per-scan rule catalog
+  so callers can record the rules in force.
 
 ## [7.17.0] - 2026-10-04
 

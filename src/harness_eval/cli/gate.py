@@ -75,7 +75,11 @@ def harness_gate(
     config_rules = gate_rules(include_provisional=include_provisional)
     target = Path(path)
 
+    setup = None
+    scan_catalog = None
     if target.is_dir():
+        from harness_eval.inspection.engine import build_scan_catalog
+
         setup = discover_setup(
             name=target.name,
             path=path,
@@ -83,30 +87,47 @@ def harness_gate(
             exclude=exclude,
             limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
         )
-        results = inspect_setup(setup, config_rules)
+        scan_catalog = build_scan_catalog(path)
+        results = inspect_setup(setup, config_rules, catalog=scan_catalog)
     else:
         from harness_eval.cli.lint import _inspect_single_file
 
         results = _inspect_single_file(target, config_rules)
 
+    baseline_suppressed = 0
     if baseline_path:
         from harness_eval.baseline import filter_baselined
 
         bl_data = json_mod.loads(Path(baseline_path).read_text())
+        before = sum(len(r.diagnostics) for r in results)
         results = filter_baselined(results, bl_data)
+        baseline_suppressed = before - sum(len(r.diagnostics) for r in results)
 
     findings = [d for r in results for d in r.diagnostics]
 
     if fmt == "sarif":
         from harness_eval.output.metadata import EvalMetadata
+        from harness_eval.output.provenance import collect_scan_evidence
         from harness_eval.output.sarif import format_sarif
 
+        evidence = None
+        if setup is not None and scan_catalog is not None:
+            evidence = collect_scan_evidence(
+                setup,
+                scan_catalog,
+                config_rules,
+                preset="gate+provisional" if include_provisional else "gate",
+                excludes=exclude,
+                baseline_path=baseline_path,
+                baseline_suppressed=baseline_suppressed,
+            )
         metadata = EvalMetadata(
             version=EvalMetadata.get_version(),
             duration_seconds=0.0,
             components_scanned=len(results),
             rules_checked=sum(len(r.rules_run) for r in results),
             invocation_source="cli",
+            evidence=evidence,
         )
         sarif_doc = format_sarif(results, metadata, scan_root=path)
         emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)

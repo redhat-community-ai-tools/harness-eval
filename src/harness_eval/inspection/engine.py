@@ -745,14 +745,31 @@ def inspect_setup(
     *load_target_yaml* is true. Target rules are loaded into a scan-local
     catalog so they cannot leak into a later scan in the same process.
     """
-    # Every scan gets an isolated catalog.  This makes target-local YAML rules
-    # safe to load in repeated or concurrent in-process scans.
+    scan_catalog = build_scan_catalog(
+        setup.path, load_target_yaml=load_target_yaml, catalog=catalog
+    )
+    return _inspect_setup(setup, config_rules, catalog=scan_catalog)
+
+
+def build_scan_catalog(
+    setup_path: str,
+    *,
+    load_target_yaml: bool = False,
+    catalog: RuleCatalog | None = None,
+) -> RuleCatalog:
+    """The isolated rule catalog one scan of *setup_path* runs with.
+
+    Every scan gets its own copy, which makes target-local YAML rules safe to
+    load in repeated or concurrent in-process scans. Callers that need to
+    record which rules were in force (``output.provenance``) build the
+    catalog here and pass it to ``inspect_setup``.
+    """
     scan_catalog = (catalog or get_default_catalog()).copy()
     if load_target_yaml:
         from harness_eval.inspection.yaml_rules import load_yaml_rules_from_dir
 
-        load_yaml_rules_from_dir(Path(setup.path) / ".harness-eval" / "rules", catalog=scan_catalog)
-    return _inspect_setup(setup, config_rules, catalog=scan_catalog)
+        load_yaml_rules_from_dir(Path(setup_path) / ".harness-eval" / "rules", catalog=scan_catalog)
+    return scan_catalog
 
 
 def _inspect_setup(

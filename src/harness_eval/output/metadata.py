@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib.metadata
 from dataclasses import dataclass
 
+from harness_eval.output.provenance import ScanEvidence
+
 
 @dataclass
 class EvalMetadata:
@@ -17,6 +19,8 @@ class EvalMetadata:
     model: str | None = None
     llm_calls_total: int | None = None
     llm_calls_succeeded: int | None = None
+    # What the scan was computed from; set for directory scans.
+    evidence: ScanEvidence | None = None
 
     @staticmethod
     def get_version() -> str:
@@ -39,6 +43,13 @@ class EvalMetadata:
                 llm_info += f" ({self.llm_calls_total} calls, {succeeded} succeeded)"
             parts.append(llm_info)
         lines.append(" | ".join(parts))
+        if self.evidence is not None:
+            ev = self.evidence
+            rev = ev.vcs_revision[:12] if ev.vcs_revision else "n/a"
+            lines.append(
+                f"Fingerprint: {ev.setup_fingerprint[:12]} | Revision: {rev} | "
+                f"Rules digest: {ev.rules_digest[:12]}"
+            )
         return "\n".join(lines)
 
     def to_dict(self) -> dict[str, object]:
@@ -57,4 +68,6 @@ class EvalMetadata:
         if self.llm_calls_total is not None:
             d["llm_calls_total"] = self.llm_calls_total
             d["llm_calls_succeeded"] = self.llm_calls_succeeded or 0
+        if self.evidence is not None:
+            d["evidence"] = self.evidence.to_dict()
         return d
