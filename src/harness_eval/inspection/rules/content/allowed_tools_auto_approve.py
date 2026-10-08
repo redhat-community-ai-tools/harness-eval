@@ -72,13 +72,12 @@ class AllowedToolsAutoApprove:
         category=RuleCategory.CONTENT,
         messages={
             "auto_approve_high": (
-                "allowed-tools includes '{{tool}}', which auto-approves shell "
-                "execution without user confirmation. This is not a sandbox; it "
-                "removes the safety prompt."
+                "allowed-tools auto-approves unrestricted shell execution without user "
+                "confirmation: {{tools}}. This is not a sandbox; it removes the safety prompt."
             ),
             "auto_approve_medium": (
-                "allowed-tools includes '{{tool}}', which auto-approves a scoped "
-                "shell command or file writes without user confirmation."
+                "allowed-tools auto-approves scoped shell commands or file writes without "
+                "user confirmation: {{tools}}."
             ),
         },
         default_suggestion="Remove dangerous tools from the allowed-tools list.",
@@ -97,35 +96,43 @@ class AllowedToolsAutoApprove:
             return
         if not skill.frontmatter:
             return
+        # A skill a pipeline harness ships runs in that harness's sandbox with
+        # permissions skipped; allowed-tools grants nothing there.
+        if context.artifacts.is_harness_managed(skill.dir_path):
+            return
 
         allowed = split_tool_entries(skill.frontmatter.get("allowed-tools"))
         if not allowed:
             return
 
         loc = Location(file=skill.skill_md_path)
-
+        high: list[str] = []
+        medium: list[str] = []
         for tool in allowed:
-            if not isinstance(tool, str):
-                continue
             tool_lower = tool.lower().strip()
-
             grant = classify_grant(tool.strip())
             unrestricted = tool_lower in _HIGH_RISK or tool_lower in ("bash(*)", "bash(:*)")
             arbitrary = grant is not None and grant[0] in _EXEC_CLASS
             if unrestricted or arbitrary:
-                context.report(
-                    ReportDescriptor(
-                        message_id="auto_approve_high",
-                        data={"tool": tool},
-                        location=loc,
-                    )
-                )
+                high.append(tool)
             elif tool_lower in _MEDIUM_RISK or tool_lower.startswith("bash("):
                 # A scoped shell grant (Bash(npm test:*)) or a file-writing tool.
-                context.report(
-                    ReportDescriptor(
-                        message_id="auto_approve_medium",
-                        data={"tool": tool},
-                        location=loc,
-                    )
+                medium.append(tool)
+        # One finding per class per file: the decision is about the file's
+        # grants as a whole, and forty findings for nine files is noise.
+        if high:
+            context.report(
+                ReportDescriptor(
+                    message_id="auto_approve_high",
+                    data={"tools": ", ".join(high)},
+                    location=loc,
                 )
+            )
+        if medium:
+            context.report(
+                ReportDescriptor(
+                    message_id="auto_approve_medium",
+                    data={"tools": ", ".join(medium)},
+                    location=loc,
+                )
+            )

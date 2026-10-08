@@ -48,6 +48,18 @@ See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
   autonomy line in the PR comment. Pre-commit: a `harness-autonomy` hook; the
   hook file patterns include `agents/` and `harness/`.
 - Plugin skill and command `harness-autonomy` (Claude Code and Cursor).
+- `harness-autonomy --compare <base checkout>`: findings that already exist
+  on the base revision are listed as `pre_existing` and do not decide the
+  verdict, so the verdict is about the change. The GitHub Action does this
+  on pull requests by default (`autonomy-changed-only`). Finding identity is
+  the rule, the file relative to the scan root, and the message with the
+  root path blanked (`baseline.finding_key`), so two checkouts of one
+  revision agree.
+- The fullsend mapper now references `doc`, path-form `providers`,
+  `openshell.profiles`, skill entries written as mappings with `source`,
+  and everything under `forge.<platform>` (skills, plugins, host files,
+  providers, policy, profiles, validation loop), so
+  `harness/referenced-file-exists` covers them.
 
 ### Changed
 - `harness-gate` runs block rules at gating tier (plus provisional with
@@ -85,7 +97,19 @@ See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
   the built-in tool list decays as clients add tools.
 - `content/allowed-tools-auto-approve` and the new frontmatter rules split
   `allowed-tools` on separators outside parentheses, so `Bash(git commit:*)`
-  is one entry.
+  is one entry. The rule reports one finding per severity class per file
+  (the decision is about the file's grants), not one per grant.
+- `agent/excessive-permissions` and `content/allowed-tools-auto-approve`
+  skip agents and skills that a pipeline harness runs: those execute in the
+  harness sandbox, where the harness policy is the boundary and Claude Code
+  permission fields decide nothing.
+- `frontmatter/format-valid`: a skill `name` that differs from its directory
+  is informational. The Agent Skills spec requires a match, but every
+  current client resolves a skill by its directory, so it is a portability
+  note and no longer fails `harness-gate` or `harness-autonomy`.
+- `mcp/unpinned-package` is effect `policy` (a floating reference, like
+  `harness/image-unpinned`): `harness-autonomy` reports it as
+  REVIEW_REQUIRED and `harness-gate` no longer runs it.
 - Custom YAML rules carry effect `signal`.
 - `scripts/gen_rules_reference.py` renders effect counts, an effect column, and
   the exact table of rules `harness-autonomy` runs.

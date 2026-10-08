@@ -337,6 +337,32 @@ class ScanArtifacts:
         return True
 
     @property
+    def harness_managed_paths(self) -> frozenset[str]:
+        """Resolved paths of components a pipeline harness runs (its agent
+        prompt and the skill directories it ships). Those run inside the
+        harness's sandbox, where the harness policy, not Claude Code
+        permission fields, is the boundary."""
+        return self.state.get("harness_managed_paths") or frozenset()
+
+    @harness_managed_paths.setter
+    def harness_managed_paths(self, value: frozenset[str]) -> None:
+        self.state["harness_managed_paths"] = value
+
+    def is_harness_managed(self, path: str | Path) -> bool:
+        managed = self.harness_managed_paths
+        if not managed:
+            return False
+        try:
+            p = Path(path).resolve()
+        except OSError:
+            return False
+        for m in managed:
+            mp = Path(m)
+            if p == mp or mp in p.parents:
+                return True
+        return False
+
+    @property
     def scan_limits(self) -> ScanLimits | None:
         limits: ScanLimits | None = self.state.get("scan_limits")
         return limits

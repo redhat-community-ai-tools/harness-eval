@@ -22,6 +22,9 @@ inputs:
   autonomy-allow-review:
     description: "Treat REVIEW_REQUIRED (exit 2) as success for the autonomy step; the findings still appear in the output. Default fails on it."
     default: "false"
+  autonomy-changed-only:
+    description: "On pull requests, compare against the PR base so only findings the change introduced decide the verdict; pre-existing ones are listed, not counted. Set to 'false' to judge the whole tree."
+    default: "true"
   gate:
     description: "Run the validated gate (harness-gate: gating-tier rules only, exits 1 on any finding, no LLM). Set to 'false' to skip."
     default: "true"
@@ -109,6 +112,19 @@ runs:
           [ -z "$pat" ] && continue
           exclude_flags="$exclude_flags --exclude $pat"
         done <<< "${{ inputs.exclude }}"
+        # On a pull request, judge the change: check out the base revision next to
+        # the workspace and let harness-autonomy list what already existed there.
+        base_dir=""
+        base_sha="${{ github.event.pull_request.base.sha }}"
+        if [ "${{ inputs.autonomy-changed-only }}" = "true" ] && [ -n "$base_sha" ] && git rev-parse --git-dir >/dev/null 2>&1; then
+          base_dir="${{ runner.temp }}/harness-eval-base"
+          if git fetch -q --depth=1 origin "$base_sha" 2>/dev/null && git worktree add -q --detach "$base_dir" "$base_sha" 2>/dev/null; then
+            echo "Comparing against base $base_sha"
+          else
+            echo "::notice::Could not check out base $base_sha; judging the whole tree"
+            base_dir=""
+          fi
+        fi
         worst=0
         json_dir="${{ runner.temp }}/harness-eval-autonomy"
         mkdir -p "$json_dir"
@@ -116,11 +132,15 @@ runs:
         while IFS= read -r dir; do
           dir=$(echo "$dir" | xargs)
           [ -z "$dir" ] && continue
+          compare_flag=""
+          if [ -n "$base_dir" ] && [ -d "$base_dir/$dir" ]; then
+            compare_flag="--compare $base_dir/$dir"
+          fi
           set +e
-          harness-eval harness-autonomy "$dir" $recursive_flag $policy_flag $exclude_flags --format json --output "$json_dir/autonomy-$i.json"
+          harness-eval harness-autonomy "$dir" $recursive_flag $policy_flag $compare_flag $exclude_flags --format json --output "$json_dir/autonomy-$i.json"
           rc=$?
           set -e
-          python3 -c "import json; d=json.load(open('$json_dir/autonomy-$i.json')); print(d['verdict']); [print('  BLOCK', f['rule'], f['file'], f['message']) for f in d['blocking']]; [print('  POLICY', f['rule'], f['file'], f['message']) for f in d['policy']]; [print('  WAIVED', f['rule'], f['file'], f['accepted_by']['reason']) for f in d['waived']]" || true
+          python3 -c "import json; d=json.load(open('$json_dir/autonomy-$i.json')); print(d['verdict']); [print('  BLOCK', f['rule'], f['file'], f['message']) for f in d['blocking']]; [print('  POLICY', f['rule'], f['file'], f['message']) for f in d['policy']]; [print('  WAIVED', f['rule'], f['file'], f['accepted_by']['reason']) for f in d['waived']]; [print('  PRE-EXISTING', f['rule'], f['file']) for f in d.get('pre_existing', [])]" || true
           # exit 1 (FAIL) outranks exit 2 (REVIEW_REQUIRED)
           if [ $rc -eq 1 ] || [ $worst -eq 1 ]; then worst=1; elif [ $rc -ne 0 ]; then worst=$rc; fi
           i=$((i + 1))

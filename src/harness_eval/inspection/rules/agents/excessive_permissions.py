@@ -39,6 +39,11 @@ class AgentExcessivePermissions:
             return
         if context.source_tool is not None and context.source_tool != "claude":
             return
+        # An agent a pipeline harness runs lives in that harness's sandbox,
+        # where the harness policy is the boundary and Claude Code runs with
+        # permissions skipped; the frontmatter fields decide nothing there.
+        if context.artifacts.is_harness_managed(agent.agent_md_path):
+            return
 
         if not agent.allowed_tools and not agent.disallowed_tools:
             context.report(

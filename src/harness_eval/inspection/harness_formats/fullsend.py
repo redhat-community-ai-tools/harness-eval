@@ -81,6 +81,70 @@ def _str_list(data: dict[str, Any], key: str) -> list[str]:
     return [x for x in v if isinstance(x, str) and x.strip()]
 
 
+def _skill_list(data: dict[str, Any], key: str) -> list[str]:
+    """Skill entries: a plain path, or a mapping with ``source`` (fullsend
+    SkillEntry with per-file overrides)."""
+    v = data.get(key)
+    if not isinstance(v, list):
+        return []
+    out: list[str] = []
+    for x in v:
+        if isinstance(x, str) and x.strip():
+            out.append(x)
+        elif isinstance(x, dict):
+            src = x.get("source") or x.get("path")
+            if isinstance(src, str) and src.strip():
+                out.append(src)
+    return out
+
+
+def _is_provider_path(value: str) -> bool:
+    """fullsend accepts a provider as a built-in name (``github-ro``) or as a
+    path to a provider definition; only the path form is checkable."""
+    return "/" in value or value.endswith((".yaml", ".yml"))
+
+
+def _resource_refs(fields: HarnessFields, data: dict[str, Any], prefix: str) -> None:
+    """Path-typed resources that appear both at the top level and under a
+    ``forge.<platform>`` override: skills, plugins, host files, providers,
+    policy, openshell profiles, validation loop script and schema."""
+    for i, s in enumerate(_skill_list(data, "skills")):
+        _add_ref(fields, f"{prefix}skills[{i}]", s, directory=True)
+    for i, p in enumerate(_str_list(data, "plugins")):
+        _add_ref(fields, f"{prefix}plugins[{i}]", p, directory=True)
+    for i, p in enumerate(_str_list(data, "providers")):
+        if _is_provider_path(p):
+            _add_ref(fields, f"{prefix}providers[{i}]", p)
+    if prefix:
+        _add_ref(fields, f"{prefix}policy", _str(data, "policy"))
+    openshell = data.get("openshell")
+    if isinstance(openshell, dict):
+        for i, p in enumerate(_str_list(openshell, "profiles")):
+            _add_ref(fields, f"{prefix}openshell.profiles[{i}]", p)
+    for i, hf in enumerate(data.get("host_files") or []):
+        if not isinstance(hf, dict):
+            continue
+        src, dest = _str(hf, "src"), _str(hf, "dest")
+        if src is None or dest is None:
+            continue
+        optional = bool(hf.get("optional"))
+        # Platform host files are alternatives (github or gitlab, never both in
+        # one run), so they take part in the existence check but not in the
+        # destination-collision check, which reasons about one run.
+        if not prefix:
+            fields.host_files.append(
+                HarnessHostFile(
+                    src=src, dest=dest, optional=optional, expand=bool(hf.get("expand"))
+                )
+            )
+        _add_ref(fields, f"{prefix}host_files[{i}].src", src, optional=optional)
+    if prefix:
+        loop = data.get("validation_loop")
+        if isinstance(loop, dict):
+            _add_ref(fields, f"{prefix}validation_loop.script", _str(loop, "script"))
+            _add_ref(fields, f"{prefix}validation_loop.schema", _str(loop, "schema"))
+
+
 def _env_map(value: Any) -> dict[str, str]:
     if not isinstance(value, dict):
         return {}
@@ -145,27 +209,13 @@ def map_fullsend(data: dict[str, Any], path: Path) -> HarnessFields:
     _add_ref(fields, "agent", fields.instructions)
     _add_ref(fields, "policy", fields.policy)
     _add_ref(fields, "agent_input", fields.agent_input, directory=True)
+    _add_ref(fields, "doc", _str(data, "doc"))
 
     _script_fields(fields, data, "")
 
-    fields.skills = _str_list(data, "skills")
-    for i, s in enumerate(fields.skills):
-        _add_ref(fields, f"skills[{i}]", s, directory=True)
+    fields.skills = _skill_list(data, "skills")
     fields.plugins = _str_list(data, "plugins")
-    for i, p in enumerate(fields.plugins):
-        _add_ref(fields, f"plugins[{i}]", p, directory=True)
-
-    for i, hf in enumerate(data.get("host_files") or []):
-        if not isinstance(hf, dict):
-            continue
-        src, dest = _str(hf, "src"), _str(hf, "dest")
-        if src is None or dest is None:
-            continue
-        optional = bool(hf.get("optional"))
-        fields.host_files.append(
-            HarnessHostFile(src=src, dest=dest, optional=optional, expand=bool(hf.get("expand")))
-        )
-        _add_ref(fields, f"host_files[{i}].src", src, optional=optional)
+    _resource_refs(fields, data, "")
 
     for i, srv in enumerate(data.get("api_servers") or []):
         if isinstance(srv, dict):
@@ -203,6 +253,12 @@ def map_fullsend(data: dict[str, Any], path: Path) -> HarnessFields:
                 continue
             fields.platform_overrides[str(platform)] = override
             _script_fields(fields, override, f"forge.{platform}.")
+            _resource_refs(fields, override, f"forge.{platform}.")
+            # Platform skills are instructions the agent runs with on that
+            # platform; the instruction closure and the managed set include them.
+            for s in _skill_list(override, "skills"):
+                if s not in fields.skills:
+                    fields.skills.append(s)
 
     if fields.output_schema is not None or fields.output_file is not None:
         tokens = [OUTPUT_DIR_ENV, OUTPUT_FILE_ENV, SCHEMA_ENV, OUTPUT_CHECK_TOOL]

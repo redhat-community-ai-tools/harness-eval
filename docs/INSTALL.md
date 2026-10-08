@@ -103,6 +103,7 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
           path: "."              # directories to scan, one per line (default: repo root)
           autonomy: "true"       # harness-autonomy: block + policy rules; fails on FAIL and REVIEW_REQUIRED
           autonomy-policy: ""    # path of a trusted policy file for harness-autonomy
+          autonomy-changed-only: "true"  # on PRs, judge only what the change introduced
           preset: "recommended"  # severity preset for lint: recommended or strict
           security-gate: "true"  # run security checks
           lint-gate: "true"      # run the quality lint (advice rules; lint-all: "true" for all 92)

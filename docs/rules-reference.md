@@ -79,7 +79,6 @@ The exact set, derived from the registry (effect block or policy, tier gating or
 | `mcp/endpoint-integrity` | block | gating | mcp_config | Flag MCP servers whose local command path is missing, whose URL is plain HTTP to a remote host, or whose URL embeds credentials |
 | `mcp/json-duplicate-keys` | block | gating | mcp_config | Flag duplicate object keys in an MCP configuration; the parser silently keeps only the last |
 | `mcp/no-plaintext-secrets` | block | provisional | mcp_config | Flag literal secret values committed in MCP configuration files |
-| `mcp/unpinned-package` | block | gating | mcp_config | Flag MCP servers that run unpinned third-party packages |
 | `mcp/valid-config` | block | gating | mcp_config | Validate MCP configuration file structure |
 | `security/credential-file-present` | block | gating | skill | Flag a file inside a skill directory whose name matches a secret-file pattern |
 | `structural/skill-md-exists` | block | gating | skill | SKILL.md file must exist in the skill directory |
@@ -95,6 +94,7 @@ The exact set, derived from the registry (effect block or policy, tier gating or
 | `hooks/permission-prompt-disabled` | policy | gating | hooks | Flag committed settings that disable the permission prompt (permissions.defaultMode) or auto-approve every project MCP server (enableAllProjectMcpServers) |
 | `hooks/pre-trust-permissions` | policy | provisional | hooks | Flag project-scoped settings that define permissions.allow or lifecycle hooks (SessionStart, Stop, etc.) that auto-execute without user interaction (CVE-2025-59536, GHSA-ph6w-f82w-28w6). |
 | `mcp/auto-approve-risk` | policy | provisional | mcp_config | Flag MCP servers with autoApprove lists containing write or execute tools |
+| `mcp/unpinned-package` | policy | gating | mcp_config | Flag MCP servers that run unpinned third-party packages |
 | `security/dangerous-permission-grant` | policy | provisional | hooks | Flag permissions.allow entries that grant access to destructive, privilege-escalating, or persistence-creating command patterns. |
 <!-- END GENERATED: autonomy-rules -->
 
@@ -176,7 +176,7 @@ and verified against the registry in CI. Do not edit it by hand.
 | `mcp/endpoint-integrity` | block | gating | FILE_FS | mcp_config |
 | `mcp/json-duplicate-keys` | block | gating | FILE | mcp_config |
 | `mcp/no-plaintext-secrets` | block | provisional | FILE | mcp_config |
-| `mcp/unpinned-package` | block | gating | FILE | mcp_config |
+| `mcp/unpinned-package` | policy | gating | FILE | mcp_config |
 | `mcp/valid-config` | block | gating | FILE | mcp_config |
 | `quality/imprecise-instruction` | advice | advisory | FILE | skill |
 | `quality/redundant-guidance` | advice | advisory | FILE | skill |

@@ -118,6 +118,7 @@ class AutonomyReport:
     blocking: list[Finding] = field(default_factory=list)
     policy: list[Finding] = field(default_factory=list)
     waived: list[tuple[Finding, PolicyGrant]] = field(default_factory=list)
+    pre_existing: list[Finding] = field(default_factory=list)
     info: list[Finding] = field(default_factory=list)
     coverage: dict[str, Any] = field(default_factory=dict)
     policy_problems: list[str] = field(default_factory=list)
@@ -146,7 +147,16 @@ def classify(
     results: list[InspectionResult],
     grants: list[PolicyGrant],
     scan_root: Path,
+    pre_existing_keys: set[tuple[str, str, str]] | None = None,
 ) -> AutonomyReport:
+    """Sort findings into the verdict buckets.
+
+    A finding whose key (rule, file relative to the root, message) also
+    appears in *pre_existing_keys*, computed from a base checkout, is
+    reported under ``pre_existing`` and does not decide the verdict: the
+    change under review did not introduce it.
+    """
+    from harness_eval.baseline import finding_key
     from harness_eval.inspection.registry import get_rule
 
     report = AutonomyReport(verdict="PASS")
@@ -154,6 +164,9 @@ def classify(
         for d in r.diagnostics:
             if d.severity == Severity.INFO:
                 report.info.append(d)
+                continue
+            if pre_existing_keys is not None and finding_key(d, scan_root) in pre_existing_keys:
+                report.pre_existing.append(d)
                 continue
             rule = get_rule(d.rule_id)
             effect = rule.meta.effect if rule is not None else "block"
@@ -256,6 +269,7 @@ def format_json(report: AutonomyReport, setup_name: str) -> str:
             {**_finding_dict(d), "accepted_by": {"file": g.file, "reason": g.reason}}
             for d, g in report.waived
         ],
+        "pre_existing": [_finding_dict(d) for d in report.pre_existing],
         "info": [_finding_dict(d) for d in report.info],
         "coverage": report.coverage,
         "policy_problems": report.policy_problems,
@@ -285,6 +299,11 @@ def format_terminal(report: AutonomyReport, setup_name: str) -> str:
         lines.append(f"Waived by policy file ({len(report.waived)}):")
         for d, g in report.waived:
             lines.append(f"  {d.rule_id}\t{d.location.file}\t{g.reason}")
+        lines.append("")
+    if report.pre_existing:
+        lines.append(f"Pre-existing on the base, not counted ({len(report.pre_existing)}):")
+        for d in report.pre_existing:
+            lines.append(f"  {d.rule_id}\t{d.location.file}\t{d.message}")
         lines.append("")
     _section("Info", report.info)
     if report.policy_problems:
@@ -351,6 +370,16 @@ def format_terminal(report: AutonomyReport, setup_name: str) -> str:
     help="Baseline JSON file. Suppressed findings are counted in coverage, never hidden.",
 )
 @click.option(
+    "--compare",
+    "compare_path",
+    type=click.Path(exists=True, file_okay=False),
+    default=None,
+    help=(
+        "A checkout of the base revision. Findings that already exist there are listed as "
+        "pre-existing and do not decide the verdict, so the verdict is about the change."
+    ),
+)
+@click.option(
     "--recursive", is_flag=True, help="Recursively search subdirectories for agent configs."
 )
 @exclude_option
@@ -361,6 +390,7 @@ def harness_autonomy(
     output_path: str | None,
     policy_path: str | None,
     baseline_path: str | None,
+    compare_path: str | None,
     recursive: bool,
     exclude: tuple[str, ...],
     max_file_bytes: int,
@@ -372,7 +402,9 @@ def harness_autonomy(
 
     Runs the block and policy rules at gating and provisional tier. Exit 0
     PASS, 1 FAIL (a configuration defect), 2 REVIEW_REQUIRED (a policy fact
-    nobody has accepted). Never loads an LLM, the network, or rules from the
+    nobody has accepted). With --compare <base checkout> only findings the
+    change introduced decide the verdict; the rest are listed as
+    pre-existing. Never loads an LLM, the network, or rules from the
     scanned tree.
     """
     t0 = time.monotonic()
@@ -407,7 +439,33 @@ def harness_autonomy(
     if policy_path:
         grants, problems = load_policy(policy_path)
 
-    report = classify(results, grants, target)
+    pre_existing_keys: set[tuple[str, str, str]] | None = None
+    compare_evidence: dict[str, Any] | None = None
+    if compare_path:
+        from harness_eval.baseline import finding_key
+        from harness_eval.output.provenance import git_revision
+
+        base_setup = discover_setup(
+            name=Path(compare_path).name,
+            path=compare_path,
+            recursive=recursive,
+            exclude=exclude,
+            limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+        )
+        base_results = inspect_setup(
+            base_setup, config_rules, catalog=build_scan_catalog(compare_path)
+        )
+        pre_existing_keys = {
+            finding_key(d, compare_path) for r in base_results for d in r.diagnostics
+        }
+        compare_evidence = {
+            "path": str(Path(compare_path).resolve()),
+            "setup_fingerprint": base_setup.fingerprint,
+            "vcs": {"revision": git_revision(compare_path)},
+            "findings": len(pre_existing_keys),
+        }
+
+    report = classify(results, grants, target, pre_existing_keys)
     report.policy_problems = problems
     report.coverage = _coverage(setup, results, config_rules, baseline_suppressed)
     evidence = collect_scan_evidence(
@@ -420,6 +478,8 @@ def harness_autonomy(
         baseline_suppressed=baseline_suppressed,
     )
     report.evidence = evidence.to_dict()
+    if compare_evidence is not None:
+        report.evidence["compare"] = compare_evidence
     if policy_path:
         from harness_eval.output.provenance import file_digest
 
@@ -443,6 +503,7 @@ def harness_autonomy(
             "verdict": report.verdict,
             "exit_code": report.exit_code,
             "waived": len(report.waived),
+            "pre_existing": len(report.pre_existing),
             "coverage": report.coverage,
         }
         emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)

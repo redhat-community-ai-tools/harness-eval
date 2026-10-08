@@ -106,7 +106,16 @@ harness-eval harness-autonomy . --policy .harness-eval/autonomy-policy.yaml --fo
 
 Accepted findings appear under `waived` with the recorded reason; they are
 never hidden. Only `policy` rules can be accepted; an entry naming a `block`
-rule is reported and ignored. The JSON output carries the verdict, the three
+rule is reported and ignored.
+
+A merge decision is about the change, not the repository's history. With
+`--compare <checkout of the base revision>` only findings the change
+introduced decide the verdict; the rest are listed under `pre_existing`.
+The GitHub Action does this on pull requests by default
+(`autonomy-changed-only`). A rule also stays quiet where its fact does not
+apply: an agent or skill that a pipeline harness runs lives in that
+harness's sandbox, so Claude Code permission facts (`tools`,
+`allowed-tools`) are not reported for it. The JSON output carries the verdict, the three
 finding lists, `coverage` (components, rules run, rules not applicable and
 why, skipped harness layers, baseline suppressions) and `evidence`
 (fingerprint, revision, rules and config digests, policy file digest), so a
@@ -150,8 +159,8 @@ Rules by effect:
 <!-- BEGIN GENERATED: effect-counts -->
 | Effect | Rules | Run by |
 |--------|-------|--------|
-| block | 35 | `harness-gate`, `harness-autonomy`, `harness-security` (security category) |
-| policy | 12 | `harness-autonomy` (REVIEW_REQUIRED), `harness-security` |
+| block | 34 | `harness-gate`, `harness-autonomy`, `harness-security` (security category) |
+| policy | 13 | `harness-autonomy` (REVIEW_REQUIRED), `harness-security` |
 | signal | 21 | `harness-security` |
 | advice | 24 | `harness-lint` |
 <!-- END GENERATED: effect-counts -->

@@ -35,7 +35,10 @@ class FormatValid:
                 "Skill name '{{name}}' must be 1-64 lowercase letters, numbers, and"
                 " single hyphens, with no leading or trailing hyphen"
             ),
-            "name_mismatch": "Skill name '{{name}}' does not match directory '{{directory}}'",
+            "name_mismatch": (
+                "Skill name '{{name}}' does not match directory '{{directory}}'; the Agent"
+                " Skills spec requires a match, current clients resolve by directory"
+            ),
             "description_type": "Field 'description' must be a string",
             "compatibility_type": "Field 'compatibility' must be a string of at most 500 characters",
             "metadata_type": "Field 'metadata' must be a mapping of string keys to string values",
@@ -81,14 +84,17 @@ class FormatValid:
                     ReportDescriptor(message_id="name_format", data={"name": name}, location=loc)
                 )
             directory = Path(skill.dir_path).name
-            # OpenCode V2 treats name as a display label and derives identity
-            # from the path; portable Agent Skills and other clients require a match.
+            # The Agent Skills spec requires name == directory, but every
+            # current client resolves a skill by its path (Claude Code: "the
+            # directory name also invokes the skill"; OpenCode treats name as a
+            # label). A mismatch is a portability note, never a load failure.
             if context.source_tool != "opencode" and name != directory:
                 context.report(
                     ReportDescriptor(
                         message_id="name_mismatch",
                         data={"name": name, "directory": directory},
                         location=loc,
+                        severity_override=Severity.INFO,
                     )
                 )
 

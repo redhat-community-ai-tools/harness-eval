@@ -772,6 +772,24 @@ def build_scan_catalog(
     return scan_catalog
 
 
+def _harness_managed_paths(harnesses: Any) -> frozenset[str]:
+    """Agent prompts and skill directories that a harness runs in its sandbox."""
+    managed: set[str] = set()
+    for h in harnesses:
+        fields = getattr(h, "fields", None)
+        if fields is None:
+            continue
+        root = Path(fields.root_dir)
+        for rel in [fields.instructions, *fields.skills]:
+            if not rel or "${" in rel or "://" in rel or rel.startswith(("/", "~")):
+                continue
+            try:
+                managed.add(str((root / rel).resolve()))
+            except OSError:
+                continue
+    return frozenset(managed)
+
+
 def _inspect_setup(
     setup: Any,
     config_rules: dict[str, str | list[Any]] | None = None,
@@ -813,6 +831,7 @@ def _inspect_setup(
     all_agents = list(parsed_setup.agents)
     all_mcp = list(parsed_setup.mcp_configs)
     all_configs = list(parsed_setup.configs)
+    artifacts.harness_managed_paths = _harness_managed_paths(parsed_setup.harnesses)
     all_harnesses = list(parsed_setup.harnesses)
 
     artifacts.component_graph = build_component_graph(
