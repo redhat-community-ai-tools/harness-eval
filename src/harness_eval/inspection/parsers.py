@@ -22,13 +22,20 @@ from harness_eval.utils.parsing import parse_frontmatter_rich
 from harness_eval.utils.tokens import count_tokens
 
 
-def list_files(directory: Path) -> list[str]:
+def list_files(
+    directory: Path,
+    *,
+    excludes: tuple[str, ...] = (),
+    project_root: Path | str | None = None,
+) -> list[str]:
+    from harness_eval.inspection._fswalk import iter_files
+
     if not directory.is_dir():
         return []
     return sorted(
         str(p.relative_to(directory))
-        for p in directory.rglob("*")
-        if p.is_file() and ".git" not in p.parts
+        for p in iter_files(directory, excludes=excludes, project_root=project_root)
+        if p.is_file()
     )
 
 
@@ -48,14 +55,20 @@ _MAX_SUB_FILES = 50
 _MAX_SUB_FILE_BYTES = 100_000
 
 
-def _read_md_sub_files(skill_dir: Path, skill_md: Path) -> dict[str, str]:
+def _read_md_sub_files(
+    skill_dir: Path,
+    skill_md: Path,
+    *,
+    excludes: tuple[str, ...] = (),
+    project_root: Path | str | None = None,
+) -> dict[str, str]:
     """Read .md files in *skill_dir* except the primary SKILL.md."""
+    from harness_eval.inspection._fswalk import iter_files
+
     result: dict[str, str] = {}
     skill_md_resolved = skill_md.resolve()
-    for p in sorted(skill_dir.rglob("*.md")):
+    for p in iter_files(skill_dir, "*.md", excludes=excludes, project_root=project_root):
         if p.resolve() == skill_md_resolved:
-            continue
-        if ".git" in p.parts or "__pycache__" in p.parts:
             continue
         if len(result) >= _MAX_SUB_FILES:
             break
@@ -98,8 +111,16 @@ def _resolve_command_path(command_path: str) -> tuple[Path, Path | None, list[st
     return path, None, [f"Path does not exist: {path}"]
 
 
-def parse_skill(skill_path: str) -> ParsedSkill:
-    """Parse a skill directory or SKILL.md file into a ParsedSkill."""
+def parse_skill(
+    skill_path: str,
+    *,
+    excludes: tuple[str, ...] = (),
+    project_root: Path | str | None = None,
+) -> ParsedSkill:
+    """Parse a skill directory or SKILL.md file into a ParsedSkill.
+
+    *excludes* and *project_root* scope the sub-file walk to what the scan
+    may read; a bare call (single-file lint) reads the whole directory."""
     skill_dir, skill_md, errors = _resolve_skill_path(skill_path)
 
     if skill_md is None:
@@ -113,7 +134,7 @@ def parse_skill(skill_path: str) -> ParsedSkill:
             frontmatter_start_line=0,
             body="",
             body_start_line=0,
-            files=list_files(skill_dir),
+            files=list_files(skill_dir, excludes=excludes, project_root=project_root),
             sub_file_contents=_read_md_sub_files(skill_dir, skill_dir / "SKILL.md"),
             parse_errors=errors,
         )
@@ -130,8 +151,10 @@ def parse_skill(skill_path: str) -> ParsedSkill:
         frontmatter_start_line=fm.frontmatter_start_line,
         body=fm.body,
         body_start_line=fm.body_start_line,
-        files=list_files(skill_dir),
-        sub_file_contents=_read_md_sub_files(skill_dir, skill_md),
+        files=list_files(skill_dir, excludes=excludes, project_root=project_root),
+        sub_file_contents=_read_md_sub_files(
+            skill_dir, skill_md, excludes=excludes, project_root=project_root
+        ),
         parse_errors=parse_errors,
         tokens=count_tokens(raw_content),
     )

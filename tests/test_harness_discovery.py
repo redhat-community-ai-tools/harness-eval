@@ -140,7 +140,13 @@ def test_invalid_yaml_reports_parse_error(tmp_path: Path) -> None:
     bad = tmp_path / "harness" / "bad.yaml"
     bad.parent.mkdir()
     bad.write_text("agent: agents/x.md\n  broken: [\n")
-    assert not is_harness_file(bad)
+    # A broken file in harness/ stays a harness so the parse error is reported
+    # instead of the component silently disappearing from the scan.
+    assert is_harness_file(bad)
+    elsewhere = tmp_path / "other" / "bad.yaml"
+    elsewhere.parent.mkdir()
+    elsewhere.write_text("agent: agents/x.md\n  broken: [\n")
+    assert not is_harness_file(elsewhere)
     parsed = parse_harness(str(bad), "fullsend")
     assert parsed.fields is None
     assert parsed.parse_errors and parsed.parse_errors[0].startswith("Invalid YAML")

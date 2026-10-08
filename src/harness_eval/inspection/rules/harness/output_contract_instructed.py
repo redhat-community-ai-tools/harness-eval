@@ -37,8 +37,10 @@ from harness_eval.utils.paths import safe_join
 _MAX_CLOSURE_FILES = 500
 
 
-def instruction_closure(fields, root: Path) -> list[Path] | None:
+def instruction_closure(fields, root: Path, artifacts=None) -> list[Path] | None:
     """Files the agent reads from *root*, or None when any listed one is missing."""
+    from harness_eval.inspection._fswalk import iter_files
+
     files: list[Path] = []
     if fields.instructions is None:
         return None
@@ -50,7 +52,8 @@ def instruction_closure(fields, root: Path) -> list[Path] | None:
         d = safe_join(root, rel)
         if d is None or not d.is_dir():
             return None
-        files.extend(sorted(p for p in d.rglob("*.md") if p.is_file()))
+        walked = artifacts.iter_files(d, "*.md") if artifacts is not None else iter_files(d, "*.md")
+        files.extend(p for p in walked if p.is_file())
         if len(files) > _MAX_CLOSURE_FILES:
             return None
     for rel in fields.shared_instruction_files:
@@ -102,7 +105,7 @@ class HarnessOutputContractInstructed:
             return
         if f.base is not None or f.agent_input is not None or f.runtime_fetch:
             return
-        files = instruction_closure(f, f.root_dir)
+        files = instruction_closure(f, f.root_dir, context.artifacts)
         if files is None:
             return
         for path in files:

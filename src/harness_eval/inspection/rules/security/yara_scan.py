@@ -141,7 +141,7 @@ class YaraScan:
             else None
         )
 
-        for file_path in sorted(skill_dir.rglob("*")):
+        for file_path in context.artifacts.iter_files(skill_dir):
             if not file_path.is_file():
                 continue
             if ".git" in file_path.parts or "__pycache__" in file_path.parts:

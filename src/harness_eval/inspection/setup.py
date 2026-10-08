@@ -87,7 +87,7 @@ def parse_setup(setup: Setup) -> ParsedSetup:
         parsed: ParsedFile | None = None
         ctype = component.component_type
         if ctype is ComponentType.SKILL:
-            parsed = parse_skill(component.path)
+            parsed = parse_skill(component.path, excludes=setup.excludes, project_root=setup.path)
             skills.append(parsed)
         elif ctype is ComponentType.COMMAND:
             parsed = parse_command(component.path)

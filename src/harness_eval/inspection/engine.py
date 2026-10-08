@@ -807,6 +807,7 @@ def _inspect_setup(
         artifacts.scan_limits = setup.limits
     if getattr(setup, "inventory_paths", None) is not None:
         artifacts.allowed_paths = frozenset(setup.inventory_paths)
+    artifacts.excludes = tuple(getattr(setup, "excludes", ()) or ())
     scan_state = artifacts.state
     results: list[InspectionResult] = []
 
@@ -840,6 +841,8 @@ def _inspect_setup(
         all_agents,
         all_hooks,
         mcp_config_paths=[c.path for c in mcp_comps],
+        excludes=artifacts.excludes,
+        project_root=artifacts.project_root,
     )
 
     lint_dispatch: dict[CT, Callable[..., InspectionResult]] = {

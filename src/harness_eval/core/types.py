@@ -83,6 +83,9 @@ class Setup:
     # without going through discover_setup; inspection then does not restrict
     # YARA to that set.
     inventory_paths: tuple[str, ...] | None = None
+    # Exclude patterns in force for this scan (defaults plus --exclude). Every
+    # walk of the tree during inspection honors them, not only discovery.
+    excludes: tuple[str, ...] = ()
 
     def by_type(self, component_type: ComponentType) -> list[ParsedComponent]:
         return [c for c in self.components if c.component_type == component_type]
