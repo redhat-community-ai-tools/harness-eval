@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import re
 
+from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.security._shared import (
-    extract_all_skill_md_content,
+    extract_component_texts,
     scan_lines_for_patterns,
 )
 from harness_eval.inspection.types import (
@@ -32,13 +33,18 @@ MEMORY_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
+_INSTRUCTION_TARGETS = (ComponentType.SKILL, ComponentType.COMMAND, ComponentType.AGENT)
+
+
 class MemoryWriteUnscoped:
     meta = RuleMeta(
         id="security/memory-write-unscoped",
+        effect="signal",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Instructions persist data across sessions without scoping constraints",
         category=RuleCategory.SECURITY,
+        target_type=_INSTRUCTION_TARGETS,
         messages={
             "memory_unscoped": (
                 "Line {{line}} contains '{{label}}'."
@@ -56,7 +62,7 @@ class MemoryWriteUnscoped:
     )
 
     def create(self, context: RuleContext) -> None:
-        for content, file_path in extract_all_skill_md_content(context):
+        for content, file_path in extract_component_texts(context):
             scan_lines_for_patterns(
                 content,
                 file_path,

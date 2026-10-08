@@ -21,8 +21,7 @@ class TestSkillScriptPaths:
         [
             ("lint", "harness-eval harness-lint"),
             ("security", "harness-eval harness-security"),
-            ("eval-skill", "harness-eval skill-review"),
-            ("skill-verify", "harness-eval skill-verify"),
+            ("autonomy", "harness-eval harness-autonomy"),
         ],
     )
     def test_skill_md_references_cli_command(self, skill_name: str, cli_command: str) -> None:
@@ -34,7 +33,7 @@ class TestSkillScriptPaths:
 
     @pytest.mark.parametrize(
         "skill_name",
-        ["lint", "security", "eval-skill", "review"],
+        ["lint", "security", "autonomy", "review"],
     )
     def test_skill_md_rubric_references_exist(self, skill_name: str) -> None:
         skill_dir = SKILLS / skill_name
@@ -51,7 +50,7 @@ class TestSkillScriptPaths:
 
     @pytest.mark.parametrize(
         "skill_name",
-        ["lint", "security", "eval-skill", "review"],
+        ["lint", "security", "autonomy", "review"],
     )
     def test_report_format_exists(self, skill_name: str) -> None:
         skill_dir = SKILLS / skill_name

@@ -8,11 +8,13 @@ from unittest.mock import patch
 
 import pytest
 
-from harness_eval.config.presets import SECURITY
+from harness_eval.config.presets import security_rules
 from harness_eval.inspection.engine import lint
 from harness_eval.inspection.rules.security.no_prompt_injection import (
     _INJECTION_PATTERNS,
 )
+
+SECURITY = security_rules()
 
 
 @pytest.fixture

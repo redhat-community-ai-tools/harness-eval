@@ -13,6 +13,7 @@ from harness_eval.cli import cli
 from harness_eval.cli._helpers import (
     emit_output,
     exclude_option,
+    llm_options,
     scan_limit_options,
     scan_limits_from,
 )
@@ -350,8 +351,7 @@ def _format_terminal_security(report: _SecurityReport) -> None:
     is_flag=True,
     help="Query OSV.dev for dependency vulnerabilities (requires network access).",
 )
-@click.option("--provider", type=click.Choice(["gemini", "anthropic"]), default="gemini")
-@click.option("--model", default=None, help="LLM model for semantic security review.")
+@llm_options
 @click.option(
     "--fail-on-error",
     is_flag=True,
@@ -396,6 +396,7 @@ def eval_setup_security(
     cve_lookup: bool,
     provider: str,
     model: str | None,
+    base_url: str | None,
     fail_on_error: bool,
     fail_on_warning: bool,
     user_config: str | None,
@@ -408,14 +409,17 @@ def eval_setup_security(
     max_files: int,
     max_depth: int,
 ) -> None:
-    """Deep security audit: all deterministic security rules + optional LLM review."""
+    """Security audit: every policy and heuristic (signal) rule plus the
+    security-category block rules, with optional LLM adjudication and review.
+    Heuristic findings are claims to read, not verdicts; this command never
+    decides a merge on its own (see harness-autonomy)."""
     if enforce and (fail_on_error or fail_on_warning):
         raise click.UsageError(
             "--enforce is mutually exclusive with --fail-on-error and --fail-on-warning"
         )
 
     t0 = time.monotonic()
-    from harness_eval.config.presets import SECURITY
+    from harness_eval.config.presets import security_rules as _security_rules
     from harness_eval.inspection.engine import inspect_setup
 
     target = Path(path)
@@ -427,7 +431,7 @@ def eval_setup_security(
         exclude=exclude,
         limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
-    security_rules = dict(SECURITY)
+    security_rules = _security_rules()
     if cve_lookup:
         # Opting into the networked OSV check must preserve security-gate
         # semantics: actionable CVE findings participate in --fail-on-error.
@@ -457,16 +461,16 @@ def eval_setup_security(
             build_adjudication_prompt,
         )
         from harness_eval.rubric.scorer import RubricChecker
-        from harness_eval.utils.llm import create_client
+        from harness_eval.utils.llm import create_client, key_hint
 
-        client = create_client(provider, model)
+        client = create_client(provider, model, base_url=base_url)
         checker = RubricChecker(client)
         try:
             checker._ensure_client_safe()
         except (ImportError, ValueError) as e:
-            key_hint = "ANTHROPIC_API_KEY" if provider == "anthropic" else "GEMINI_API_KEY"
             raise click.ClickException(
-                f"{e}\n\nSet {key_hint} in your environment, or run `harness-eval doctor` to check setup."
+                f"{e}\n\nSet {key_hint(provider)} in your environment, "
+                "or run `harness-eval doctor` to check setup."
             ) from None
 
         components_needing_adjudication = [r for r in results if r.diagnostics]
@@ -540,13 +544,16 @@ def eval_setup_security(
                     all_sec_results.append(future.result())
                 except Exception as e:
                     err_name = type(e).__name__
-                    if "Auth" in err_name or "Unauthorized" in err_name or "401" in str(e):
-                        key_hint = (
-                            "ANTHROPIC_API_KEY" if provider == "anthropic" else "GEMINI_API_KEY"
-                        )
+                    if (
+                        "Auth" in err_name
+                        or "Unauthorized" in err_name
+                        or "401" in str(e)
+                        or isinstance(e, PermissionError)
+                    ):
                         raise click.ClickException(
                             f"Authentication failed: {e}\n\n"
-                            f"Check that {key_hint} is valid, or run `harness-eval doctor`."
+                            f"Check that {key_hint(provider)} is valid, "
+                            "or run `harness-eval doctor`."
                         ) from None
                     raise
 
@@ -609,6 +616,3 @@ def eval_setup_security(
         raise SystemExit(1)
     if fail_on_warning and (effective_errors + effective_warnings) > 0:
         raise SystemExit(1)
-
-
-cli.add_command(eval_setup_security, "security")

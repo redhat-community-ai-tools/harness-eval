@@ -16,6 +16,7 @@ DEFAULT_MAX_DESCRIPTION_TOKENS = 100
 class DescriptionLength:
     meta = RuleMeta(
         id="content/description-length",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

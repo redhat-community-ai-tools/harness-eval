@@ -34,6 +34,8 @@ _DANGEROUS_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 class HooksDangerousPermissionGrant:
     meta = RuleMeta(
         id="security/dangerous-permission-grant",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.ERROR,
         fixable=False,
         description=(

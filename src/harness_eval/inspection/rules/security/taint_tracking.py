@@ -191,6 +191,7 @@ def _report_flow(
 class TaintTracking:
     meta: RuleMeta = RuleMeta(
         id="security/taint-flow",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect data flows from sensitive sources to dangerous sinks in Python scripts",

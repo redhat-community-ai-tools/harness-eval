@@ -34,6 +34,7 @@ class HarnessHostFileDestCollision:
     meta = RuleMeta(
         id="harness/host-file-dest-collision",
         tier="provisional",
+        effect="block",
         scope="FILE",
         default_severity=Severity.ERROR,
         fixable=False,

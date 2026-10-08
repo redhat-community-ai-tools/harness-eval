@@ -90,12 +90,12 @@ def load_tool_names() -> list[str]:
     return list(data)
 
 
-def load_tautological_patterns(
-    *,
-    generic_advice_only: bool = False,
-) -> list[tuple[str, re.Pattern[str]]]:
+def load_hook_events() -> list[str]:
+    data = json.loads((_DATA_DIR / "hook_events.json").read_text())
+    return list(data["events"])
+
+
+def load_tautological_patterns() -> list[tuple[str, re.Pattern[str]]]:
     data = json.loads((_DATA_DIR / "tautological_patterns.json").read_text())
     patterns = data["patterns"]
-    if generic_advice_only:
-        patterns = [p for p in patterns if p.get("generic_advice")]
     return [(p["label"], re.compile(p["regex"], re.I)) for p in patterns]

@@ -19,6 +19,7 @@ _STATE_KEY = "command/duplicate-detection"
 class CommandDuplicateDetection:
     meta = RuleMeta(
         id="command/duplicate-detection",
+        effect="advice",
         scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,

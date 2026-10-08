@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from harness_eval.inspection.rules.cross.overpermissive_grants import classify_grant
+from harness_eval.inspection.rules.frontmatter._keys import split_tool_entries
 from harness_eval.inspection.types import (
     Location,
     ReportDescriptor,
@@ -59,6 +60,8 @@ _EXEC_CLASS = {
 class AllowedToolsAutoApprove:
     meta = RuleMeta(
         id="content/allowed-tools-auto-approve",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(
@@ -95,10 +98,8 @@ class AllowedToolsAutoApprove:
         if not skill.frontmatter:
             return
 
-        allowed = skill.frontmatter.get("allowed-tools")
-        if isinstance(allowed, str):
-            allowed = [part for part in allowed.replace(",", " ").split() if part]
-        if not allowed or not isinstance(allowed, list):
+        allowed = split_tool_entries(skill.frontmatter.get("allowed-tools"))
+        if not allowed:
             return
 
         loc = Location(file=skill.skill_md_path)

@@ -1,6 +1,6 @@
 ---
 name: security
-description: Deep security audit of the agent setup. Deterministic rules (prompt injection, credential access, exfiltration, obfuscation, taint tracking, MCP analysis, YARA, CVE lookup) plus LLM semantic review. Use when the user asks about security or needs a pre-deployment audit.
+description: Security audit of the agent setup. Every policy and heuristic (signal) rule plus the security-category block rules (prompt injection, credential access, exfiltration, obfuscation, taint tracking, permission grants, MCP secrets and endpoints, YARA, CVE lookup), then LLM semantic review. Heuristic findings are claims to read, not verdicts. Use when the user asks about security or needs a pre-deployment audit.
 allowed-tools: Bash Read
 ---
 <!-- evaluator-ignore: content/allowed-tools-auto-approve -->

@@ -51,6 +51,7 @@ class ConfigComponentConflict:
     meta = RuleMeta(
         id="cross/config-component-conflict",
         tier="advisory",
+        effect="advice",
         scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,

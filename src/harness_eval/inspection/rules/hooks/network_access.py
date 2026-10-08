@@ -22,6 +22,7 @@ _NETWORK_PATTERNS = [
 class HooksNetworkAccess:
     meta = RuleMeta(
         id="hooks/network-access",
+        effect="signal",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag hooks that make network calls",

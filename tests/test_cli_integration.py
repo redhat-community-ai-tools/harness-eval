@@ -29,7 +29,7 @@ class TestLintCommand:
         assert "FAIL" in result.output or "error" in result.output.lower()
 
     def test_lint_fail_on_error(self) -> None:
-        result = CliRunner().invoke(cli, ["harness-lint", DIRTY, "--fail-on-error"])
+        result = CliRunner().invoke(cli, ["harness-lint", DIRTY, "--all", "--fail-on-error"])
         assert result.exit_code == 1
 
     def test_lint_json_output(self) -> None:
@@ -74,34 +74,6 @@ class TestSecurityCommand:
         assert "security_scan" in data
         assert "risk_assessment" in data
 
-    def test_lint_alias(self) -> None:
-        result = CliRunner().invoke(cli, ["lint", CLEAN, "--format", "json"])
-        assert result.exit_code == 0
-        json.loads(result.output)
-
-    def test_security_alias(self) -> None:
-        result = CliRunner().invoke(cli, ["security", CLEAN, "--format", "json"])
-        assert result.exit_code == 0
-        json.loads(result.output)
-
-
-class TestScanCommand:
-    def test_scan_clean_fixture(self) -> None:
-        result = CliRunner().invoke(cli, ["skill-verify", CLEAN])
-        assert result.exit_code == 0
-        assert "Verdict" in result.output
-
-    def test_scan_dirty_fixture(self) -> None:
-        result = CliRunner().invoke(cli, ["skill-verify", DIRTY])
-        assert "UNSAFE" in result.output
-
-    def test_scan_json_output(self) -> None:
-        result = CliRunner().invoke(cli, ["skill-verify", CLEAN, "--format", "json"])
-        assert result.exit_code == 0
-        data = json.loads(result.output)
-        assert data["scan"] is True
-        assert "verdict" in data
-
 
 class TestDoctorCommand:
     def test_doctor_runs(self) -> None:
@@ -126,7 +98,7 @@ class TestRulesCommand:
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert isinstance(data, list)
-        assert len(data) >= 92
+        assert len(data) >= 80
 
 
 class TestVersionFlag:
@@ -134,13 +106,3 @@ class TestVersionFlag:
         result = CliRunner().invoke(cli, ["--version"])
         assert result.exit_code == 0
         assert "harness-eval" in result.output
-
-
-class TestSkillReviewCommand:
-    def test_json_output_has_required_fields(self) -> None:
-        skill_path = str(FIXTURES / "sample-setup-a" / "skills" / "code-review")
-        result = CliRunner().invoke(cli, ["skill-review", skill_path, "--format", "json"])
-        assert result.exit_code == 0
-        data = json.loads(result.output)
-        for key in ("skill", "tokens", "errors", "warnings", "findings"):
-            assert key in data, f"Missing key '{key}' in skill-review JSON output"

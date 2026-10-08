@@ -1,6 +1,6 @@
 # Eval Setup Lint
 
-Run 103 deterministic rules + system-level analysis on the agent setup. No LLM. Fast, reproducible, CI-suitable.
+Run the quality lint (advice rules + system-level analysis) on the agent setup; add --all for every one of the 92 deterministic rules. No LLM. Fast, reproducible.
 
 ## Instructions
 
@@ -9,7 +9,8 @@ Run 103 deterministic rules + system-level analysis on the agent setup. No LLM. 
 2. Run the lint command on the current project:
 
 ```bash
-uvx --from harness-eval harness-eval harness-lint .
+uvx --from harness-eval harness-eval harness-lint .            # advice rules + system analysis
+uvx --from harness-eval harness-eval harness-lint . --all      # every rule
 ```
 
 For JSON output (if the user prefers file output):

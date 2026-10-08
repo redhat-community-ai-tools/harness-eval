@@ -74,6 +74,7 @@ def _find_common_prefix(commands: list[str]) -> str | None:
 class CommandAllowedToolsCoverage:
     meta = RuleMeta(
         id="command/allowed-tools-coverage",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Check that command allowed-tools covers the tools the command uses",

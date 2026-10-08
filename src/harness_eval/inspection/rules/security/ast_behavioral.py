@@ -152,6 +152,7 @@ def _analyze_file(py_path: Path, context: RuleContext, skill_md_path: str) -> No
 class AstBehavioral:
     meta: RuleMeta = RuleMeta(
         id="security/ast-behavioral",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect dangerous function calls in Python scripts via AST analysis",

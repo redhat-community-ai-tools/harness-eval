@@ -26,6 +26,12 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
+      - id: autonomy-gate
+        name: harness-autonomy
+        entry: uv run harness-eval harness-autonomy .
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
       - id: security-gate
         name: security gate
         entry: uv run harness-eval harness-security . --fail-on-warning

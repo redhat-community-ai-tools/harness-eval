@@ -237,6 +237,7 @@ class TestCLIWatchFlag:
                 mock_watch.assert_called_once_with(
                     path=".",
                     preset="strict",
+                    everything=False,
                     fmt="terminal",
                     user_config=None,
                     recursive=False,
@@ -258,6 +259,7 @@ class TestCLIWatchFlag:
                 mock_watch.assert_called_once_with(
                     path=".",
                     preset="recommended",
+                    everything=False,
                     fmt="terminal",
                     user_config=None,
                     recursive=False,

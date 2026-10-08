@@ -25,6 +25,7 @@ class StructuralSymlinkEscape:
     meta = RuleMeta(
         id="structural/symlink-escape",
         tier="gating",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

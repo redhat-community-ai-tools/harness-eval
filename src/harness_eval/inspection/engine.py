@@ -652,7 +652,7 @@ def lint_text_file(
     if base:
         # An explicit rule set (a preset or the gate) was passed: honor it, so a
         # security rule runs only if the set enables it; disable the rest. Without
-        # this, presets that omit these rules on purpose (gate, scan, pre-workflow)
+        # this, rule sets that omit these rules on purpose (gate, autonomy, lint)
         # would still fire them on generic text files (CI workflows, shell scripts)
         # and leak false positives. Keep every key present (unlisted -> "off") so the
         # config stays non-empty: an empty config means "no filter, run everything".

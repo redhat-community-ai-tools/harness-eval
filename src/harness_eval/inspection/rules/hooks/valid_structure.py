@@ -15,6 +15,7 @@ class HooksValidStructure:
     meta = RuleMeta(
         id="hooks/valid-structure",
         tier="gating",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag hook definitions that have no command, which the runtime ignores",

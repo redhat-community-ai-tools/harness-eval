@@ -16,6 +16,8 @@ from harness_eval.inspection.types import (
 class AgentExcessivePermissions:
     meta = RuleMeta(
         id="agent/excessive-permissions",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Agent declares no tool constraints, granting unrestricted access",

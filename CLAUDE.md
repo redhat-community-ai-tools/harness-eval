@@ -25,21 +25,22 @@ The CI runs 5 jobs: lint, typecheck, test, security gate, lint gate. All must pa
 
 ```bash
 uv run ruff format src/ tests/ && uv run ruff check src/ tests/ && uv run pytest tests/ -q
+uv run harness-eval harness-autonomy .                      # decidable rules only; exit 1 FAIL, 2 REVIEW_REQUIRED
 uv run harness-eval harness-security . --fail-on-error      # security gate: errors block (warnings are informational)
-uv run harness-eval harness-gate .                          # gating-tier integrity rules; exits 1 on errors and warnings
-uv run harness-eval harness-lint . --fail-on-error          # lint: errors block, advisory findings do not
+uv run harness-eval harness-gate .                          # validated block rules; exits 1 on errors and warnings
+uv run harness-eval harness-lint . --all --fail-on-error    # every rule: errors block, advisory findings do not
 ```
 
-The most common CI failure is forgetting `ruff format`. The security gate blocks on any security finding (even warnings). `harness-gate` is the integrity gate. `content/broken-references` is advisory and does not gate.
+The most common CI failure is forgetting `ruff format`. The security gate blocks on any security finding (even warnings). `harness-autonomy` and `harness-gate` are the integrity gates.
 
 ## Project structure
 
 - `src/harness_eval/` - main package
-  - `cli/` - Click CLI package (`lint.py`, `gate.py`, `review.py`, `security.py`, `skill.py`, `scan.py`, `submission_scan.py`, `doctor.py`, `baseline.py`, `rules.py`)
-  - `config/` - rule presets (recommended/strict/security/scan/pre-workflow)
+  - `cli/` - Click CLI package (`autonomy.py`, `gate.py`, `security.py`, `lint.py`, `review.py`, `doctor.py`, `baseline.py`, `rules.py`)
+  - `config/` - severity presets (recommended/strict) and the effect-derived rule sets each command runs
   - `core/` - setup discovery, fingerprinting, component types
     - `discoverers/` - per-tool discoverer classes (`ToolDiscoverer` ABC); add new assistants here
-  - `inspection/` - static analysis: parsers, lint engine, 103 rules, suppression, auto-fix
+  - `inspection/` - static analysis: parsers, lint engine, 92 rules, suppression, auto-fix
     - `rules/security/_shared.py` - shared scanning logic used by security rules across component types
     - `harness_formats/` - per-format mappers (one per `source_tool`) into the normalized pipeline-harness model consumed by `rules/harness/`
   - `rubric/` - LLM-based issue detection; prompts in `rubric/prompts/`
@@ -59,7 +60,7 @@ The most common CI failure is forgetting `ruff format`. The security gate blocks
 - Cross-component state in rules uses `context.scan_state`, not module-level variables
 - Tests go in `tests/` mirroring the source structure
 - LLM prompts live in `src/harness_eval/rubric/prompts/` as markdown files, not inline strings
-- `skills/eval-skill/rubric/skills-rubric.md` is a symlink to `skills/review/rubric/skills-rubric.md`; edit the source, not the link
-- YARA and CVE rules only run in the `security` preset (used by `security`), never in lint
+- Every rule declares `effect` (block/policy/signal/advice) and `tier`; commands select rules from those two fields (`config/presets.py`), never from hand lists. A rule that applies to several component types uses a tuple `target_type`.
+- YARA and CVE rules only run in `harness-security`, never in lint, gate or autonomy
 - Rules that resolve file paths from user content must use `safe_join()` from `utils.paths` to prevent path traversal; never join untrusted paths with raw `/` or `Path()`
 - Security detection rules in `src/harness_eval/inspection/rules/security/` intentionally contain attack signatures (suspicious paths, bidi characters, URL calls, shell patterns) as part of their detection logic. When writing or modifying these rules, add inline `# nosec BXXX` annotations (with a brief comment) on any line bandit would flag. Use the specific rule ID (e.g., `B108`, `B310`, `B603`) rather than a bare `# nosec`. Run `bandit -r src/` locally to verify no unannotated findings remain.

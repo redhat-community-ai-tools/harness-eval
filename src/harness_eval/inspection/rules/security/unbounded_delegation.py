@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import re
 
+from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.security._shared import (
-    extract_all_skill_md_content,
+    extract_component_texts,
     scan_lines_for_patterns,
 )
 from harness_eval.inspection.types import (
@@ -24,13 +25,18 @@ DELEGATION_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
+_INSTRUCTION_TARGETS = (ComponentType.SKILL, ComponentType.COMMAND, ComponentType.AGENT)
+
+
 class UnboundedDelegation:
     meta = RuleMeta(
         id="security/unbounded-delegation",
+        effect="signal",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Instructions spawn subagents or delegate without recursion bounds",
         category=RuleCategory.SECURITY,
+        target_type=_INSTRUCTION_TARGETS,
         messages={
             "unbounded": (
                 "Line {{line}} contains '{{label}}'."
@@ -48,7 +54,7 @@ class UnboundedDelegation:
     )
 
     def create(self, context: RuleContext) -> None:
-        for content, file_path in extract_all_skill_md_content(context):
+        for content, file_path in extract_component_texts(context):
             scan_lines_for_patterns(
                 content,
                 file_path,

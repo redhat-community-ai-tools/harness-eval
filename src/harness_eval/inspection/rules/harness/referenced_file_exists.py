@@ -41,6 +41,7 @@ class HarnessReferencedFileExists:
     meta = RuleMeta(
         id="harness/referenced-file-exists",
         tier="provisional",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

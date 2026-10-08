@@ -25,6 +25,8 @@ _LIFECYCLE_EVENTS = {
 class HooksPreTrustPermissions:
     meta = RuleMeta(
         id="hooks/pre-trust-permissions",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

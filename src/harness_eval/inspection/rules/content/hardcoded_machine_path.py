@@ -52,6 +52,7 @@ class HardcodedMachinePath:
     meta = RuleMeta(
         id="content/hardcoded-machine-path",
         tier="gating",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag machine-specific absolute paths that break portability",

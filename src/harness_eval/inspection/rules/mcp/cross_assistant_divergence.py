@@ -100,6 +100,7 @@ def _find_project_root(start: Path) -> Path:
 class McpCrossAssistantDivergence:
     meta = RuleMeta(
         id="mcp/cross-assistant-divergence",
+        effect="advice",
         scope="PAIRWISE",
         default_severity=Severity.INFO,  # a review item: most pairs are equivalent declarations
         fixable=False,

@@ -290,7 +290,7 @@ def test_scan_limits_count_files_and_total_bytes(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "command",
-    ["harness-lint", "harness-gate", "harness-security", "skill-verify"],
+    ["harness-lint", "harness-gate", "harness-security", "harness-autonomy"],
 )
 def test_every_scanning_command_reports_limits_cleanly(tmp_path: Path, command: str) -> None:
     _write_setup(tmp_path)

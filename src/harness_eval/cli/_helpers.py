@@ -59,3 +59,28 @@ def emit_output(text: str, output_path: str | None) -> None:
         Path(output_path).write_text(text)
     else:
         click.echo(text)
+
+
+def llm_options(func: _F) -> _F:
+    """Attach ``--provider``, ``--model`` and ``--base-url``, shared by every
+    command that calls an LLM. ``--base-url`` applies to the ``openai``
+    provider and points it at any OpenAI-compatible server."""
+    from harness_eval.utils.llm import PROVIDERS
+
+    func = click.option(
+        "--base-url",
+        default=None,
+        help=(
+            "OpenAI-compatible endpoint for --provider openai "
+            "(default: $OPENAI_BASE_URL or https://api.openai.com/v1)."
+        ),
+    )(func)
+    func = click.option("--model", default=None, help="Model name for the provider.")(func)
+    func = click.option(
+        "--provider",
+        type=click.Choice(list(PROVIDERS)),
+        default="gemini",
+        show_default=True,
+        help="LLM provider; 'openai' works with any OpenAI-compatible server.",
+    )(func)
+    return func

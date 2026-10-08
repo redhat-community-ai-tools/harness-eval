@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 
+from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.security._shared import (
-    extract_all_skill_md_content,
+    extract_component_texts,
     scan_lines_for_patterns,
 )
 from harness_eval.inspection.types import (
@@ -60,13 +61,18 @@ _INJECTION_PATTERNS: list[tuple[str, re.Pattern]] = [
 ]
 
 
+_INSTRUCTION_TARGETS = (ComponentType.SKILL, ComponentType.COMMAND, ComponentType.AGENT)
+
+
 class NoPromptInjection:
     meta: RuleMeta = RuleMeta(
         id="security/no-prompt-injection",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
-        description="Skill content should not contain prompt injection patterns",
+        description="Instruction content should not contain prompt injection patterns",
         category=RuleCategory.SECURITY,
+        target_type=_INSTRUCTION_TARGETS,
         messages={
             "injection_detected": "Line {{line}} contains a word pattern ('{{label}}') that could be used to manipulate the AI assistant. Check if this is intentional content or an actual risk.",
             "injection_in_code_block": "Line {{line}} contains '{{label}}' inside a code block -- likely safe (documentation or example).",
@@ -78,7 +84,7 @@ class NoPromptInjection:
     )
 
     def create(self, context: RuleContext) -> None:
-        for content, file_path in extract_all_skill_md_content(context):
+        for content, file_path in extract_component_texts(context):
             scan_lines_for_patterns(
                 content,
                 file_path,

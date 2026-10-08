@@ -78,7 +78,7 @@ class TestExcessivePermissions:
 # -----------------------------------------------------------------------
 
 MEMORY_SKILL_CONFIG = {"security/memory-write-unscoped": "error"}
-MEMORY_AGENT_CONFIG = {"agent/memory-write-unscoped": "error"}
+MEMORY_AGENT_CONFIG = {"security/memory-write-unscoped": "error"}
 
 
 class TestMemoryWriteUnscopedSkill:
@@ -130,7 +130,10 @@ class TestMemoryWriteUnscopedAgent:
         setup = discover_setup("test", str(tmp_path))
         results = inspect_setup(setup, MEMORY_AGENT_CONFIG)
         diags = [
-            d for r in results for d in r.diagnostics if d.rule_id == "agent/memory-write-unscoped"
+            d
+            for r in results
+            for d in r.diagnostics
+            if d.rule_id == "security/memory-write-unscoped"
         ]
         assert len(diags) >= 1
 
@@ -148,7 +151,10 @@ class TestMemoryWriteUnscopedAgent:
         setup = discover_setup("test", str(tmp_path))
         results = inspect_setup(setup, MEMORY_AGENT_CONFIG)
         diags = [
-            d for r in results for d in r.diagnostics if d.rule_id == "agent/memory-write-unscoped"
+            d
+            for r in results
+            for d in r.diagnostics
+            if d.rule_id == "security/memory-write-unscoped"
         ]
         assert len(diags) == 0
 
@@ -158,7 +164,7 @@ class TestMemoryWriteUnscopedAgent:
 # -----------------------------------------------------------------------
 
 DELEGATION_SKILL_CONFIG = {"security/unbounded-delegation": "error"}
-DELEGATION_AGENT_CONFIG = {"agent/unbounded-delegation": "error"}
+DELEGATION_AGENT_CONFIG = {"security/unbounded-delegation": "error"}
 
 
 class TestUnboundedDelegationSkill:
@@ -215,7 +221,10 @@ class TestUnboundedDelegationAgent:
         setup = discover_setup("test", str(tmp_path))
         results = inspect_setup(setup, DELEGATION_AGENT_CONFIG)
         diags = [
-            d for r in results for d in r.diagnostics if d.rule_id == "agent/unbounded-delegation"
+            d
+            for r in results
+            for d in r.diagnostics
+            if d.rule_id == "security/unbounded-delegation"
         ]
         assert len(diags) >= 1
 
@@ -233,6 +242,9 @@ class TestUnboundedDelegationAgent:
         setup = discover_setup("test", str(tmp_path))
         results = inspect_setup(setup, DELEGATION_AGENT_CONFIG)
         diags = [
-            d for r in results for d in r.diagnostics if d.rule_id == "agent/unbounded-delegation"
+            d
+            for r in results
+            for d in r.diagnostics
+            if d.rule_id == "security/unbounded-delegation"
         ]
         assert len(diags) == 0

@@ -3,10 +3,10 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-103-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
+[![Rules](https://img.shields.io/badge/rules-92-blue)](https://github.com/redhat-community-ai-tools/harness-eval#inspection-rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Codex, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf/Devin, Cline, OpenCode, and fullsend pipeline harnesses), builds a component graph across them, and runs 103 deterministic rules. It catches client-specific schema problems plus cross-component failures such as disabled skills, unreachable MCP servers, ambiguous duplicate skill IDs, and explicit credential-to-network paths.
+A linter for AI code agent setups, not for code. It auto-detects which AI tools a project uses (Codex, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf/Devin, Cline, OpenCode, and fullsend pipeline harnesses), builds a component graph across them, and runs 92 deterministic rules. Each rule declares what a finding means (block, policy, signal or advice), and four commands select on that one axis: a merge-safe autonomy check, a validated gate, a security audit and a quality lint. It catches client-specific schema problems plus cross-component failures such as disabled skills, unreachable MCP servers, ambiguous duplicate skill IDs, and explicit credential-to-network paths.
 
 Most tools test whether a skill produces correct output. This one checks the setup itself: CLAUDE.md, GEMINI.md, AGENTS.md, skills, commands, hooks, MCP configs, agents, `.cursor/rules/*.mdc`, `.cursorrules`, `.github/prompts/`, `.opencode/`, `.codex/`.
 
@@ -14,21 +14,30 @@ Most tools test whether a skill produces correct output. This one checks the set
 
 ```bash
 pip install harness-eval
-harness-eval harness-lint .                    # 103 deterministic rules, fully offline
-harness-eval harness-gate .                     # validated (gating-tier) rules only; exits 1 on errors and warnings, no LLM
-harness-eval harness-security .                # security scan
-harness-eval skill-verify ./downloaded-skill   # SAFE / CAUTION / UNSAFE before you install
+harness-eval harness-autonomy .   # decidable checks only; exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED
+harness-eval harness-gate .       # validated block rules; exits 1 on errors and warnings
+harness-eval harness-security .   # policy + heuristic security rules, YARA, optional LLM review
+harness-eval harness-lint .       # quality lint (advice rules + system analysis); --all for every rule
 ```
 
 Example output:
 
 ```
-FAIL     no-credential-access: References sensitive path '~/.aws/credentials' at line 10
-             Fix: Use a secret manager or environment variable injection instead of hardcoded paths.
-WARNING  orphan-skills: Skill 'creds-skill' is not referenced by any command, CLAUDE.md, or agent
-             Fix: Reference the skill from a command, CLAUDE.md, or agent, or remove it.
+harness-autonomy: my-repo
+Verdict: REVIEW_REQUIRED
 
-Verdict: UNSAFE
+Policy (needs a decision) (1):
+  hooks/permission-prompt-disabled	.claude/settings.json	permissions.defaultMode is 'bypassPermissions' ...
+
+Coverage:
+  components: 1 claude_md, 2 command, 1 hooks, 1 mcp_config, 3 skill
+  rules: 41 ran of 50 selected
+  not applicable (no agent component in the setup): agent/description-required, ...
+
+Evidence:
+  fingerprint: 3f9c...
+  revision: 7b1e2d...
+  rules digest: a41c...
 ```
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for all installation options and configuration.
@@ -49,28 +58,59 @@ Not every finding is a real problem. Four ways to handle false positives:
 
 **Baseline** (incremental adoption):
 ```bash
-harness-eval harness-lint . --format json --output .harness-eval-baseline.json
-harness-eval harness-lint . --baseline .harness-eval-baseline.json   # suppresses known findings
+harness-eval baseline . --output .harness-eval-baseline.json
+harness-eval harness-lint . --all --baseline .harness-eval-baseline.json   # suppresses known findings
 ```
+`harness-autonomy --baseline` counts suppressed findings in its coverage block instead of hiding them.
 
 **Exclude files**: `--exclude "vendor/**" --exclude ".git/**"` (repeatable).
 
 **Advisory mode**: `--enforce advisory` reports findings without failing CI.
 
-See [`docs/rules-reference.md`](docs/rules-reference.md) for rule confidence tiers (exact, heuristic, advisory).
+See [`docs/rules-reference.md`](docs/rules-reference.md) for what each rule's effect means (block, policy, signal, advice).
 
-| Command | What it does | LLM needed? |
-|---------|-------------|-------------|
-| `harness-lint` | 103 deterministic rules + system analysis (token budget, trigger overlaps, dependencies). Fast, CI-suitable. Supports `--format sarif`. YAML from the scan target loads only with `--rules-from-target`. | No |
-| `harness-gate` | Validated gating-tier rules only. Exits 1 on any error or warning. Info is printed and does not fail. Never loads LLM extras or target YAML. | No |
-| `harness-security` | Security rules + YARA, opt-in OSV lookup (`--cve`), and optional semantic review. SAFE/CAUTION/UNSAFE. | Default: no. `--cve` and `--review`: yes. |
-| `harness-review` | Per-component rubric review with scoring, 21 cross-type checks, KEEP/REVIEW/REMOVE verdicts. | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
-| `skill-verify` | Vet a skill or setup before installing. Combines lint + security in one pass. SAFE/CAUTION/UNSAFE verdict. | No |
-| `skill-review` | Deep-evaluate one skill individually and in context of the full setup. | Lint: no. `--rubric`: `[llm]` extra or in-session. |
-| `skill-submission-scan`* | Scan a skill submission for CI pipelines. Splits findings into security and quality JSON files. | No |
-| `rules` | List all rules. Filter by `--category` or `--target`. | No |
+| Command | Rules it runs | Exit code | LLM needed? |
+|---------|---------------|-----------|-------------|
+| `harness-autonomy` | **block** and **policy** rules at gating or provisional tier: every finding is a decidable fact about the configuration. No heuristics, no target YAML, no network. Reports coverage (what did and did not run, and why) and an evidence block. | 0 PASS, 1 FAIL (a block finding), 2 REVIEW_REQUIRED (policy findings nobody accepted). `--policy <trusted file>` turns accepted policy findings into visible `waived` entries. | No |
+| `harness-gate` | **block** rules at gating tier (add `--include-provisional`). | 1 on any error or warning; info is printed and does not fail. | No |
+| `harness-security` | **policy** and **signal** rules plus the security-category block rules, YARA, opt-in OSV lookup (`--cve`), optional LLM adjudication and semantic review (`--review`). SAFE/CAUTION/UNSAFE. Signal findings are claims to read, not verdicts. | 0 unless `--fail-on-error`/`--fail-on-warning`/`--enforce`. | Default: no. `--cve` and `--review`: yes. |
+| `harness-lint` | **advice** rules plus system analysis (token budget, trigger overlaps, dependencies). `--all` runs every rule. `--preset strict` raises severities. Supports `--format sarif`, `--watch`, `--fix`; target YAML loads only with `--rules-from-target`. | 0 unless `--fail-on-error`/`--fail-on-warning`/`--enforce`. | No |
+| `harness-review` | LLM rubric review per component with scoring and KEEP/REVIEW/REMOVE verdicts. `--provider gemini\|anthropic\|openai`; `openai` talks to any OpenAI-compatible endpoint (`--base-url` or `OPENAI_BASE_URL`). | 0 | CLI: `[llm]` extra. Plugin/Cursor: in-session. |
+| `rules` | List all rules. Filter by `--effect`, `--tier`, `--category`, `--target`, `--scope`. | 0 | No |
+| `baseline`, `doctor` | Snapshot current findings; check installed extras and keys. | 0 | No |
 
-\* `skill-verify` and `skill-submission-scan` both vet skills, but for different audiences. `skill-verify` is for developers checking a downloaded skill ("is this safe to install?"). `skill-submission-scan` is for CI pipelines that gate skill submissions, producing structured JSON with `--output-security` and `--output-quality` for downstream automation.
+### The autonomy check
+
+`harness-autonomy` is the command a merge policy can trust. It runs only rules
+whose finding is a fact (effect `block` or `policy`) that have passed the
+corpus (tier `gating` or `provisional`). A pattern match, a taint path or a
+style judgment never enters it, so a PASS means "no decidable defect and no
+unaccepted policy fact", not "no heuristic fired".
+
+Policy findings are facts that need a trust decision: permission prompts
+disabled, a wildcard Bash grant, a floating container image. A repository
+records the ones it accepts in a policy file kept out of the scanned tree or
+protected by CODEOWNERS:
+
+```yaml
+# .harness-eval/autonomy-policy.yaml
+accept:
+  - rule: harness/image-unpinned
+    file: harness/*.yaml          # optional glob, relative to the scan root
+    reason: platform images float by design; tracked in SEC-42
+```
+
+```bash
+harness-eval harness-autonomy . --policy .harness-eval/autonomy-policy.yaml --format json
+```
+
+Accepted findings appear under `waived` with the recorded reason; they are
+never hidden. Only `policy` rules can be accepted; an entry naming a `block`
+rule is reported and ignored. The JSON output carries the verdict, the three
+finding lists, `coverage` (components, rules run, rules not applicable and
+why, skipped harness layers, baseline suppressions) and `evidence`
+(fingerprint, revision, rules and config digests, policy file digest), so a
+downstream policy engine can bind the verdict to exactly what was scanned.
 
 ## Cross-component analysis
 
@@ -101,9 +141,20 @@ Multi-tool projects are fully supported. When a project uses both Claude Code an
 
 ## Inspection rules
 
-103 deterministic rules across 14 categories: structural, frontmatter, content, quality, security, cross-component, commands, instruction files, configuration, MCP, hooks, agents, harness definitions, and submission. Six presets: `recommended` (default), `strict`, `security`, `pre-workflow`, `skill-submission`, and `gate`.
+92 deterministic rules across 13 categories: structural, frontmatter, content, quality, security, cross-component, commands, instruction files, configuration, MCP, hooks, agents, and harness definitions. Two severity presets, `recommended` (default) and `strict`. Which rules a command runs is not a preset: it is derived from each rule's declared **effect**.
 
-**Rule tiers.** Each rule carries an evidence tier. **Gating** rules are structural checks that are safe to block a build on; `harness-gate` runs exactly these (corpus-validated rules plus decidable FILE/FILE_FS integrity checks). **Provisional** rules have no observed false positives but too few findings to promote yet. **Advisory** rules (including every heuristic, prose-judgment rule) are reported but never gate. Rules are also tagged by analysis scope (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`) — the last two are findings a per-file linter structurally cannot see. See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
+**Effect.** `block` is a decidable defect; `policy` is a decidable fact that needs a trust decision; `signal` is a heuristic match; `advice` is quality. The commands select on this axis, so a rule changes what gates a merge only by changing its own declaration. **Tier** is the evidence class: `gating` (corpus-validated at >=97% precision, or a decidable integrity fact), `provisional` (no observed false positives, fewer than 50 findings), `advisory` (every heuristic). Signal and advice rules are always advisory; block and policy rules are gating or provisional. Rules are also tagged by analysis scope (`FILE`, `FILE_FS`, `PAIRWISE`, `SETUP`); the last two are findings a per-file linter structurally cannot see. See [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md).
+
+Rules by effect:
+
+<!-- BEGIN GENERATED: effect-counts -->
+| Effect | Rules | Run by |
+|--------|-------|--------|
+| block | 35 | `harness-gate`, `harness-autonomy`, `harness-security` (security category) |
+| policy | 12 | `harness-autonomy` (REVIEW_REQUIRED), `harness-security` |
+| signal | 21 | `harness-security` |
+| advice | 24 | `harness-lint` |
+<!-- END GENERATED: effect-counts -->
 
 Rules by tier:
 
@@ -111,8 +162,8 @@ Rules by tier:
 | Tier | Rules |
 |------|-------|
 | gating | 22 |
-| provisional | 3 |
-| advisory | 78 |
+| provisional | 25 |
+| advisory | 45 |
 <!-- END GENERATED: tier-counts -->
 
 Rules by scope:
@@ -120,13 +171,13 @@ Rules by scope:
 <!-- BEGIN GENERATED: scope-counts -->
 | Scope | Rules |
 |-------|-------|
-| FILE | 76 |
+| FILE | 66 |
 | FILE_FS | 12 |
-| PAIRWISE | 10 |
+| PAIRWISE | 9 |
 | SETUP | 5 |
 <!-- END GENERATED: scope-counts -->
 
-For the complete rule list with examples, detection techniques, and framework mappings (OWASP, MITRE ATLAS), see [`docs/rules-reference.md`](docs/rules-reference.md).
+For the complete rule list with examples, detection techniques, and framework mappings (OWASP, MITRE ATLAS), and the exact table of rules `harness-autonomy` runs, see [`docs/rules-reference.md`](docs/rules-reference.md).
 
 ## Scan architecture and safety
 
@@ -153,7 +204,7 @@ an exceeded limit is reported as a one-line error.
 A result that will be consumed by something other than a person (a merge
 policy, a compliance record) has to say what it was computed from.
 `harness-lint --format json` carries that under `metadata.evidence`, and
-`harness-lint`/`harness-gate --format sarif` under `runs[0].properties` plus
+`harness-lint`/`harness-gate`/`harness-autonomy --format sarif` under `runs[0].properties` plus
 `runs[0].versionControlProvenance`:
 
 - `setup_fingerprint`: hash of the scanned inventory (the same one watch mode uses)
@@ -168,9 +219,9 @@ are the same evaluation.
 
 ## Privacy
 
-`harness-lint` and default `harness-security` are fully offline. OSV lookup (`harness-security --cve`) and **LLM review are opt-in:**
-`harness-review`, `harness-security --review`, and `skill-review --rubric` send snippets to a remote
-provider (Gemini or Anthropic via CLI, or in-session as a plugin/command).
+`harness-autonomy`, `harness-gate`, `harness-lint` and default `harness-security` are fully offline. OSV lookup (`harness-security --cve`) and **LLM review are opt-in:**
+`harness-review` and `harness-security --review` send snippets to a remote
+provider (Gemini, Anthropic, or any OpenAI-compatible endpoint via `--provider openai --base-url`, or in-session as a plugin/command).
 
 Before any remote LLM call, likely secrets (tokens, PEM keys, `API_KEY=` assignments,
 known prefix patterns) are replaced with `[REDACTED]` (HE-2). Scans also skip `.env`,
@@ -196,9 +247,9 @@ patterns:
 message: "Found '{{label}}' on line {{line}}"
 ```
 
-YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under every preset. Remove the rule file to disable it.
+YAML rules support regex pattern matching on component content. Patterns are case-insensitive by default. Custom rules run at their declared severity under both presets and carry effect `signal`, so they appear in `harness-lint --all` and never in `harness-autonomy` or `harness-gate`. Remove the rule file to disable it.
 
-`harness-lint` loads YAML from the scanned tree only with `--rules-from-target`. `harness-gate` and `harness-security` never load them: regexes from an audited tree run in-process. Target YAML rules are held in a scan-local catalog and cannot leak into another scan. Regexes longer than 256 characters or with nested unbounded quantifiers are skipped.
+`harness-lint` loads YAML from the scanned tree only with `--rules-from-target`. `harness-autonomy`, `harness-gate` and `harness-security` never load them: regexes from an audited tree run in-process. Target YAML rules are held in a scan-local catalog and cannot leak into another scan. Regexes longer than 256 characters or with nested unbounded quantifiers are skipped.
 
 Scans enforce resource limits on the agent-setup files they read (`10 MB` per file,
 `250 MB` total, `100,000` files, depth `50`). CI jobs with unusually large setups can

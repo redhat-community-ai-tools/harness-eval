@@ -38,6 +38,7 @@ _PERSISTENCE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 class StealthPersistence:
     meta = RuleMeta(
         id="security/stealth-persistence",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect instructions writing to config directories or persistent state",

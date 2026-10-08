@@ -70,7 +70,8 @@ def _line_of_contract(raw: str) -> int | None:
 class HarnessOutputContractInstructed:
     meta = RuleMeta(
         id="harness/output-contract-instructed",
-        tier="advisory",
+        tier="provisional",
+        effect="block",
         scope="PAIRWISE",
         default_severity=Severity.ERROR,
         fixable=False,

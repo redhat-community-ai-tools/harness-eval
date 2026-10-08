@@ -25,12 +25,13 @@ Pre-commit also runs **gitleaks** (secret scanning) and **bandit** (Python secur
 Pre-push hooks run the full test suite and two dogfood gates:
 
 ```bash
+uv run harness-eval harness-autonomy .                      # decidable rules only; exit 1 FAIL, 2 REVIEW_REQUIRED
 uv run harness-eval harness-security . --fail-on-warning   # any security finding blocks
-uv run harness-eval harness-gate .                          # gating-tier integrity rules only
-uv run harness-eval harness-lint . --fail-on-error          # lint: errors block, advisory findings do not
+uv run harness-eval harness-gate .                          # validated block rules only
+uv run harness-eval harness-lint . --all --fail-on-error    # every rule: errors block, advisory findings do not
 ```
 
-The security gate is strict: even a warning about credential access patterns blocks the push. Use `harness-gate` for the CI integrity gate. `harness-lint --fail-on-error` is lenient on advisory findings.
+The security gate is strict: even a warning about credential access patterns blocks the push. `harness-autonomy` and `harness-gate` are the integrity gates. `harness-lint --fail-on-error` is lenient on advisory findings.
 
 ## Versioned data files
 
@@ -56,6 +57,11 @@ Rules go in `src/harness_eval/inspection/rules/<category>/`. Pick the category t
 | `mcp/` | MCP configuration validation | MCP_CONFIG |
 | `hooks/` | Hook structure, safety, and script boundary | Hooks |
 | `agents/` | Agent definition checks | Agent |
+| `harness/` | Pipeline agent harness definitions (fullsend `harness/*.yaml`) | Harness |
+
+A rule that checks the same thing on several component types takes a tuple `target_type=(ComponentType.SKILL, ComponentType.COMMAND, ComponentType.AGENT)` and reads whichever component the context holds (see `security/_shared.extract_component_texts`); do not write one class per type.
+
+Every rule declares an **effect** on `RuleMeta` (`block`, `policy`, `signal`, `advice`; see [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md)). Which commands run the rule follows from the effect and the tier, never from a hand-maintained list. A `block` or `policy` rule must be decidable from the files and start at `tier="provisional"`; a heuristic is `signal` or `advice` and stays `advisory`. `tests/test_rules_8_0.py` enforces both.
 
 **Security rules and bandit false positives:** Rules in `security/` intentionally contain attack signatures (suspicious paths like `/tmp`, bidi control characters, `urlopen` calls to vulnerability databases, shell patterns) because that is how they detect those patterns in other codebases. Bandit will flag these lines as findings. Add inline `# nosec BXXX` annotations (with a brief explanatory comment) on any line that bandit would flag. Use the specific bandit rule ID (e.g., `# nosec B108  # detection pattern, not real /tmp usage`) rather than a bare `# nosec`. Run `bandit -r src/` locally before committing to verify no unannotated findings remain.
 
@@ -119,15 +125,16 @@ Add your class to `src/harness_eval/inspection/rules/__init__.py`:
 
 `recommended` and `strict` pick the new rule up from the registry automatically
 (`default_severity`, unless you add an override in `RECOMMENDED_OVERRIDES` /
-`STRICT_OVERRIDES`). Subset presets (`security`, `pre-workflow`, `gate`) still
-skip unlisted IDs — add the ID there only if that preset should run it.
+`STRICT_OVERRIDES`). The command rule sets (`autonomy_rules`, `gate_rules`,
+`security_rules`, `lint_rules` in `config/presets.py`) are derived from
+`effect` and `tier`; there is nothing to add there.
 
 ### 4. Update the counts
 
-Update the rule count in all files that reference it:
-- `README.md` (the "Inspection Rules (N)" heading, table, and command table)
+Run `uv run scripts/gen_rules_reference.py` (effect, tier and scope tables, and the
+autonomy rule table), then update the rule count in all files that reference it:
+- `README.md` (the badge, the intro, and the "Inspection rules" section)
 - `CLAUDE.md` (the project structure line mentioning rule count)
-- `src/harness_eval/cli.py` (the `harness_eval_lint` docstring)
 - `skills/lint/SKILL.md` (the description field)
 - `skills/review/report-format.md` (the lint description)
 - `commands/harness-lint.md` (the description field)

@@ -9,7 +9,12 @@ from pathlib import Path
 import click
 
 from harness_eval.cli import cli
-from harness_eval.cli._helpers import exclude_option, scan_limit_options, scan_limits_from
+from harness_eval.cli._helpers import (
+    exclude_option,
+    llm_options,
+    scan_limit_options,
+    scan_limits_from,
+)
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.output.metadata import EvalMetadata
@@ -45,8 +50,7 @@ def _format_json_review(
 @cli.command("harness-review")
 @click.argument("path", type=click.Path(exists=True))
 @click.option("--format", "fmt", type=click.Choice(["terminal", "json"]), default="terminal")
-@click.option("--provider", type=click.Choice(["gemini", "anthropic"]), default="gemini")
-@click.option("--model", default=None, help="LLM model for rubric scoring.")
+@llm_options
 @click.option(
     "--user-config",
     type=click.Path(),
@@ -65,6 +69,7 @@ def eval_setup_review(
     fmt: str,
     provider: str,
     model: str | None,
+    base_url: str | None,
     user_config: str | None,
     recursive: bool,
     exclude: tuple[str, ...],
@@ -76,7 +81,7 @@ def eval_setup_review(
     """Review: LLM rubric scoring per component. Requires API key in environment."""
     t0 = time.monotonic()
     from harness_eval.rubric.scorer import RubricChecker
-    from harness_eval.utils.llm import create_client
+    from harness_eval.utils.llm import create_client, key_hint
 
     setup = discover_setup(
         name=Path(path).name,
@@ -87,7 +92,7 @@ def eval_setup_review(
         limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
     )
 
-    client = create_client(provider, model)
+    client = create_client(provider, model, base_url=base_url)
     checker = RubricChecker(client)
 
     context_parts = [
@@ -136,9 +141,9 @@ def eval_setup_review(
     try:
         checker._ensure_client_safe()
     except (ImportError, ValueError) as e:
-        key_hint = "ANTHROPIC_API_KEY" if provider == "anthropic" else "GEMINI_API_KEY"
         raise click.ClickException(
-            f"{e}\n\nSet {key_hint} in your environment, or run `harness-eval doctor` to check setup."
+            f"{e}\n\nSet {key_hint(provider)} in your environment, "
+            "or run `harness-eval doctor` to check setup."
         ) from None
     click.echo(f"  Reviewing {len(reviewable)} components ({len(batches)} batches)...", err=True)
 
@@ -159,10 +164,9 @@ def eval_setup_review(
             except Exception as e:
                 err_name = type(e).__name__
                 if "Auth" in err_name or "Unauthorized" in err_name or "401" in str(e):
-                    key_hint = "ANTHROPIC_API_KEY" if provider == "anthropic" else "GEMINI_API_KEY"
                     raise click.ClickException(
                         f"Authentication failed: {e}\n\n"
-                        f"Check that {key_hint} is valid, or run `harness-eval doctor`."
+                        f"Check that {key_hint(provider)} is valid, or run `harness-eval doctor`."
                     ) from None
                 raise
             if isinstance(result, list):

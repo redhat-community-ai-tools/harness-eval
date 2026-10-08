@@ -17,6 +17,7 @@ OVERLAP_THRESHOLD = 0.80
 class CommandSkillOverlap:
     meta = RuleMeta(
         id="command/skill-overlap",
+        effect="advice",
         scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,

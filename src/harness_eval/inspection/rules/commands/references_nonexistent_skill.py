@@ -44,6 +44,8 @@ _PATH_CONTINUATION = re.compile(r"/(?=[/]?)(\w[\w-]{2,})(?=[/.])")
 class CommandReferencesNonexistentSkill:
     meta = RuleMeta(
         id="command/references-nonexistent-skill",
+        tier="advisory",
+        effect="advice",
         scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,

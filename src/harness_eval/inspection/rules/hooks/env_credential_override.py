@@ -23,6 +23,8 @@ _FALSE_POSITIVE = re.compile(r".*_PUBLIC_KEY$", re.IGNORECASE)
 class HooksEnvCredentialOverride:
     meta = RuleMeta(
         id="hooks/env-credential-override",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

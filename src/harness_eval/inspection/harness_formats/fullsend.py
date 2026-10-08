@@ -135,6 +135,7 @@ def map_fullsend(data: dict[str, Any], path: Path) -> HarnessFields:
     fields.base = _str(data, "base")
     fields.instructions = _str(data, "agent")
     fields.model = _str(data, "model")
+    fields.image = _str(data, "image")
     fields.policy = _str(data, "policy")
     fields.agent_input = _str(data, "agent_input")
     fields.runtime_fetch = bool(data.get("allow_runtime_fetch"))

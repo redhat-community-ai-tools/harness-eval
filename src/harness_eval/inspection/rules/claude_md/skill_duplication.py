@@ -17,6 +17,7 @@ OVERLAP_THRESHOLD = 0.80
 class ClaudeMdSkillDuplication:
     meta = RuleMeta(
         id="claude-md/skill-duplication",
+        effect="advice",
         scope="PAIRWISE",
         default_severity=Severity.WARNING,
         fixable=False,

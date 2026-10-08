@@ -38,6 +38,8 @@ def _resolve(base: Path, ref: str) -> Path | None:
 class CommandScriptExists:
     meta = RuleMeta(
         id="command/script-exists",
+        tier="provisional",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.WARNING,
         fixable=False,

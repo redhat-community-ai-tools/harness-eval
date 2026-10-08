@@ -17,6 +17,7 @@ class FormatValid:
     meta: RuleMeta = RuleMeta(
         id="frontmatter/format-valid",
         tier="gating",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Frontmatter must be valid YAML with the fields the Agent Skills spec requires",

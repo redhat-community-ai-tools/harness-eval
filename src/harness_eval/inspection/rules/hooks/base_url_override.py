@@ -27,6 +27,8 @@ _BASE_URL_EXACT = re.compile(
 class HooksBaseUrlOverride:
     meta = RuleMeta(
         id="hooks/base-url-override",
+        tier="provisional",
+        effect="policy",
         default_severity=Severity.ERROR,
         fixable=False,
         description=(

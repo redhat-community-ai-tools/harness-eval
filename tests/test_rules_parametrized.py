@@ -252,42 +252,6 @@ class TestCommandSkillOverlapRule:
 
 
 # ---------------------------------------------------------------------------
-# claude-md/generic-advice
-# ---------------------------------------------------------------------------
-
-
-class TestClaudeMdGenericAdviceRule:
-    @pytest.mark.parametrize(
-        "content,should_fire",
-        [
-            pytest.param(
-                "# Guidelines\n\nAlways write clean, readable code when editing files.",
-                True,
-                id="generic-write-clean-code-triggers",
-            ),
-            pytest.param(
-                "# Guidelines\n\nFollow best practices when writing tests.",
-                True,
-                id="generic-follow-best-practices-triggers",
-            ),
-            pytest.param(
-                "# Project\n\nUse uv run pytest for running tests.\nFormat with ruff.",
-                False,
-                id="specific-advice-no-trigger",
-            ),
-        ],
-    )
-    def test_generic_advice(self, tmp_path: Path, content: str, should_fire: bool) -> None:
-        claude_md_path = _make_claude_md(tmp_path, content)
-        result = lint_claude_md(claude_md_path)
-        ids = _rule_ids(result)
-        if should_fire:
-            assert "claude-md/generic-advice" in ids
-        else:
-            assert "claude-md/generic-advice" not in ids
-
-
-# ---------------------------------------------------------------------------
 # claude-md/skill-duplication
 # ---------------------------------------------------------------------------
 

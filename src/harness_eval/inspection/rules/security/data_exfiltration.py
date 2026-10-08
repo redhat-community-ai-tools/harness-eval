@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 
+from harness_eval.core.types import ComponentType
 from harness_eval.inspection.rules.security._shared import (
-    extract_all_skill_md_content,
+    extract_component_texts,
     scan_lines_for_patterns,
 )
 from harness_eval.inspection.types import (
@@ -28,13 +29,18 @@ _EXFIL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
+_INSTRUCTION_TARGETS = (ComponentType.SKILL, ComponentType.COMMAND, ComponentType.AGENT)
+
+
 class DataExfiltration:
     meta: RuleMeta = RuleMeta(
         id="security/data-exfiltration",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
-        description="Skill content should not contain data exfiltration patterns",
+        description="Instruction content should not contain data exfiltration patterns",
         category=RuleCategory.SECURITY,
+        target_type=_INSTRUCTION_TARGETS,
         messages={
             "exfil_detected": "Line {{line}} contains a data exfiltration pattern ('{{label}}'). This is a critical security risk.",
             "exfil_in_code_block": "Line {{line}} contains '{{label}}' inside a code block — likely documentation, but verify.",
@@ -44,7 +50,7 @@ class DataExfiltration:
     )
 
     def create(self, context: RuleContext) -> None:
-        for content, file_path in extract_all_skill_md_content(context):
+        for content, file_path in extract_component_texts(context):
             scan_lines_for_patterns(
                 content,
                 file_path,

@@ -27,6 +27,7 @@ class McpValidConfig:
     meta = RuleMeta(
         id="mcp/valid-config",
         tier="gating",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Validate MCP configuration file structure",

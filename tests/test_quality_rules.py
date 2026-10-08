@@ -9,7 +9,6 @@ from harness_eval.inspection.engine import lint
 IMPRECISE = "quality/imprecise-instruction"
 REDUNDANT = "quality/redundant-guidance"
 UNFINISHED = "quality/unfinished-content"
-EXAMPLE_GAP = "quality/example-gap"
 STALE = "quality/stale-references"
 
 
@@ -245,45 +244,6 @@ class TestUnfinishedContent:
 
 
 # --- ExampleGap ---
-
-
-class TestExampleGap:
-    def _long_instructions(self) -> str:
-        return "\n".join(
-            [
-                "Always use TypeScript strict mode.",
-                "Never commit directly to main.",
-                "Use conventional commits for all messages.",
-                "Run the linter before every push.",
-                "Ensure all tests pass before merging.",
-                "Follow the project naming conventions.",
-                "Use absolute imports throughout.",
-                "Avoid circular dependencies between modules.",
-                "Set environment variables via the .env file.",
-                "Do not hardcode API endpoints.",
-            ]
-        )
-
-    def test_no_examples_triggers(self, tmp_path: Path) -> None:
-        path = _make_skill(tmp_path, "e1", self._long_instructions())
-        assert EXAMPLE_GAP in _rule_ids(path)
-
-    def test_with_code_block_passes(self, tmp_path: Path) -> None:
-        body = self._long_instructions() + "\n\n```ts\nconst x = 1;\n```"
-        path = _make_skill(tmp_path, "e2", body)
-        assert len(_findings_for(path, EXAMPLE_GAP)) == 0
-
-    def test_short_skill_not_flagged(self, tmp_path: Path) -> None:
-        path = _make_skill(tmp_path, "e3", "Use TypeScript.")
-        assert len(_findings_for(path, EXAMPLE_GAP)) == 0
-
-    def test_few_instructions_not_flagged(self, tmp_path: Path) -> None:
-        body = "Some background context about the project.\n" * 10
-        path = _make_skill(tmp_path, "e4", body)
-        assert len(_findings_for(path, EXAMPLE_GAP)) == 0
-
-
-# --- StaleReferences ---
 
 
 class TestStaleReferences:

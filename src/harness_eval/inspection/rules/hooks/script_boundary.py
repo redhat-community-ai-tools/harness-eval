@@ -18,6 +18,8 @@ from harness_eval.utils.paths import safe_join
 class HooksScriptBoundary:
     meta = RuleMeta(
         id="hooks/script-boundary",
+        tier="provisional",
+        effect="block",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Hook scripts must resolve within the project directory",

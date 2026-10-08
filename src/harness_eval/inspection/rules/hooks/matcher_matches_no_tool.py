@@ -19,6 +19,8 @@ _TOOL_MATCHER_EVENTS = {"pretooluse", "posttooluse", "posttoolusefailure", "perm
 class HooksMatcherMatchesNoTool:
     meta = RuleMeta(
         id="hooks/matcher-matches-no-tool",
+        tier="provisional",
+        effect="block",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag hook matchers that match no known tool name",
@@ -115,10 +117,13 @@ class HooksMatcherMatchesNoTool:
                     )
                 )
             else:
+                # The tool list decays as clients add tools, so an unknown name
+                # is informational; an invalid regex or a case mismatch is a fact.
                 context.report(
                     ReportDescriptor(
                         message_id="no_match",
                         data={"matcher": matcher},
                         location=loc,
+                        severity_override=Severity.INFO,
                     )
                 )

@@ -1,6 +1,23 @@
+- id: harness-autonomy
+  name: harness-autonomy
+  description: Decidable checks for an auto-merge policy (block and policy rules; exit 1 FAIL, 2 REVIEW_REQUIRED; no LLM)
+  entry: harness-eval harness-autonomy .
+  language: python
+  pass_filenames: false
+  always_run: false
+  files: >-
+    (?x)(
+      CLAUDE\.md|AGENTS\.md|GEMINI\.md|
+      \.cursorrules|\.clinerules|\.windsurfrules|
+      skills/|commands/|agents/|harness/|
+      \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
+      \.mcp\.json
+    )
+  stages: [pre-commit]
+
 - id: harness-gate
   name: harness-gate
-  description: Gate AI agent setup files on corpus-validated rules (exits 1 on any finding, no LLM)
+  description: Gate AI agent setup files on validated block rules (exits 1 on any finding, no LLM)
   entry: harness-eval harness-gate .
   language: python
   pass_filenames: false
@@ -9,7 +26,7 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|
+      skills/|commands/|agents/|harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
       \.mcp\.json
     )
@@ -17,7 +34,7 @@
 
 - id: harness-lint
   name: harness-lint
-  description: Lint AI agent setup files for best practices and structural issues
+  description: Quality lint for AI agent setup files (advice rules; add --all for every rule)
   entry: harness-eval harness-lint .
   language: python
   pass_filenames: false
@@ -26,7 +43,7 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|
+      skills/|commands/|agents/|harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
       \.mcp\.json
     )
@@ -43,7 +60,7 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|
+      skills/|commands/|agents/|harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
       \.mcp\.json
     )

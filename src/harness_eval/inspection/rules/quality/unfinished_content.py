@@ -52,6 +52,7 @@ _HEADING_RE = re.compile(r"^(#{1,6})\s+\S")
 class UnfinishedContent:
     meta = RuleMeta(
         id="quality/unfinished-content",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Detect placeholders, deferred content, and empty sections",

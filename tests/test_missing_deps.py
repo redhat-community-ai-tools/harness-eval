@@ -39,12 +39,3 @@ class TestMissingLLMDeps:
         assert result.exit_code != 0
         assert "LLM dependencies not installed" in result.output
         assert "Traceback" not in result.output
-
-    def test_skill_rubric_gives_clean_error(self) -> None:
-        skill_path = FIXTURES / "skills" / "code-review"
-        runner = CliRunner()
-        with patch("harness_eval.utils.llm.create_client", side_effect=_make_failing_client):
-            result = runner.invoke(cli, ["skill-review", str(skill_path), "--rubric"])
-        assert result.exit_code != 0
-        assert "LLM dependencies not installed" in result.output
-        assert "Traceback" not in result.output

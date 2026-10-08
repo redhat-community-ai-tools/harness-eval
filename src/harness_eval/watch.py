@@ -55,6 +55,7 @@ def run_watch(
     load_target_yaml: bool = False,
     limits: ScanLimits | None = None,
     exclude: tuple[str, ...] = (),
+    everything: bool = False,
 ) -> None:
     """Run lint in watch mode, re-running on file changes.
 
@@ -68,6 +69,7 @@ def run_watch(
         load_target_yaml: Load YAML rules from the scanned tree.
         limits: Resource limits for the files a scan reads; defaults apply when None.
         exclude: Glob patterns forwarded to each re-scan (plus default credential excludes).
+        everything: Run every rule instead of advice rules only.
     """
     root = Path(path)
     if not root.is_dir():
@@ -82,12 +84,12 @@ def run_watch(
         ) from err
 
     from harness_eval.analysis.system import analyze_system
-    from harness_eval.config.presets import PRESETS
+    from harness_eval.config.presets import lint_rules
     from harness_eval.core.setup import discover_setup, matches_exclude, merge_scan_excludes
     from harness_eval.inspection.engine import inspect_setup
     from harness_eval.output.report import format_json, format_terminal
 
-    config_rules = PRESETS.get(preset, {})
+    config_rules = lint_rules(preset, everything=everything)
 
     user_config_path = Path(user_config) if user_config else None
     patterns = merge_scan_excludes(exclude)

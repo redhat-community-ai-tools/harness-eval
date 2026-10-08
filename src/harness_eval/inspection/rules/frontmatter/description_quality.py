@@ -15,6 +15,7 @@ MAX_DESCRIPTION_LENGTH = 1024
 class DescriptionQuality:
     meta: RuleMeta = RuleMeta(
         id="frontmatter/description-quality",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Description must fit the Agent Skills 1,024-character limit",

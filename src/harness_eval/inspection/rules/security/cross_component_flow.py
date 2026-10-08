@@ -23,6 +23,7 @@ from harness_eval.inspection.types import (
 class CrossComponentFlow:
     meta = RuleMeta(
         id="security/cross-component-flow",
+        effect="signal",
         scope="SETUP",
         default_severity=Severity.WARNING,
         fixable=False,

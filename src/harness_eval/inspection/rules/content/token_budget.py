@@ -20,6 +20,7 @@ MAX_LINES = 500
 class TokenBudget:
     meta: RuleMeta = RuleMeta(
         id="content/token-budget",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Skill should be within adaptive token budget and under 500 lines",

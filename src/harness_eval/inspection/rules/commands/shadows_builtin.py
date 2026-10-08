@@ -17,6 +17,7 @@ BUILTIN_COMMANDS = load_builtins()
 class CommandShadowsBuiltin:
     meta = RuleMeta(
         id="command/shadows-builtin",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Command name should not shadow a Claude Code built-in slash command",

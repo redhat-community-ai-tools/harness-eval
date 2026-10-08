@@ -30,6 +30,7 @@ class HarnessOutputSchemaValid:
     meta = RuleMeta(
         id="harness/output-schema-valid",
         tier="provisional",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

@@ -171,7 +171,7 @@ def test_lint_json_carries_evidence() -> None:
     ev = json.loads(result.output)["metadata"]["evidence"]
     assert ev["setup_fingerprint"] == discover_setup("s", str(CLEAN)).fingerprint
     assert ev["rules"]["count"] == len(get_all_rules())
-    assert ev["config"]["preset"] == "recommended"
+    assert ev["config"]["preset"] == "recommended+advice"
     assert ev["vcs"]["revision"] is None or HEX40.match(ev["vcs"]["revision"])
     assert ev["inventory"]["files"] > 0
 
@@ -186,7 +186,7 @@ def test_lint_json_counts_baseline_suppressions(tmp_path: Path) -> None:
     bl = tmp_path / "baseline.json"
     bl.write_text(json.dumps(create_baseline(results)))
     result = CliRunner().invoke(
-        cli, ["harness-lint", str(DIRTY), "--format", "json", "--baseline", str(bl)]
+        cli, ["harness-lint", str(DIRTY), "--all", "--format", "json", "--baseline", str(bl)]
     )
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)

@@ -173,6 +173,8 @@ def _absolute_outside_project(ref: str, project_root: Path | None) -> bool:
 class BrokenReferences:
     meta: RuleMeta = RuleMeta(
         id="content/broken-references",
+        tier="advisory",
+        effect="advice",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

@@ -28,6 +28,7 @@ _ENV_LEAK_PATTERNS = [
 class HooksEnvLeakage:
     meta = RuleMeta(
         id="hooks/env-leakage",
+        effect="signal",
         default_severity=Severity.WARNING,
         fixable=False,
         description="Flag hooks that may leak environment variables",

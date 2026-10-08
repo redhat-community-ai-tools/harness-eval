@@ -15,6 +15,8 @@ from harness_eval.inspection.types import (
 class ReferencedSkillsExist:
     meta: RuleMeta = RuleMeta(
         id="agent/referenced-skills-exist",
+        tier="advisory",
+        effect="advice",
         scope="PAIRWISE",
         default_severity=Severity.ERROR,
         fixable=False,

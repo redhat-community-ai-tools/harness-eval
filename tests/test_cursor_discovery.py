@@ -113,28 +113,6 @@ class TestCursorSourceTool:
         assert len(cursor_comps) > 0
 
 
-class TestCursorRuleFiltering:
-    def test_claude_md_exists_not_fired_for_cursor(self) -> None:
-        setup = discover_setup(name="cursor", path=str(FIXTURES_DIR / "sample-cursor-setup"))
-        config = {"claude-md/exists": "warning"}
-        results = inspect_setup(setup, config)
-        for r in results:
-            for d in r.diagnostics:
-                assert d.rule_id != "claude-md/exists", (
-                    "claude-md/exists should not fire for Cursor setup"
-                )
-
-    def test_generic_advice_not_fired_for_cursor(self) -> None:
-        setup = discover_setup(name="cursor", path=str(FIXTURES_DIR / "sample-cursor-setup"))
-        config = {"claude-md/generic-advice": "warning"}
-        results = inspect_setup(setup, config)
-        for r in results:
-            for d in r.diagnostics:
-                assert d.rule_id != "claude-md/generic-advice", (
-                    "generic-advice should not fire for Cursor components"
-                )
-
-
 class TestCursorBudget:
     def test_cursor_non_always_apply_is_on_demand(self) -> None:
         setup = discover_setup(name="cursor", path=str(FIXTURES_DIR / "sample-cursor-setup"))

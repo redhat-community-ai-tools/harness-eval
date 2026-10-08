@@ -46,6 +46,8 @@ class HarnessFields:
     layer_complete: bool = False
     instructions: str | None = None
     model: str | None = None
+    # Container image reference the agent runs in, as written.
+    image: str | None = None
     policy: str | None = None
     scripts: dict[str, str] = field(default_factory=dict)
     skills: list[str] = field(default_factory=list)

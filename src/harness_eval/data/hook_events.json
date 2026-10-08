@@ -1,0 +1,31 @@
+{
+  "_comment": "Claude Code hook event names as written in settings.json 'hooks'. Event names are case-sensitive; a key that differs only in case or separators is silently ignored. Update when Claude Code adds events.",
+  "events": [
+    "PreToolUse",
+    "PostToolUse",
+    "PostToolUseFailure",
+    "PermissionRequest",
+    "PermissionDenied",
+    "Notification",
+    "UserPromptSubmit",
+    "Stop",
+    "StopFailure",
+    "SubagentStart",
+    "SubagentStop",
+    "PreCompact",
+    "PostCompact",
+    "SessionStart",
+    "SessionEnd",
+    "TeammateIdle",
+    "TaskCreated",
+    "TaskCompleted",
+    "ConfigChange",
+    "WorktreeCreate",
+    "WorktreeRemove",
+    "Elicitation",
+    "ElicitationResult",
+    "InstructionsLoaded",
+    "CwdChanged",
+    "FileChanged"
+  ]
+}

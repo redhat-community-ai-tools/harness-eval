@@ -135,6 +135,7 @@ _HOMOGLYPH_MAP: dict[str, str] = {
 class McpToolPoisoning:
     meta: RuleMeta = RuleMeta(
         id="security/mcp-tool-poisoning",
+        effect="signal",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Detect hidden instructions, Unicode deception, and suspicious embedded content",

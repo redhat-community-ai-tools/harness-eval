@@ -15,6 +15,7 @@ class AgentDescriptionRequired:
     meta: RuleMeta = RuleMeta(
         id="agent/description-required",
         tier="gating",
+        effect="block",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Agent must have a description in frontmatter",

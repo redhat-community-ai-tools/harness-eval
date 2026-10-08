@@ -118,6 +118,7 @@ def _config_exists(project_root: str, config_key: str) -> bool:
 class RedundantGuidance:
     meta = RuleMeta(
         id="quality/redundant-guidance",
+        effect="advice",
         default_severity=Severity.WARNING,
         fixable=False,
         description=(

@@ -101,7 +101,9 @@ class RuleMeta:
     description: str
     category: RuleCategory
     messages: dict[str, str]
-    target_type: ComponentType = ComponentType.SKILL
+    # One component type, or several when the same check applies to each
+    # (``targets`` normalizes both forms).
+    target_type: ComponentType | tuple[ComponentType, ...] = ComponentType.SKILL
     tools: tuple[str, ...] | None = None
     frameworks: dict[str, str] | None = None
     default_suggestion: str | None = None
@@ -112,6 +114,23 @@ class RuleMeta:
     # config file; FILE_FS = also touches the filesystem; PAIRWISE = compares two
     # components; SETUP = needs the whole component graph or an aggregate.
     scope: Literal["FILE", "FILE_FS", "PAIRWISE", "SETUP"] = "FILE"
+    # What a finding means for the person reading it. The single axis the
+    # commands select on (see docs/rule-taxonomy.md):
+    #   block  - a decidable defect in the configuration; nothing to argue about
+    #   policy - a decidable fact whose acceptability is a trust decision
+    #   signal - a heuristic match (text pattern, taint, signature); needs a reader
+    #   advice - quality or style; never gates anything
+    effect: Literal["block", "policy", "signal", "advice"] = "advice"
+
+    @property
+    def targets(self) -> tuple[ComponentType, ...]:
+        if isinstance(self.target_type, tuple):
+            return self.target_type
+        return (self.target_type,)
+
+    @property
+    def target_label(self) -> str:
+        return ",".join(t.value for t in self.targets)
 
 
 @dataclass

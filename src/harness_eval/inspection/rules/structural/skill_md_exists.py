@@ -14,6 +14,7 @@ class SkillMdExists:
     meta: RuleMeta = RuleMeta(
         id="structural/skill-md-exists",
         tier="gating",
+        effect="block",
         scope="FILE_FS",
         default_severity=Severity.ERROR,
         fixable=False,

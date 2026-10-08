@@ -60,6 +60,8 @@ def _key_suggests_credential(key: str) -> bool:
 class McpNoPlaintextSecrets:
     meta = RuleMeta(
         id="mcp/no-plaintext-secrets",
+        tier="provisional",
+        effect="block",
         default_severity=Severity.ERROR,
         fixable=False,
         description="Flag literal secret values committed in MCP configuration files",

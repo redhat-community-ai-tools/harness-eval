@@ -22,7 +22,8 @@ _OPENCODE_HIGH_IMPACT = ("shell", "edit", "external_directory")
 class ConfigDangerousAutonomy:
     meta = RuleMeta(
         id="config/dangerous-autonomy",
-        tier="advisory",
+        tier="provisional",
+        effect="policy",
         scope="FILE",
         default_severity=Severity.WARNING,
         fixable=False,
