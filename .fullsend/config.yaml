@@ -7,10 +7,7 @@ version: "1"
 roles:
     - triage
     - coder
-    # review: disabled until the Vertex AI provider credentials for this repo are
-    # configured; the review stage currently fails to start on every PR
-    # (provider create "vertex-ai" ... --credential missing). Re-add to re-enable.
-    # - review
+    - review
     - fix
     - retro
     - prioritize
