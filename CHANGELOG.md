@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [8.0.2] - 2026-10-10
+
 ### Fixed
 - `cross/overpermissive-grants` and `content/allowed-tools-auto-approve` no
   longer report `Bash(find:*)` or `Bash(watch:*)` as arbitrary execution.
