@@ -39,7 +39,6 @@ class TestClassification:
         [
             "Bash(awk:*)",
             "Bash(sed:*)",
-            "Bash(find:*)",
             "Bash(python:*)",
             "Bash(python3:*)",
             "Bash(python3 -c:*)",
@@ -75,6 +74,14 @@ class TestClassification:
             "Read",
             "Grep",
             "Read(src/**)",
+            # Exec wrappers a prefix rule cannot auto-approve (Claude Code
+            # permissions docs, "Process wrappers"): the grant widens nothing.
+            "Bash(find:*)",
+            "Bash(find *)",
+            "Bash(watch:*)",
+            "Bash(setsid:*)",
+            "Bash(ionice:*)",
+            "Bash(flock:*)",
         ],
     )
     def test_scoped_or_benign_grants_silent(self, entry: str) -> None:
@@ -111,8 +118,8 @@ class TestOverpermissiveGrants:
         assert _lint(_make_settings(tmp_path, ["Bash(git:*)", "Bash(ls:*)", "Bash(npm:*)"])) == []
 
     def test_flags_long_interpreter_prefix(self, tmp_path: Path) -> None:
-        diags = _lint(_make_settings(tmp_path, ["Bash(python:*)", "Bash(find:*)"]))
-        assert {d.message.split("'")[1] for d in diags} == {"Bash(python:*)", "Bash(find:*)"}
+        diags = _lint(_make_settings(tmp_path, ["Bash(python:*)", "Bash(awk:*)"]))
+        assert {d.message.split("'")[1] for d in diags} == {"Bash(python:*)", "Bash(awk:*)"}
 
     def test_multiple_entries(self, tmp_path: Path) -> None:
         assert len(_lint(_make_settings(tmp_path, ["Bash(*)", "Edit", "Bash(awk:*)", "Read"]))) == 3

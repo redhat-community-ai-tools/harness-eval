@@ -15,6 +15,9 @@ _HIGH_RISK = {"bash"}
 _MEDIUM_RISK = {"write", "edit", "notebookedit"}
 # Commands whose wildcard is equivalent to an unrestricted shell. Network and
 # build tools (curl, make, docker, ssh) are scoped grants, not shell access.
+# find and watch are absent on purpose: Claude Code documents that a prefix
+# rule does not auto-approve find -exec/-delete or exec wrappers such as watch
+# (see _PREFIX_RULE_EXCLUDED in cross/overpermissive_grants).
 _EXEC_CLASS = {
     "sh",
     "bash",
@@ -27,7 +30,6 @@ _EXEC_CLASS = {
     "xargs",
     "nohup",
     "timeout",
-    "watch",
     "sudo",
     "doas",
     "python",
@@ -44,7 +46,6 @@ _EXEC_CLASS = {
     "mawk",
     "nawk",
     "sed",
-    "find",
     "vim",
     "vi",
     "nvim",

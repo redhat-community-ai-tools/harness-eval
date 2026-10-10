@@ -34,7 +34,6 @@ _ARBITRARY_EXEC_COMMANDS: dict[str, str] = {
     "xargs": "runs any command over its input",
     "nohup": "runs any command detached",
     "timeout": "runs any command",
-    "watch": "runs any command repeatedly",
     "sudo": "runs any command with elevated privileges",
     "doas": "runs any command with elevated privileges",
     "python": "runs arbitrary code with -c or a script",
@@ -51,7 +50,6 @@ _ARBITRARY_EXEC_COMMANDS: dict[str, str] = {
     "mawk": "runs arbitrary commands via system()",
     "nawk": "runs arbitrary commands via system()",
     "sed": "runs arbitrary commands via the GNU e flag",
-    "find": "runs arbitrary commands via -exec",
     "vim": "runs arbitrary commands via :!",
     "vi": "runs arbitrary commands via :!",
     "nvim": "runs arbitrary commands via :!",
@@ -69,6 +67,17 @@ _ARBITRARY_EXEC_COMMANDS: dict[str, str] = {
     "wget": "fetches arbitrary URLs and can exfiltrate data",
 }
 
+# Commands that can execute another command but that Claude Code documents as
+# NOT auto-approved by a prefix rule: "Exec wrappers such as watch, setsid,
+# ionice, and flock can't be auto-approved by a prefix rule like Bash(watch *)
+# ... The same applies to find with -exec or -delete: a Bash(find *) rule
+# doesn't cover these forms." (code.claude.com/docs/en/permissions, "Process
+# wrappers"). A wildcard grant on one of these widens nothing the client
+# would otherwise prompt for, so it is not reported. Kept as an explicit set so
+# a future entry cannot re-add one of them by accident.
+_PREFIX_RULE_EXCLUDED: frozenset[str] = frozenset({"find", "watch", "setsid", "ionice", "flock"})
+assert not _PREFIX_RULE_EXCLUDED & _ARBITRARY_EXEC_COMMANDS.keys()
+
 # Bash(<pattern>) where <pattern> is "<cmd>:*" or "<cmd> *" or "<cmd>*".
 # Captures the leading command token, with or without a path prefix.
 _BASH_GRANT_RE = re.compile(
@@ -80,12 +89,15 @@ _BASH_GRANT_RE = re.compile(
 
 def classify_grant(entry: str) -> tuple[str, str] | None:
     """(command, reason) when *entry* is a wildcard grant on a command that
-    executes arbitrary code; None for Bash(*), bare tools, and scoped grants.
+    executes arbitrary code; None for Bash(*), bare tools, scoped grants, and
+    the exec wrappers a prefix rule cannot auto-approve (_PREFIX_RULE_EXCLUDED).
     Shared with the skill allowed-tools rule so both use one definition."""
     m = _BASH_GRANT_RE.match(entry)
     if not m:
         return None
     cmd = m.group(1).lower()
+    if cmd in _PREFIX_RULE_EXCLUDED:
+        return None
     reason = _ARBITRARY_EXEC_COMMANDS.get(cmd)
     return (cmd, reason) if reason is not None else None
 

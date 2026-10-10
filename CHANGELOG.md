@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- `cross/overpermissive-grants` and `content/allowed-tools-auto-approve` no
+  longer report `Bash(find:*)` or `Bash(watch:*)` as arbitrary execution.
+  Claude Code documents that a prefix rule does not auto-approve `find -exec`,
+  `find -delete`, or exec wrappers such as `watch`, `setsid`, `ionice` and
+  `flock`, so the grant widens nothing; the excluded set is explicit
+  (`_PREFIX_RULE_EXCLUDED`) and tested. The published corpus study had to
+  remove 62 such findings by hand (36 settings, 26 skill grants).
+
 ### Removed
 - `inspection/merge.py` (`merge_inspection_results`), which only the removed
   `skill-verify` command used, and `docs/modernization-audit-2026.md`, a
