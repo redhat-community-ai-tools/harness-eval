@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,
+  `AGENTS.md`, Cursor rules, Copilot and Codex instruction files) and on
+  commands and agents, not only on skills. Hidden text in a rules file is the
+  vector Pillar Security's "Rules File Backdoor" demonstrated in March 2025;
+  until now the rule could not see those files. `extract_component_texts`
+  reads a `CLAUDE_MD` component so other multi-target text rules can follow.
+- The rule's suggestion tells the reader to remove the hidden text or reject
+  the change; it no longer says "pin the MCP server package" for a finding in
+  a markdown file.
+
+### Added
+- `security/mcp-tool-poisoning` reports invisible Unicode tag characters
+  (U+E0001, U+E0020..U+E007F), the "ASCII smuggling" encoding that carries
+  readable text to the model without rendering anything.
+
+### Fixed
+- `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
+  start of a file, nor a zero-width joiner or non-joiner inside an emoji
+  sequence or between Persian, Arabic or Indic letters. Both are only
+  reported when the character sits next to ASCII text, where it has no
+  typographic purpose.
+
 ### Removed
 - `inspection/merge.py` (`merge_inspection_results`), which only the removed
   `skill-verify` command used, and `docs/modernization-audit-2026.md`, a

@@ -55,10 +55,13 @@ def extract_content_and_path(
 def extract_component_texts(context: RuleContext) -> list[tuple[str, str]]:
     """Return (content, path) for whichever instruction component the context holds.
 
-    A skill contributes SKILL.md and its markdown sub-files; a command or an
-    agent contributes its single markdown file. Rules that scan instruction
-    text for the same patterns across all three use this instead of one
-    rule class per component type.
+    A skill contributes SKILL.md and its markdown sub-files; a command, an
+    agent or an instruction file (CLAUDE.md, AGENTS.md, Cursor rules, Copilot
+    instructions) contributes its single markdown file. Rules that scan
+    instruction text for the same patterns across these types use this
+    instead of one rule class per component type. A rule only ever sees the
+    types it declares in ``target_type``; this helper reads whichever one the
+    engine handed it.
     """
     if context.skill is not None:
         return extract_all_skill_md_content(context)
@@ -66,6 +69,9 @@ def extract_component_texts(context: RuleContext) -> list[tuple[str, str]]:
         found = extract_content_and_path(context, target)
         if found is not None:
             return [found]
+    claude_md = context.claude_md
+    if claude_md is not None and claude_md.raw_content:
+        return [(claude_md.raw_content, claude_md.file_path)]
     return []
 
 
