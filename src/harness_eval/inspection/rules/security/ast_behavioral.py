@@ -133,20 +133,23 @@ def _analyze_file(py_path: Path, context: RuleContext, skill_md_path: str) -> No
                         severity_override=Severity.WARNING,
                     )
                 )
-        elif call_name == "getattr" and len(node.args) >= 2:
-            if not isinstance(node.args[1], ast.Constant):
-                context.report(
-                    ReportDescriptor(
-                        message_id="ast_dynamic_import",
-                        data={
-                            "call": "getattr (non-literal)",
-                            "file": rel_path,
-                            "line": str(line),
-                        },
-                        location=Location(file=skill_md_path, start_line=line),
-                        severity_override=Severity.WARNING,
-                    )
+        elif (
+            call_name == "getattr"
+            and len(node.args) >= 2
+            and not isinstance(node.args[1], ast.Constant)
+        ):
+            context.report(
+                ReportDescriptor(
+                    message_id="ast_dynamic_import",
+                    data={
+                        "call": "getattr (non-literal)",
+                        "file": rel_path,
+                        "line": str(line),
+                    },
+                    location=Location(file=skill_md_path, start_line=line),
+                    severity_override=Severity.WARNING,
                 )
+            )
 
 
 class AstBehavioral:

@@ -61,13 +61,23 @@ class Finding:
     # text, and so on). The message is the sentence; this is the same evidence
     # in a form a caller can use without parsing that sentence.
     data: dict[str, str | int] | None = None
+    # Rule classification is distinct from severity and from an execution
+    # verdict. INFO observations from a block rule do not block the gate.
+    message_id: str | None = None
+    rule_effect: str | None = None
+    source_tool: str | None = None
 
 
-def finding_data_field(finding: Finding) -> dict[str, dict[str, str | int]]:
-    """JSON object to merge into a serialized finding. Empty when there is no data."""
-    if not finding.data:
-        return {}
-    return {"data": dict(finding.data)}
+def finding_data_field(finding: Finding) -> dict[str, Any]:
+    """Optional structured evidence and provenance for JSON/SARIF findings."""
+    out: dict[str, Any] = {}
+    if finding.data:
+        out["data"] = dict(finding.data)
+    for key in ("message_id", "rule_effect", "source_tool"):
+        value = getattr(finding, key)
+        if value is not None:
+            out[key] = value
+    return out
 
 
 @dataclass(frozen=True)

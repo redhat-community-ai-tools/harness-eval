@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from harness_eval.core.types import ComponentType
@@ -39,6 +40,19 @@ _UVX_VALUE_FLAGS = {
 }
 _UVX_COMMANDS = {"uvx"}
 _PIPX_COMMAND = "pipx"
+_NPX_VALUE_FLAGS = {"--registry", "--cache", "--userconfig", "--prefix", "--loglevel"}
+
+_NPM_VERSION_RE = re.compile(
+    r"[v=]?(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+    r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+)
+_PYTHON_VERSION_RE = re.compile(
+    r"v?(?:[0-9]+!)?[0-9]+(?:\.[0-9]+)*"
+    r"(?:[-_.]?(?:a|b|c|rc|alpha|beta|pre|preview)[-_.]?[0-9]*)?"
+    r"(?:(?:[-_.]?(?:post|rev|r)[-_.]?[0-9]*)|(?:-[0-9]+))?"
+    r"(?:[-_.]?dev[-_.]?[0-9]*)?(?:\+[a-z0-9]+(?:[-_.][a-z0-9]+)*)?",
+    re.I,
+)
 
 
 def _is_local_spec(spec: str) -> bool:
@@ -48,13 +62,13 @@ def _is_local_spec(spec: str) -> bool:
 def _is_npx_pinned(spec: str) -> bool:
     if _is_local_spec(spec):
         return True
-    # Has @version but not @latest. A scoped package (@scope/name) starts with
+    # Require an exact version, not a dist-tag or range. A scoped package starts with
     # "@", which is not a version separator, so look for "@" after position 0.
     at_idx = spec.rfind("@")
     if at_idx <= 0:
         return False
     version = spec[at_idx + 1 :]
-    return version.lower() != "latest" and len(version) > 0
+    return _NPM_VERSION_RE.fullmatch(version) is not None
 
 
 def _declared_dependencies(context: RuleContext) -> set[str]:
@@ -88,7 +102,15 @@ def _declared_dependencies(context: RuleContext) -> set[str]:
 def _is_uvx_pinned(spec: str) -> bool:
     if _is_local_spec(spec):
         return True
-    return "==" in spec or "@" in spec
+    if spec.startswith("git+"):
+        return re.search(r"@(?:[0-9a-f]{40}|[0-9a-f]{64})(?:#.*)?$", spec, re.I) is not None
+    if "==" in spec:
+        version = spec.split("==", 1)[1].strip()
+    elif "@" in spec:
+        version = spec.rsplit("@", 1)[1].strip()
+    else:
+        return False
+    return _PYTHON_VERSION_RE.fullmatch(version) is not None
 
 
 # ``docker run`` flags that consume the next token; the image is the first
@@ -159,9 +181,12 @@ _DOCKER_VALUE_FLAGS = frozenset(
 def _is_docker_pinned(image: str) -> bool:
     if "@sha256:" in image:
         return True
-    if ":" in image:
-        tag = image.rsplit(":", 1)[1]
-        return tag.lower() != "latest"
+    # A registry port is not an image tag. This rule accepts an explicit
+    # non-latest tag; that is not a claim that tags are immutable digests.
+    last = image.rsplit("/", 1)[-1]
+    if ":" in last:
+        tag = last.rsplit(":", 1)[1]
+        return bool(tag) and tag.lower() != "latest"
     return False
 
 
@@ -177,11 +202,12 @@ class McpUnpinnedPackage:
         messages={
             "unpinned": (
                 "MCP server '{{server}}': runs unpinned package '{{spec}}'"
-                " -- version is re-resolved every session. Pin an exact version."
+                " -- declare an exact package version or a non-latest image tag;"
+                " prefer an image digest for immutability."
             ),
         },
         target_type=ComponentType.MCP_CONFIG,
-        default_suggestion="Pin the package to an exact version.",
+        default_suggestion="Pin an exact package version; for containers, prefer a content digest.",
     )
 
     def create(self, context: RuleContext) -> None:
@@ -219,7 +245,9 @@ class McpUnpinnedPackage:
                 command = command_value if isinstance(command_value, str) else ""
 
             all_parts = [command] + [str(a) for a in args]
-            cmd_base = command.rsplit("/", 1)[-1] if command else ""
+            cmd_base = command.replace("\\", "/").rsplit("/", 1)[-1]
+            if cmd_base.endswith((".cmd", ".exe")):
+                cmd_base = cmd_base.rsplit(".", 1)[0]
 
             # npx / bunx
             if cmd_base in _NPX_COMMANDS:
@@ -247,18 +275,45 @@ class McpUnpinnedPackage:
         self, context: RuleContext, loc: Location, server: str, args: list[str], cmd: str
     ) -> None:
         local_deps = _declared_dependencies(context)
-        # Check if --package with pinned spec exists
-        for i, arg in enumerate(args):
-            if arg == "--package" and i + 1 < len(args):
-                spec = args[i + 1]
-                if _is_npx_pinned(spec):
-                    return
-
-        # --no-install / --offline never fetch: the package must already be local.
-        if "--no-install" in args or "--offline" in args:
+        # Every explicit package matters; one pinned package cannot hide a
+        # second floating package. Stop at the positional command, whose
+        # arguments are not npx options.
+        packages: list[str] = []
+        i = 0
+        while i < len(args):
+            arg = args[i]
+            if arg in {"--no-install", "--offline"}:
+                return
+            if arg == "--":
+                i += 1
+                break
+            if arg in _NPX_VALUE_FLAGS:
+                i += 2
+                continue
+            if arg in {"--package", "-p"} and i + 1 < len(args):
+                packages.append(args[i + 1])
+                i += 2
+                continue
+            if arg.startswith("--package="):
+                packages.append(arg.split("=", 1)[1])
+            elif arg.startswith("-p") and not arg.startswith("--") and len(arg) > 2:
+                packages.append(arg[2:])
+            elif arg in {"--call", "-c"} or not arg.startswith("-"):
+                break
+            i += 1
+        if packages:
+            for spec in packages:
+                if not _is_npx_pinned(spec):
+                    context.report(
+                        ReportDescriptor(
+                            message_id="unpinned",
+                            data={"server": server, "spec": spec},
+                            location=loc,
+                        )
+                    )
             return
         # Find the package spec (first arg that isn't a flag)
-        for arg in args:
+        for arg in args[i:]:
             if arg.startswith("-"):
                 continue
             spec = arg
@@ -270,12 +325,13 @@ class McpUnpinnedPackage:
                 for a in args[args.index(arg) + 1 :]
             ):
                 return
-            # A package the project itself declares is served from node_modules
-            # at the lockfile's version; npx does not consult the registry.
+            # Treat a bare project dependency as locally managed. An explicit
+            # selector can request a different version and must still be checked.
+            # This is not verification of installation or lockfile contents.
             bare = (
                 "@" + spec[1:].split("@", 1)[0] if spec.startswith("@") else spec.split("@", 1)[0]
             )
-            if bare in local_deps:
+            if bare == spec and bare in local_deps:
                 return
             if not _is_npx_pinned(spec):
                 context.report(
@@ -288,28 +344,31 @@ class McpUnpinnedPackage:
             return
 
     def _check_uvx(self, context: RuleContext, loc: Location, server: str, args: list[str]) -> None:
-        # ``--from pkg==1.0 cmd`` pins through the flag value.
-        for i, arg in enumerate(args):
-            if arg == "--from" and i + 1 < len(args) and _is_uvx_pinned(args[i + 1]):
-                return
-        skip_next = False
-        for arg in args:
-            if skip_next:
-                skip_next = False
-                continue
-            if arg.startswith("-"):
-                skip_next = arg in _UVX_VALUE_FLAGS
-                continue
-            spec = arg
-            if not _is_uvx_pinned(spec):
-                context.report(
-                    ReportDescriptor(
-                        message_id="unpinned",
-                        data={"server": server, "spec": spec},
-                        location=loc,
+        # --from / pipx --spec identify the package, not the command name.
+        # Both split and equals forms must inspect the selector itself.
+        i = 0
+        while i < len(args):
+            arg = args[i]
+            spec = None
+            if arg in {"--from", "--spec"} and i + 1 < len(args):
+                spec = args[i + 1]
+            elif arg.startswith(("--from=", "--spec=")):
+                spec = arg.split("=", 1)[1]
+            elif arg == "--" and i + 1 < len(args):
+                spec = args[i + 1]
+            elif not arg.startswith("-"):
+                spec = arg
+            if spec is not None:
+                if not _is_uvx_pinned(spec):
+                    context.report(
+                        ReportDescriptor(
+                            message_id="unpinned",
+                            data={"server": server, "spec": spec},
+                            location=loc,
+                        )
                     )
-                )
-            return
+                return
+            i += 2 if arg in _UVX_VALUE_FLAGS else 1
 
     def _check_docker(
         self, context: RuleContext, loc: Location, server: str, args: list[str]

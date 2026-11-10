@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from harness_eval.inspection.types import (
@@ -159,6 +159,9 @@ def _exists_under_path_bases(project_root: Path, bases: list[str], ref: str) -> 
 
 def _absolute_outside_project(ref: str, project_root: Path | None) -> bool:
     path = Path(ref)
+    # A POSIX absolute reference remains external on a Windows checkout.
+    if PurePosixPath(ref).is_absolute() and not path.is_absolute():
+        return True
     if not path.is_absolute():
         return False
     if project_root is None:

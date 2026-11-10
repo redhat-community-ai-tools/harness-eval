@@ -74,10 +74,10 @@ def _interpolate(template: str, data: dict[str, str | int] | None) -> str:
 def _resolve_severity(
     rule: Rule,
     config_rules: dict[str, str | list[Any]],
-) -> tuple[Severity, list[Any]] | None:
+) -> tuple[Severity, list[Any], bool] | None:
     """Determine effective severity and options for a rule.
 
-    Returns (severity, options), or None if the rule should be skipped.
+    Returns (severity, options, explicitly_configured), or None when skipped.
     """
     severity_config = config_rules.get(rule.meta.id)
     if severity_config == "off":
@@ -121,6 +121,8 @@ def _make_report_fn(
     suppression_counter: list[int],
     explicitly_configured: bool = False,
     default_suggestion: str | None = None,
+    rule_effect: str | None = None,
+    source_tool: str | None = None,
 ) -> Callable[[ReportDescriptor], None]:
     """Build a report callback for a single rule.
 
@@ -158,6 +160,9 @@ def _make_report_fn(
                 fix=descriptor.fix if fixable else None,
                 suggestion=descriptor.suggestion or default_suggestion,
                 data=dict(descriptor.data) if descriptor.data else None,
+                message_id=descriptor.message_id,
+                rule_effect=rule_effect,
+                source_tool=source_tool,
             )
         )
 
@@ -177,6 +182,8 @@ def _parse_errors_to_findings(
             message=error,
             location=Location(file=file_path),
             category=category,  # type: ignore[arg-type]
+            message_id="parse_error",
+            rule_effect="block",
         )
         for error in parse_errors
     ]
@@ -246,6 +253,8 @@ def _run_rules(
                 suppression_counter,
                 explicitly_configured,
                 rule.meta.default_suggestion,
+                rule_effect=rule.meta.effect,
+                source_tool=source_tool,
             ),
             severity=severity,
             skill=skill,

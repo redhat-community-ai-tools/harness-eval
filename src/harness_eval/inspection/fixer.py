@@ -56,7 +56,7 @@ def apply_fixes(diagnostics: list[Finding], project_root: Path | None = None) ->
             lines[line_num - 1] = diag.fix.replacement
             rule_ids.append(diag.rule_id)
 
-        path.write_text(line_ending.join(lines), encoding="utf-8")
+        path.write_text(line_ending.join(lines), encoding="utf-8", newline="")
         results.append(
             FixResult(
                 file_path=file_path,
