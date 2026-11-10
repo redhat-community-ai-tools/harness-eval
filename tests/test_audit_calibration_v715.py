@@ -461,7 +461,7 @@ class TestFifthRound:
         (tmp_path / ".claude" / "skills" / "deploy" / "steps" / "SKILL.md").write_text(
             "# reference\n"
         )
-        found = [str(p) for p in ClaudeCodeDiscoverer().collect_paths(tmp_path)]
+        found = [p.as_posix() for p in ClaudeCodeDiscoverer().collect_paths(tmp_path)]
         assert any(p.endswith("deploy/SKILL.md") for p in found)
         assert not any(p.endswith("steps/SKILL.md") for p in found)
 

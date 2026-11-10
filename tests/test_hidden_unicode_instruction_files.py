@@ -137,6 +137,37 @@ def test_clean_instruction_file_is_silent(tmp_path: Path) -> None:
     assert not _findings(lint_claude_md(str(f)))
 
 
+@pytest.mark.parametrize("payload", [ZWNJ, ZWJ, ZWNJ + ZWJ, (ZWNJ + ZWJ) * 16])
+def test_isolated_joiners_are_reported(tmp_path: Path, payload: str) -> None:
+    f = _write(tmp_path / "CLAUDE.md", f"Run {payload} tests.\n{payload}\n")
+    assert _findings(lint_claude_md(str(f)), "zero-width")
+
+
+@pytest.mark.parametrize("text", ["क्" + ZWJ + "ष", "क्" + ZWNJ + "ष", "ع" + ZWJ + "ر"])
+def test_joining_script_context_is_not_reported(tmp_path: Path, text: str) -> None:
+    f = _write(tmp_path / "CLAUDE.md", text)
+    assert not _findings(lint_claude_md(str(f)), "zero-width")
+
+
+@pytest.mark.parametrize("code", ["gbeng", "gbsct", "gbwls"])
+def test_standard_tag_flag_is_not_reported(tmp_path: Path, code: str) -> None:
+    flag = "\U0001f3f4" + "".join(chr(0xE0000 + ord(c)) for c in code) + "\U000e007f"
+    f = _write(tmp_path / "CLAUDE.md", f"# Team {flag}\n")
+    assert not _findings(lint_claude_md(str(f)), "tag character")
+    _write(f, f"# Team {flag}{TAGGED_HI}\n")
+    assert _findings(lint_claude_md(str(f)), "tag character")
+
+
+def test_unrecognized_tag_sequence_is_reported(tmp_path: Path) -> None:
+    f = _write(tmp_path / "CLAUDE.md", "\U0001f3f4" + TAGGED_HI + "\U000e007f")
+    assert _findings(lint_claude_md(str(f)), "tag character")
+
+
+def test_legitimate_joiner_does_not_hide_an_isolated_one(tmp_path: Path) -> None:
+    f = _write(tmp_path / "CLAUDE.md", f"می{ZWNJ}خواهم {ZWNJ} tests")
+    assert _findings(lint_claude_md(str(f)), "zero-width non-joiner")
+
+
 @pytest.mark.parametrize(
     "fixture", ["sample-setup-a", "sample-cursor-setup", "sample-copilot-setup"]
 )

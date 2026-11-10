@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import re
+import unicodedata
 from collections import Counter
 
 from harness_eval.core.types import ComponentType
@@ -102,37 +103,76 @@ _RTL_OVERRIDE_CHARS = {
 
 # Zero-width joiner and non-joiner have legitimate uses: emoji sequences
 # (U+200D between emoji) and Persian, Arabic or Indic text (U+200C between
-# letters). The attack pattern is one of these characters embedded in ASCII
-# text, where it has no typographic job. Only that case is reported.
+# letters). Exempt plausible joining contexts, not every non-ASCII context:
+# isolated runs between spaces can themselves encode hidden text.
 _CONTEXT_SENSITIVE_ZERO_WIDTH = {"\u200c", "\u200d"}
 
 # Unicode "tag" characters (U+E0001, U+E0020..U+E007F) are invisible copies of
 # ASCII. Text written in them is not rendered but is read by the model: the
 # "ASCII smuggling" vector Pillar's Rules File Backdoor research referenced.
-_TAG_CHAR_LOW = 0xE0000
+_TAG_CHAR_LOW = 0xE0020
 _TAG_CHAR_HIGH = 0xE007F
+# The three RGI emoji tag sequences in Unicode UTS #51. Remove only these
+# exact sequences from tag inspection; adjacent or malformed tags remain.
+_TAG_FLAGS_RE = re.compile(
+    "|".join(
+        re.escape("\U0001f3f4" + "".join(chr(0xE0000 + ord(c)) for c in code) + "\U000e007f")
+        for code in ("gbeng", "gbsct", "gbwls")
+    )
+)
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9_Ѐ-ӿͰ-Ͽ]+")
 
 
-def _is_ascii_text(char: str) -> bool:
-    return char.isascii() and not char.isspace()
+def _emoji_base(char: str) -> bool:
+    return bool(char) and (0x1F000 <= ord(char) <= 0x1FAFF or 0x2600 <= ord(char) <= 0x27BF)
 
 
-def _zero_width_in_ascii_context(char: str, line: str) -> bool:
-    """True when *char* sits next to printable ASCII on at least one side."""
+def _joining_context(line: str, idx: int, char: str) -> bool:
+    before = line[idx - 1] if idx else ""
+    after = line[idx + 1] if idx + 1 < len(line) else ""
+    if not before or not after:
+        return False
+    if char == "\u200d":
+        left = idx - 1
+        while left >= 0 and (
+            line[left] in {"\ufe0e", "\ufe0f"} or 0x1F3FB <= ord(line[left]) <= 0x1F3FF
+        ):
+            left -= 1
+        if left >= 0 and _emoji_base(line[left]) and _emoji_base(after):
+            return True
+    # Virama followed by a consonant is a normal Indic joining context.
+    if unicodedata.combining(before) == 9 and after.isalpha() and not after.isascii():
+        return True
+    left, right = idx - 1, idx + 1
+    while left >= 0 and unicodedata.category(line[left]).startswith("M"):
+        left -= 1
+    while right < len(line) and unicodedata.category(line[right]).startswith("M"):
+        right += 1
+    if left < 0 or right >= len(line):
+        return False
+    before, after = line[left], line[right]
+    if not before.isalpha() or not after.isalpha():
+        return False
+    for script in ("ARABIC", "SYRIAC", "NKO", "MANDAIC", "MONGOLIAN"):
+        if all(unicodedata.name(c, "").startswith(script + " ") for c in (before, after)):
+            return True
+    return False
+
+
+def _has_unexplained_joiner(char: str, line: str) -> bool:
+    """Report if any occurrence lacks a plausible typographic context."""
     start = 0
     while (idx := line.find(char, start)) != -1:
-        before = line[idx - 1] if idx > 0 else ""
-        after = line[idx + 1] if idx + 1 < len(line) else ""
-        if (before and _is_ascii_text(before)) or (after and _is_ascii_text(after)):
+        if not _joining_context(line, idx, char):
             return True
         start = idx + 1
     return False
 
 
 def _tag_chars(line: str) -> list[str]:
-    return [c for c in line if _TAG_CHAR_LOW <= ord(c) <= _TAG_CHAR_HIGH]
+    text = _TAG_FLAGS_RE.sub("", line)
+    return [c for c in text if ord(c) == 0xE0001 or _TAG_CHAR_LOW <= ord(c) <= _TAG_CHAR_HIGH]
 
 
 def _is_mixed_script_token(char: str, line: str) -> bool:
@@ -249,7 +289,7 @@ class McpToolPoisoning:
             for char, char_name in _ZERO_WIDTH_CHARS.items():
                 if char not in line:
                     continue
-                if char in _CONTEXT_SENSITIVE_ZERO_WIDTH and not _zero_width_in_ascii_context(
+                if char in _CONTEXT_SENSITIVE_ZERO_WIDTH and not _has_unexplained_joiner(
                     char, line
                 ):
                     continue

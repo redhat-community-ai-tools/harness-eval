@@ -59,7 +59,7 @@ def expand_project_vars(value: str, root: Path) -> str:
     # ${VAR:-default} / ${VAR:=default} forms of the project variables.
     value = re.sub(
         r"\$\{(?:CLAUDE_PROJECT_DIR|CURSOR_PROJECT_DIR|PROJECT_DIR|PWD):[-=][^}]*\}",
-        str(root),
+        lambda _: str(root),
         value,
     )
     for var in (

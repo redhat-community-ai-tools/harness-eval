@@ -21,7 +21,7 @@
     "target_type": "hooks"
   },
   {
-    "message": "MCP server 'filesystem': runs unpinned package '@modelcontextprotocol/server-filesystem' -- version is re-resolved every session. Pin an exact version.",
+    "message": "MCP server 'filesystem': runs unpinned package '@modelcontextprotocol/server-filesystem' -- declare an exact package version or a non-latest image tag; prefer an image digest for immutability.",
     "rule_id": "mcp/unpinned-package",
     "severity": "warning",
     "target_name": ".mcp.json",

@@ -28,6 +28,26 @@ The effect is not the severity. A `block` rule can default to `warning`
 (`hooks/valid-structure`) and a `signal` rule to `error`
 (`security/reverse-shell`); severity says how loud, effect says what kind.
 
+Machine-readable findings preserve `message_id`, `rule_effect` and, when
+known, `source_tool`. `rule_effect` is the rule's classification, not proof
+that a particular report blocks execution. For example, `frontmatter/format-valid`
+emits INFO portability observations as well as higher-severity format findings;
+the gate and autonomy commands do not block on INFO. An ERROR from a `signal`
+rule is still a heuristic, not a confirmed vulnerability. Consumers should
+retain both axes and the message identity rather than infer meaning from
+severity or rendered message text alone. Requirements of a file-format standard
+must also be distinguished from the behavior of a particular client.
+
+`mcp/unpinned-package` inspects literal launch selectors, not installed packages,
+registry metadata or execution. npm selectors must name an exact version;
+Python selectors must name an exact version or a full Git commit. Docker
+references with an explicit non-latest tag are accepted by this rule, but tags
+can move: only a content digest identifies immutable image content. Local paths,
+bare project-managed npm dependencies and offline npm invocations are outside
+this rule's remote-selector warning; their omission is not evidence of a
+verified installation or lockfile. A scan with no report is not a certificate
+of dependency reproducibility or safety.
+
 ## Axis 1: evidence class (tier)
 
 A rule's evidence is either **structural** or **heuristic**.

@@ -94,7 +94,7 @@ class TestFixerLineEndings:
         from harness_eval.inspection.fixer import apply_fixes
 
         target = tmp_path / "SKILL.md"
-        target.write_text("---\nname: old-name\n---\n\nContent here.\n")
+        target.write_bytes(b"---\nname: old-name\n---\n\nContent here.\n")
 
         findings = [
             Finding(

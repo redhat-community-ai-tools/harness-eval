@@ -40,7 +40,7 @@ def _build_rule_descriptors(findings: list[Finding]) -> list[dict]:
 
 def _relativize_to_root(file_path: str, scan_root: str) -> str:
     try:
-        return os.path.relpath(file_path, scan_root)
+        return Path(os.path.relpath(file_path, scan_root)).as_posix()
     except ValueError:
         return file_path
 

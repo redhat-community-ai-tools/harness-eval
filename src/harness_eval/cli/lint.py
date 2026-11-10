@@ -255,6 +255,10 @@ def eval_setup_lint(
                                 "rule": d.rule_id,
                                 "severity": d.severity.value,
                                 "message": d.message,
+                                "file": d.location.file,
+                                **(
+                                    {"line": d.location.start_line} if d.location.start_line else {}
+                                ),
                                 **finding_data_field(d),
                             }
                             for d in r.diagnostics

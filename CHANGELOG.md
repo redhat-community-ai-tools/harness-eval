@@ -19,13 +19,31 @@ All notable changes to this project will be documented in this file.
 - `security/mcp-tool-poisoning` reports invisible Unicode tag characters
   (U+E0001, U+E0020..U+E007F), the "ASCII smuggling" encoding that carries
   readable text to the model without rendering anything.
+- JSON and SARIF findings retain `message_id`, `rule_effect` and the known
+  `source_tool`. Single-file lint JSON also retains file and line locations.
+  Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
-  sequence or between Persian, Arabic or Indic letters. Both are only
-  reported when the character sits next to ASCII text, where it has no
-  typographic purpose.
+  sequence or in supported Arabic-script and Indic joining contexts.
+  Isolated joiners and whitespace-delimited hidden sequences remain reportable.
+  Standard England, Scotland and Wales flag emoji are not ASCII-smuggling
+  findings; extra tag characters beside a flag remain reportable.
+- `mcp/unpinned-package` no longer accepts npm ranges/dist-tags, uvx `@latest`
+  or wildcard Python versions as exact package versions. Docker registry ports
+  are no longer mistaken for image tags. Explicit non-latest Docker tags remain
+  accepted by this rule and are not claimed to be immutable.
+- Dependency selection handles `--package=`, `-p`, multiple npm packages,
+  `--from=`, pipx `--spec`, and Windows launcher paths. Findings name the
+  selected package rather than its executable. A pinned package no longer
+  hides another floating selector, and explicit selectors are not exempted
+  just because the project declares the package. Tool arguments after the
+  positional command are not reinterpreted as launcher options.
+- Project-variable expansion preserves literal Windows path separators instead
+  of interpreting them as regex replacement escapes, which could crash scans.
+  SARIF paths use URI-compatible separators, POSIX absolute references stay
+  external on Windows, and fixes preserve the file's existing newline style.
 
 ### Removed
 - `inspection/merge.py` (`merge_inspection_results`), which only the removed
