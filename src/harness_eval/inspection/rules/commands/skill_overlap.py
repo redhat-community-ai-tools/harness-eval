@@ -9,9 +9,11 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-from harness_eval.utils.similarity import tfidf_similarity
+from harness_eval.utils.similarity import build_tfidf_index
 
 OVERLAP_THRESHOLD = 0.80
+
+_STATE_KEY = "_skill_body_index"
 
 
 class CommandSkillOverlap:
@@ -38,11 +40,17 @@ class CommandSkillOverlap:
         if len(cmd.body.split()) < 20:
             return
 
-        for skill in context.all_skills:
-            if not skill.body or len(skill.body.split()) < 20:
-                continue
+        if _STATE_KEY not in context.scan_state:
+            skill_texts = {
+                s.dir_name: s.body
+                for s in context.all_skills
+                if s.body and len(s.body.split()) >= 20
+            }
+            context.scan_state[_STATE_KEY] = build_tfidf_index(skill_texts)
+        index = context.scan_state[_STATE_KEY]
 
-            similarity = tfidf_similarity(cmd.body, skill.body)
+        sims = index.query(cmd.body)
+        for skill_name, similarity in sims.items():
             if similarity >= OVERLAP_THRESHOLD:
                 context.report(
                     ReportDescriptor(
@@ -50,7 +58,7 @@ class CommandSkillOverlap:
                         data={
                             "command": cmd.dir_name,
                             "pct": str(int(similarity * 100)),
-                            "skill": skill.dir_name,
+                            "skill": skill_name,
                         },
                         location=Location(file=cmd.command_md_path, start_line=1),
                     )

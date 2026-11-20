@@ -8,7 +8,7 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-from harness_eval.utils.similarity import tfidf_similarity
+from harness_eval.utils.similarity import build_similarity_matrix
 
 SIMILARITY_THRESHOLD = 0.85
 
@@ -38,21 +38,25 @@ class DuplicateDetection:
             return
 
         if _STATE_KEY not in context.scan_state:
-            context.scan_state[_STATE_KEY] = {"texts": {}, "reported": set()}
+            texts = {s.dir_name: s.body for s in context.all_skills if s.body}
+            context.scan_state[_STATE_KEY] = {
+                "matrix": build_similarity_matrix(texts),
+                "reported": set(),
+            }
         state = context.scan_state[_STATE_KEY]
+        matrix = state["matrix"]
 
         skill_key = skill.dir_name
-        state["texts"][skill_key] = skill.body
 
-        for other_name, other_text in state["texts"].items():
-            if other_name == skill_key:
+        for other in context.all_skills:
+            if other.dir_name == skill_key or not other.body:
                 continue
 
-            pair = tuple(sorted([skill_key, other_name]))
+            pair = tuple(sorted([skill_key, other.dir_name]))
             if pair in state["reported"]:
                 continue
 
-            similarity = tfidf_similarity(skill.body, other_text)
+            similarity = matrix.get(skill_key, other.dir_name)
             if similarity >= SIMILARITY_THRESHOLD:
                 state["reported"].add(pair)
                 context.report(
@@ -60,7 +64,7 @@ class DuplicateDetection:
                         message_id="duplicate",
                         data={
                             "similarity": str(int(similarity * 100)),
-                            "other": other_name,
+                            "other": other.dir_name,
                         },
                         location=Location(
                             file=skill.skill_md_path,

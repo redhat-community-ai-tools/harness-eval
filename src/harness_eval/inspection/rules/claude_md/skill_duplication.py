@@ -9,9 +9,11 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-from harness_eval.utils.similarity import tfidf_similarity
+from harness_eval.utils.similarity import build_tfidf_index
 
 OVERLAP_THRESHOLD = 0.80
+
+_STATE_KEY = "_skill_body_index"
 
 
 class ClaudeMdSkillDuplication:
@@ -36,16 +38,22 @@ class ClaudeMdSkillDuplication:
         if cmd is None or not context.all_skills:
             return
 
+        if _STATE_KEY not in context.scan_state:
+            skill_texts = {
+                s.dir_name: s.body
+                for s in context.all_skills
+                if s.body and len(s.body.split()) >= 20
+            }
+            context.scan_state[_STATE_KEY] = build_tfidf_index(skill_texts)
+        index = context.scan_state[_STATE_KEY]
+
         for section in cmd.sections:
             section_text = section.get("content", "")
             if len(section_text.split()) < 20:
                 continue
 
-            for skill in context.all_skills:
-                if not skill.body or len(skill.body.split()) < 20:
-                    continue
-
-                similarity = tfidf_similarity(section_text, skill.body)
+            sims = index.query(section_text)
+            for skill_name, similarity in sims.items():
                 if similarity >= OVERLAP_THRESHOLD:
                     msg_id = "overlap_cursor" if context.source_tool == "cursor" else "overlap"
                     context.report(
@@ -54,7 +62,7 @@ class ClaudeMdSkillDuplication:
                             data={
                                 "section": section.get("header", "(untitled)"),
                                 "pct": str(int(similarity * 100)),
-                                "skill": skill.dir_name,
+                                "skill": skill_name,
                             },
                             location=Location(file=cmd.file_path, start_line=1),
                         )

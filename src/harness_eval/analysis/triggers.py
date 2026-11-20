@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from harness_eval.core.types import ComponentType, Setup
-from harness_eval.utils.similarity import tfidf_similarity
+from harness_eval.utils.similarity import build_similarity_matrix
 
 TRIGGER_OVERLAP_THRESHOLD = 0.50
 
@@ -51,13 +51,8 @@ def analyze_triggers(setup: Setup) -> TriggerReport:
         else:
             report.skills_without_description += 1
 
-    names = list(descriptions.keys())
-    for i in range(len(names)):
-        for j in range(i + 1, len(names)):
-            sim = tfidf_similarity(descriptions[names[i]], descriptions[names[j]])
-            if sim >= TRIGGER_OVERLAP_THRESHOLD:
-                report.overlap_pairs.append((names[i], names[j], sim))
-
+    matrix = build_similarity_matrix(descriptions)
+    report.overlap_pairs = matrix.pairs_above(TRIGGER_OVERLAP_THRESHOLD)
     report.overlap_pairs.sort(key=lambda x: x[2], reverse=True)
 
     return report

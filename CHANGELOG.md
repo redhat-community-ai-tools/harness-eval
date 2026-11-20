@@ -24,6 +24,9 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `harness-lint` no longer scales quadratically with the number of skills.
+  Similarity rules now vectorise once per scan and compare in bulk instead
+  of fitting a new TF-IDF vectorizer for every pair of texts (#153).
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.

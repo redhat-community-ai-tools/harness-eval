@@ -9,7 +9,7 @@ from harness_eval.inspection.types import (
     RuleMeta,
     Severity,
 )
-from harness_eval.utils.similarity import tfidf_similarity
+from harness_eval.utils.similarity import build_similarity_matrix
 
 SIMILARITY_THRESHOLD = 0.85
 
@@ -38,21 +38,25 @@ class CommandDuplicateDetection:
             return
 
         if _STATE_KEY not in context.scan_state:
-            context.scan_state[_STATE_KEY] = {"texts": {}, "reported": set()}
+            texts = {c.dir_name: c.body for c in context.all_commands if c.body}
+            context.scan_state[_STATE_KEY] = {
+                "matrix": build_similarity_matrix(texts),
+                "reported": set(),
+            }
         state = context.scan_state[_STATE_KEY]
+        matrix = state["matrix"]
 
         cmd_key = cmd.dir_name
-        state["texts"][cmd_key] = cmd.body
 
-        for other_name, other_text in state["texts"].items():
-            if other_name == cmd_key:
+        for other in context.all_commands:
+            if other.dir_name == cmd_key or not other.body:
                 continue
 
-            pair = tuple(sorted([cmd_key, other_name]))
+            pair = tuple(sorted([cmd_key, other.dir_name]))
             if pair in state["reported"]:
                 continue
 
-            similarity = tfidf_similarity(cmd.body, other_text)
+            similarity = matrix.get(cmd_key, other.dir_name)
             if similarity >= SIMILARITY_THRESHOLD:
                 state["reported"].add(pair)
                 context.report(
@@ -60,7 +64,7 @@ class CommandDuplicateDetection:
                         message_id="duplicate",
                         data={
                             "similarity": str(int(similarity * 100)),
-                            "other": other_name,
+                            "other": other.dir_name,
                         },
                         location=Location(file=cmd.command_md_path, start_line=1),
                     )
