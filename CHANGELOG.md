@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
-- Pre-commit hook `files` pattern now covers all discoverer paths: `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, `.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`, `opencode.json(c)`, `codex.json`, `.windsurf/`, `.devin/`, `.cline/`, and `.agents/`. Anchored `skills/`, `commands/`, `agents/`, and `harness/` to prevent accidental substring matches.
+- Pre-commit hook `files` pattern now covers all discoverer paths:
+  `.github/copilot-instructions.md`, `.github/instructions/`,
+  `.github/prompts/`, `.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`,
+  `opencode.json(c)`, `codex.json`, `.windsurf/`, `.devin/`, `.cline/`, and
+  `.agents/`. Anchored `skills/`, `commands/`, `agents/`, and `harness/` to
+  prevent accidental substring matches.
 
 ### Changed
 - `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,
