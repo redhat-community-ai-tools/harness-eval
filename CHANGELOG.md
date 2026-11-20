@@ -24,6 +24,10 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `mcp/no-plaintext-secrets` now detects literal secrets in `args`
+  (`--key=value`, `--flag <value>` pairs), URL query-string parameters, and
+  inline shell assignments (`VAR=value` in `sh -c` strings). Previously only
+  `env` and `headers` values were scanned.
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.

@@ -172,3 +172,139 @@ class TestMcpNoPlaintextSecrets:
         result = lint_mcp_config(path, RULE_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
         assert len(diags) == 0
+
+    # --- args scanning ---
+
+    def test_flags_secret_in_args_key_equals_value(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "args-server": {
+                    "command": "npx",
+                    "args": ["-y", "pkg-b@1.2.3", "--api-key=ghp_abc123"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 1
+        assert "args-server" in diags[0].message
+
+    def test_flags_secret_in_args_flag_then_value(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "args2-server": {
+                    "command": "npx",
+                    "args": ["-y", "pkg-c@1.2.3", "--token", "ghp_abc123"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 1
+        assert "args2-server" in diags[0].message
+
+    def test_skips_env_ref_in_args_flag_then_value(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "safe-args": {
+                    "command": "npx",
+                    "args": ["-y", "pkg@1.0.0", "--token", "$API_KEY"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 0
+
+    def test_skips_env_ref_in_args_key_equals_value(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "safe-args": {
+                    "command": "npx",
+                    "args": ["--api-key=${MY_KEY}"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 0
+
+    # --- URL query string scanning ---
+
+    def test_flags_secret_in_url_query_param(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "url-server": {
+                    "type": "sse",
+                    "url": "https://api.example.com/sse?api_key=ghp_urltoken123",
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 1
+        assert "url-server" in diags[0].message
+
+    def test_skips_url_without_query_string(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "clean-url": {
+                    "type": "sse",
+                    "url": "https://api.example.com/mcp",
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 0
+
+    # --- Inline shell assignment scanning ---
+
+    def test_flags_secret_in_sh_c_inline_env(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "cmd-server": {
+                    "command": "sh",
+                    "args": ["-c", "GITHUB_TOKEN=ghp_abc123 npx -y pkg-d@1.0.0"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 1
+        assert "cmd-server" in diags[0].message
+
+    def test_skips_sh_c_env_ref_inline(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "safe-cmd": {
+                    "command": "sh",
+                    "args": ["-c", "GITHUB_TOKEN=$GH_TOKEN npx -y pkg@1.0.0"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 0
+
+    def test_skips_command_without_inline_assignment(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "normal-cmd": {
+                    "command": "npx",
+                    "args": ["-y", "pkg@1.0.0"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 0

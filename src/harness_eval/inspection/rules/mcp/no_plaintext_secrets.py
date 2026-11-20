@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import math
+import re
+from urllib.parse import parse_qs, urlparse
 
 from harness_eval.core.types import ComponentType
 from harness_eval.data import load_secret_prefixes
@@ -27,6 +29,12 @@ _PLACEHOLDER_SUBSTRINGS = [
 ]
 
 _CREDENTIAL_KEY_SUBSTRINGS = ["key", "token", "secret", "password", "auth"]
+
+# Matches --flag=value or -flag=value in CLI args
+_FLAG_EQUALS_RE = re.compile(r"^-{1,2}([\w][\w-]*)=(.+)$")
+
+# Matches VAR=value patterns in shell strings (e.g. GITHUB_TOKEN=ghp_... npx ...)
+_ENV_ASSIGN_INLINE_RE = re.compile(r"(?:^|\s)([A-Z_][A-Z0-9_]*)=(\S+)")
 
 
 def _shannon_entropy(s: str) -> float:
@@ -55,6 +63,14 @@ def _is_placeholder(value: str) -> bool:
 def _key_suggests_credential(key: str) -> bool:
     lower = key.lower()
     return any(sub in lower for sub in _CREDENTIAL_KEY_SUBSTRINGS)
+
+
+def _is_credential_flag(arg: str) -> bool:
+    """True when the argument looks like a CLI flag for a credential."""
+    if not arg.startswith("-"):
+        return False
+    flag = arg.lstrip("-").lower()
+    return any(sub in flag for sub in _CREDENTIAL_KEY_SUBSTRINGS)
 
 
 class McpNoPlaintextSecrets:
@@ -121,6 +137,21 @@ class McpNoPlaintextSecrets:
                     if isinstance(value, str):
                         self._check_value(context, loc, server_name, key, value, prefixes)
 
+            # Check args for secrets (--key=value, --flag <value>, inline VAR=value)
+            args = server_def.get("args")
+            if isinstance(args, list):
+                self._check_args(context, loc, server_name, args, prefixes)
+
+            # Check url query string for secrets
+            url = server_def.get("url")
+            if isinstance(url, str):
+                self._check_url(context, loc, server_name, url, prefixes)
+
+            # Check command string for inline env assignments
+            command = server_def.get("command")
+            if isinstance(command, str):
+                self._check_shell_string(context, loc, server_name, "command", command, prefixes)
+
     def _check_value(
         self,
         context: RuleContext,
@@ -168,3 +199,77 @@ class McpNoPlaintextSecrets:
                     location=loc,
                 )
             )
+
+    def _check_args(
+        self,
+        context: RuleContext,
+        loc: Location,
+        server: str,
+        args: list,
+        prefixes: list[str],
+    ) -> None:
+        """Scan CLI args for secrets in --key=value, --flag <value>, and VAR=value."""
+        for i, arg in enumerate(args):
+            if not isinstance(arg, str):
+                continue
+
+            handled = False
+
+            # 1. --key=value or -key=value patterns
+            eq_match = _FLAG_EQUALS_RE.match(arg)
+            if eq_match:
+                flag_name, value = eq_match.group(1), eq_match.group(2)
+                # Use the flag name as key so entropy check fires for
+                # credential-related flags; otherwise fall back to "args".
+                key = f"args (--{flag_name})" if _key_suggests_credential(flag_name) else "args"
+                self._check_value(context, loc, server, key, value, prefixes)
+                handled = True
+
+            # 2. Value following a credential flag (--token <value>)
+            if not handled and i > 0 and not arg.startswith("-"):
+                prev = args[i - 1]
+                if isinstance(prev, str) and _is_credential_flag(prev):
+                    self._check_value(context, loc, server, f"args ({prev})", arg, prefixes)
+                    handled = True
+
+            # 3. Inline VAR=value patterns (shell strings, e.g. sh -c)
+            if not handled:
+                for m in _ENV_ASSIGN_INLINE_RE.finditer(arg):
+                    var_name, value = m.group(1), m.group(2)
+                    self._check_value(context, loc, server, f"args ({var_name})", value, prefixes)
+                    handled = True
+
+            # 4. Fallback: check the raw string for known prefixes
+            if not handled:
+                self._check_value(context, loc, server, "args", arg, prefixes)
+
+    def _check_url(
+        self,
+        context: RuleContext,
+        loc: Location,
+        server: str,
+        url: str,
+        prefixes: list[str],
+    ) -> None:
+        """Scan URL query-string parameters for secrets."""
+        parsed = urlparse(url)
+        if not parsed.query:
+            return
+        params = parse_qs(parsed.query, keep_blank_values=False)
+        for key, values in params.items():
+            for value in values:
+                self._check_value(context, loc, server, f"url ({key})", value, prefixes)
+
+    def _check_shell_string(
+        self,
+        context: RuleContext,
+        loc: Location,
+        server: str,
+        field: str,
+        text: str,
+        prefixes: list[str],
+    ) -> None:
+        """Scan a shell string for inline VAR=value assignments."""
+        for m in _ENV_ASSIGN_INLINE_RE.finditer(text):
+            var_name, value = m.group(1), m.group(2)
+            self._check_value(context, loc, server, f"{field} ({var_name})", value, prefixes)
