@@ -13,7 +13,9 @@ from harness_eval.utils.similarity import build_tfidf_index
 
 OVERLAP_THRESHOLD = 0.80
 
-_STATE_KEY = "_skill_body_index"
+# Shared with claude_md/skill_duplication.py — both rules query the same
+# pre-fitted skill-body TF-IDF index so it is built only once per scan.
+_STATE_KEY = "shared/skill-body-tfidf-index"
 
 
 class CommandSkillOverlap:

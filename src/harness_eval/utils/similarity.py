@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from scipy.sparse import spmatrix
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -94,7 +95,7 @@ class TfidfIndex:
     def __init__(
         self,
         vectorizer: TfidfVectorizer | None,
-        matrix: object,
+        matrix: spmatrix | None,
         names: list[str],
     ) -> None:
         self._vectorizer = vectorizer

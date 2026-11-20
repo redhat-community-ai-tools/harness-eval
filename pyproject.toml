@@ -80,6 +80,7 @@ module = [
     "tiktoken",
     "watchfiles",
     "sklearn.*",
+    "scipy.*",
 ]
 ignore_missing_imports = true
 

@@ -80,6 +80,23 @@ class TestTfidfIndex:
         index = build_tfidf_index({})
         assert index.query("anything") == {}
 
+    def test_multi_document_idf_discrimination(self) -> None:
+        """With multiple indexed documents, IDF weighting discriminates matches."""
+        texts = {
+            "deploy": "deploy the application to production using docker containers",
+            "testing": "run unit tests and integration tests with pytest framework",
+            "monitoring": "monitor application health using prometheus and grafana dashboards",
+        }
+        index = build_tfidf_index(texts)
+        # A query about deployment should match "deploy" most strongly
+        sims = index.query("deploy docker containers to production")
+        assert sims["deploy"] > sims["testing"]
+        assert sims["deploy"] > sims["monitoring"]
+        # A query about testing should match "testing" most strongly
+        sims = index.query("run pytest unit tests for integration")
+        assert sims["testing"] > sims["deploy"]
+        assert sims["testing"] > sims["monitoring"]
+
     def test_empty_query(self) -> None:
         index = build_tfidf_index({"a": "some text"})
         assert index.query("") == {}
