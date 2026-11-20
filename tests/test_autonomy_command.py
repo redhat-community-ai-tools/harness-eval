@@ -222,6 +222,5 @@ def test_internal_error_exit_code(tmp_path: Path) -> None:
         result = _run(str(tmp_path))
     finally:
         harness_autonomy.callback = original_callback
-    assert result.exit_code == EXIT_INTERNAL, (
-        f"ClickException exited {result.exit_code}; expected {EXIT_INTERNAL}"
-    )
+    msg = f"ClickException exited {result.exit_code}; expected {EXIT_INTERNAL}"
+    assert result.exit_code == EXIT_INTERNAL, msg
