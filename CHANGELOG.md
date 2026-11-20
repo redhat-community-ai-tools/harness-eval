@@ -24,6 +24,10 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `harness-autonomy`: inline `evaluator-ignore` comments no longer suppress
+  findings from `block`-effect rules. The scanned file cannot waive its own
+  blocking defects; the finding is emitted normally and the verdict remains
+  `FAIL`. Non-block rules (policy, signal, advice) are still suppressible.
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.
