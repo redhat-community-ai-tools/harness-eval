@@ -138,10 +138,10 @@ table above.
 | Claude Code | `CLAUDE.md`, `skills/`, `.claude/skills/`, `commands/`, `.claude/commands/`, `.claude/settings.json`, `.claude/agents/`, `agents/*.md`, `.mcp.json`, `.claude/rules/`, `.claude/output-styles/` |
 | Cursor | `AGENTS.md`, `.cursorrules`, `.cursor/rules/`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
 | Windsurf | `AGENTS.md`, `.windsurfrules`, `.windsurf/rules/`, `.devin/rules/`, `.windsurf/skills/`, `.devin/skills/`, `.agents/skills/`, `.windsurf/workflows/`, `.devin/workflows/`, `.windsurf/hooks.json`, `.windsurf/mcp_config.json` |
-| Cline | `AGENTS.md`, `.clinerules`, `.cline/rules/`, `.cline/skills/`, `.clinerules/skills/` |
-| Copilot | `.github/copilot-instructions.md`, `.github/instructions/`, `.github/skills/`, `.github/prompts/`, `.github/agents/`, `.github/hooks/`, `.github/copilot/settings.json`, `.vscode/mcp.json` |
-| Gemini CLI | `GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`, `.gemini/settings.json` |
-| OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `.opencode/skills/`, `opencode.json`, `opencode.jsonc` |
+| Cline | `AGENTS.md`, `.clinerules`, `.cline/rules/`, `.cline/skills/`, `.clinerules/skills/`, `.claude/skills/` |
+| Copilot | `.github/copilot-instructions.md`, `.github/instructions/`, `.github/skills/`, `.github/prompts/`, `.github/agents/`, `.github/hooks/`, `.github/copilot/settings.json`, `.vscode/mcp.json`, `.agents/skills/`, `.claude/skills/` |
+| Gemini CLI | `GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`, `.gemini/settings.json`, `.agents/skills/` |
+| OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `.opencode/skills/`, `opencode.json`, `opencode.jsonc`, `.agents/skills/`, `.claude/skills/` |
 | Codex CLI | `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, `.codex/config.toml`, `.codex/skills/`, `.agents/skills/`, `codex.json` |
 | fullsend | `harness/*.yaml` pipeline agent harnesses: agent prompt, model, image, policy, scripts, skills, plugins, host files, output contract, per-forge overrides |
 | Third-party modules | `.lola/modules/` (skills, commands, agents installed via package managers) |

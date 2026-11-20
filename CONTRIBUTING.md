@@ -131,8 +131,8 @@ Add your class to `src/harness_eval/inspection/rules/__init__.py`:
 
 ### 4. Update the counts
 
-Run `uv run scripts/gen_rules_reference.py` (effect, tier and scope tables, and the
-autonomy rule table), then update the rule count in all files that reference it:
+Run `uv run scripts/gen_rules_reference.py` (effect, tier and scope tables, the
+autonomy rule table, and the discovery table), then update the rule count in all files that reference it:
 - `README.md` (the badge, the intro, and the "Inspection rules" section)
 - `CLAUDE.md` (the project structure line mentioning rule count)
 - `skills/lint/SKILL.md` (the description field)
@@ -182,6 +182,7 @@ The discovery layer uses per-tool discoverer classes in `src/harness_eval/core/d
 Create `src/harness_eval/core/discoverers/my_tool.py` that subclasses `ToolDiscoverer` from `base.py`. Implement:
 - `tool_name` (display name, e.g., "My Tool")
 - `source_tool` (short identifier for `ParsedComponent.source_tool`, e.g., "mytool")
+- `discovery_summary` (backtick-quoted paths this discoverer checks, used to auto-generate the README discovery table)
 - `detect(root)` (return True if the tool's files exist)
 - `discover(root)` (return list of `ParsedComponent` objects)
 - `collect_paths(root)` (return every file path the discoverer reads)
@@ -217,7 +218,7 @@ uv run python scripts/update_corpus_snapshots.py
 
 ### 6. Update docs
 
-- Add the tool to the "Supported AI tools" table in `README.md`
+- Implement `discovery_summary` on the discoverer (the README discovery table is auto-generated from it; run `uv run scripts/gen_rules_reference.py` to regenerate)
 - Add an abbreviation to `docs/rules-reference.md`
 - Add the tool to the intro line in `README.md`
 

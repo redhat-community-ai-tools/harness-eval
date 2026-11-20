@@ -26,7 +26,8 @@ class ClineDiscoverer(ToolDiscoverer):
     @property
     def discovery_summary(self) -> str:
         return (
-            "`AGENTS.md`, `.clinerules`, `.cline/rules/`, `.cline/skills/`, `.clinerules/skills/`"
+            "`AGENTS.md`, `.clinerules`, `.cline/rules/`, `.cline/skills/`, "
+            "`.clinerules/skills/`, `.claude/skills/`"
         )
 
     def detect(self, root: Path) -> bool:

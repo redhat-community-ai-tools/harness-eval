@@ -28,7 +28,8 @@ class OpenCodeDiscoverer(ToolDiscoverer):
     def discovery_summary(self) -> str:
         return (
             "`AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, "
-            "`.opencode/skills/`, `opencode.json`, `opencode.jsonc`"
+            "`.opencode/skills/`, `opencode.json`, `opencode.jsonc`, "
+            "`.agents/skills/`, `.claude/skills/`"
         )
 
     def detect(self, root: Path) -> bool:
