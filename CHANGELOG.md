@@ -24,6 +24,9 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `CLAUDE.md` "Before committing" section: corrected job count and list to
+  match CI, fixed security gate prose to match `--fail-on-error` semantics,
+  and removed `--all` from `harness-lint` command to match CI.
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.
