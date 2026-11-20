@@ -25,7 +25,7 @@ Pre-commit also runs **gitleaks** (secret scanning) and **bandit** (Python secur
 Pre-push hooks run the full test suite and two dogfood gates:
 
 ```bash
-uv run harness-eval harness-autonomy .                      # decidable rules only; exit 1 FAIL, 2 REVIEW_REQUIRED
+uv run harness-eval harness-autonomy .                      # decidable rules only; exit 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error
 uv run harness-eval harness-security . --fail-on-warning   # any security finding blocks
 uv run harness-eval harness-gate .                          # validated block rules only
 uv run harness-eval harness-lint . --all --fail-on-error    # every rule: errors block, advisory findings do not

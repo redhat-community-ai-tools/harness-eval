@@ -11,6 +11,7 @@ from click.testing import CliRunner
 from harness_eval.cli import cli
 from harness_eval.cli.autonomy import (
     EXIT_FAIL,
+    EXIT_INTERNAL,
     EXIT_PASS,
     EXIT_REVIEW_REQUIRED,
     EXIT_USAGE,
@@ -202,3 +203,25 @@ def test_usage_error_exit_code_not_in_verdict_range() -> None:
         EXIT_REVIEW_REQUIRED,
     ), f"Usage error exited {result.exit_code}; expected outside the verdict range"
     assert result.exit_code == EXIT_USAGE
+
+
+def test_internal_error_exit_code(tmp_path: Path) -> None:
+    """A ClickException inside the command exits 70 (EX_SOFTWARE), not 1 or 2."""
+
+    import click
+
+    from harness_eval.cli.autonomy import harness_autonomy
+
+    original_callback = harness_autonomy.callback
+
+    def _raise(*args: object, **kwargs: object) -> None:
+        raise click.ClickException("simulated internal error")
+
+    harness_autonomy.callback = _raise
+    try:
+        result = _run(str(tmp_path))
+    finally:
+        harness_autonomy.callback = original_callback
+    assert result.exit_code == EXIT_INTERNAL, (
+        f"ClickException exited {result.exit_code}; expected {EXIT_INTERNAL}"
+    )
