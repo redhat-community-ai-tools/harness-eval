@@ -115,7 +115,5 @@ class TestBlockRuleSuppressionImmunity:
         injection_findings = [
             d for d in result.diagnostics if d.rule_id == "security/no-prompt-injection"
         ]
-        assert len(injection_findings) == 0, (
-            "Non-block rule should still be suppressed by inline comment"
-        )
+        assert not injection_findings, "Non-block rule should still be suppressed by inline comment"
         assert result.suppression_count >= 1
