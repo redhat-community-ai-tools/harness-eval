@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from click.testing import CliRunner
 
 from harness_eval.analysis.dependencies import analyze_dependencies
+from harness_eval.cli import cli
 from harness_eval.core.types import ComponentType, ParsedComponent, Setup
 from harness_eval.utils import tokens
 
@@ -25,10 +29,17 @@ class TestTiktokenFallback:
             result = tokens.count_tokens("hello world! this is a test.")
             assert result == len("hello world! this is a test.") // 4
 
-    def test_fallback_warns_once(self):
-        with patch.object(tokens, "_init_encoder", side_effect=self._force_fallback):
-            with pytest.warns(UserWarning, match="chars/4 approximation"):
-                tokens.count_tokens("first call")
+    def test_fallback_no_warning(self):
+        """Fallback path must not emit a UserWarning (issue #159)."""
+        import warnings
+
+        with (
+            patch.object(tokens, "_init_encoder", side_effect=self._force_fallback),
+            warnings.catch_warnings(),
+        ):
+            warnings.simplefilter("error")
+            # Neither call should raise — no warnings emitted
+            tokens.count_tokens("first call")
             tokens.count_tokens("second call")
 
     def test_normal_path_uses_tiktoken(self):
@@ -44,6 +55,23 @@ class TestTiktokenFallback:
     @staticmethod
     def _force_fallback():
         tokens._FALLBACK = True
+
+
+class TestAutonomyNoStderrNoise:
+    """harness-autonomy must not leak warnings to stderr (issue #159)."""
+
+    def test_autonomy_no_stderr_noise(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+        """harness-autonomy on a minimal fixture writes nothing to stderr."""
+        (tmp_path / "CLAUDE.md").write_text("# Instructions\n")
+        # Force tiktoken fallback so the former warning path is exercised
+        monkeypatch.setitem(sys.modules, "tiktoken", None)
+        tokens._reset()
+        try:
+            runner = CliRunner()
+            result = runner.invoke(cli, ["harness-autonomy", str(tmp_path)])
+            assert result.stderr == "", f"Unexpected stderr: {result.stderr}"
+        finally:
+            tokens._reset()
 
 
 class TestOrphanDetectionScope:
