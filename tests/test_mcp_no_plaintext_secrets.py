@@ -295,6 +295,36 @@ class TestMcpNoPlaintextSecrets:
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
         assert len(diags) == 0
 
+    def test_flags_nested_var_value_in_flag_equals(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "nested-server": {
+                    "command": "tool",
+                    "args": ["--env=GITHUB_TOKEN=ghp_abc123"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) >= 1
+        assert "nested-server" in diags[0].message
+
+    def test_flags_bare_secret_in_positional_arg(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "bare-arg-server": {
+                    "command": "tool",
+                    "args": ["ghp_abc123"],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 1
+        assert "bare-arg-server" in diags[0].message
+
     def test_skips_command_without_inline_assignment(self, tmp_path: Path) -> None:
         path = _make_mcp_config(
             tmp_path,

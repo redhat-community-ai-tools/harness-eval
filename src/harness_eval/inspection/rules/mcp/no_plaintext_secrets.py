@@ -205,7 +205,7 @@ class McpNoPlaintextSecrets:
         context: RuleContext,
         loc: Location,
         server: str,
-        args: list,
+        args: list[str],
         prefixes: list[str],
     ) -> None:
         """Scan CLI args for secrets in --key=value, --flag <value>, and VAR=value."""
@@ -223,21 +223,24 @@ class McpNoPlaintextSecrets:
                 # credential-related flags; otherwise fall back to "args".
                 key = f"args (--{flag_name})" if _key_suggests_credential(flag_name) else "args"
                 self._check_value(context, loc, server, key, value, prefixes)
+                # Also scan the extracted value for nested VAR=value patterns
+                # (e.g. --env=GITHUB_TOKEN=ghp_abc).
+                self._check_shell_string(context, loc, server, "args", value, prefixes)
                 handled = True
 
             # 2. Value following a credential flag (--token <value>)
+            # Guard: exclude flags that already carry an inline value via "="
+            # to avoid false-positives when branch 1 already handled the arg.
             if not handled and i > 0 and not arg.startswith("-"):
                 prev = args[i - 1]
-                if isinstance(prev, str) and _is_credential_flag(prev):
+                if isinstance(prev, str) and "=" not in prev and _is_credential_flag(prev):
                     self._check_value(context, loc, server, f"args ({prev})", arg, prefixes)
                     handled = True
 
             # 3. Inline VAR=value patterns (shell strings, e.g. sh -c)
-            if not handled:
-                for m in _ENV_ASSIGN_INLINE_RE.finditer(arg):
-                    var_name, value = m.group(1), m.group(2)
-                    self._check_value(context, loc, server, f"args ({var_name})", value, prefixes)
-                    handled = True
+            if not handled and _ENV_ASSIGN_INLINE_RE.search(arg):
+                self._check_shell_string(context, loc, server, "args", arg, prefixes)
+                handled = True
 
             # 4. Fallback: check the raw string for known prefixes
             if not handled:
