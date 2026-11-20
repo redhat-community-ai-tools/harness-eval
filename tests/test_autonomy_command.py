@@ -9,7 +9,13 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from harness_eval.cli import cli
-from harness_eval.cli.autonomy import EXIT_FAIL, EXIT_PASS, EXIT_REVIEW_REQUIRED, load_policy
+from harness_eval.cli.autonomy import (
+    EXIT_FAIL,
+    EXIT_PASS,
+    EXIT_REVIEW_REQUIRED,
+    EXIT_USAGE,
+    load_policy,
+)
 from harness_eval.config.presets import autonomy_rules, gate_rules, lint_rules, security_rules
 from harness_eval.inspection.registry import get_all_rules
 
@@ -182,3 +188,17 @@ def test_baseline_suppressions_are_counted_not_hidden(tmp_path: Path) -> None:
     data = json.loads(result.output)
     assert data["coverage"]["baseline_suppressed"] == len(first["blocking"]) + len(first["policy"])
     assert data["evidence"]["baseline"]["suppressed"] == data["coverage"]["baseline_suppressed"]
+
+
+# --- usage errors exit outside the verdict range --------------------------------
+
+
+def test_usage_error_exit_code_not_in_verdict_range() -> None:
+    """A usage error (nonexistent path) must not exit 0, 1 or 2."""
+    result = _run("./does-not-exist")
+    assert result.exit_code not in (
+        EXIT_PASS,
+        EXIT_FAIL,
+        EXIT_REVIEW_REQUIRED,
+    ), f"Usage error exited {result.exit_code}; expected outside the verdict range"
+    assert result.exit_code == EXIT_USAGE

@@ -6,8 +6,16 @@ only at tiers that have passed the corpus (``gating`` and ``provisional``).
 Heuristic (``signal``) and quality (``advice``) rules never take part, so a
 finding here is a fact about the configuration, not a pattern match.
 
-Exit codes: 0 PASS (no findings), 1 FAIL (a block finding), 2 REVIEW_REQUIRED
-(policy findings only; a person or a trusted policy file has to accept them).
+Exit codes
+----------
+0  PASS             — no findings.
+1  FAIL             — a block finding (a configuration defect).
+2  REVIEW_REQUIRED  — policy findings only; a person or a trusted policy
+                      file has to accept them.
+64 USAGE_ERROR      — invalid invocation (bad path, unknown flag, missing
+                      ``--policy`` file).  BSD ``EX_USAGE``.
+70 INTERNAL_ERROR   — unexpected internal error.  BSD ``EX_SOFTWARE``.
+
 No LLM, no network, no rules loaded from the scanned tree.
 """
 
@@ -35,6 +43,8 @@ from harness_eval.inspection.types import Finding, InspectionResult, Severity, f
 EXIT_PASS = 0
 EXIT_FAIL = 1
 EXIT_REVIEW_REQUIRED = 2
+EXIT_USAGE = 64  # BSD EX_USAGE — invalid invocation (bad path, unknown flag, etc.)
+EXIT_INTERNAL = 70  # BSD EX_SOFTWARE — unexpected internal error
 
 _HARNESS_FS_RULES = ("harness/referenced-file-exists", "harness/output-schema-valid")
 
@@ -336,7 +346,43 @@ def format_terminal(report: AutonomyReport, setup_name: str) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-@cli.command("harness-autonomy")
+class _AutonomyCommand(click.Command):
+    """Click command that remaps usage errors from exit 2 to 64 (EX_USAGE).
+
+    Click exits with code 2 for any ``UsageError`` (bad path, unknown flag,
+    missing file for ``--policy``).  ``harness-autonomy`` reserves exit 2 for
+    ``REVIEW_REQUIRED``, so a caller that reads only the exit code cannot
+    distinguish a legitimate review verdict from a broken invocation.
+
+    This subclass intercepts usage errors and raises ``SystemExit(64)``
+    instead, keeping the verdict range 0–2 unambiguous.
+    """
+
+    def make_context(
+        self,
+        info_name: str | None,
+        args: list[str],
+        parent: click.Context | None = None,
+        **extra: Any,
+    ) -> click.Context:
+        try:
+            return super().make_context(info_name, args, parent=parent, **extra)
+        except click.UsageError as exc:
+            exc.show()
+            raise SystemExit(EXIT_USAGE) from exc
+
+    def invoke(self, ctx: click.Context) -> Any:
+        try:
+            return super().invoke(ctx)
+        except click.UsageError as exc:
+            exc.show()
+            raise SystemExit(EXIT_USAGE) from exc
+        except click.ClickException as exc:
+            exc.show()
+            raise SystemExit(EXIT_INTERNAL) from exc
+
+
+@cli.command("harness-autonomy", cls=_AutonomyCommand)
 @click.argument("path", type=click.Path(exists=True, file_okay=False))
 @click.option(
     "--format",
