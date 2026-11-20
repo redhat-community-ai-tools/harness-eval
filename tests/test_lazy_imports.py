@@ -13,9 +13,9 @@ def test_sklearn_not_imported_at_module_load():
     removed = {m: sys.modules.pop(m) for m in mods_to_remove}
     try:
         importlib.import_module("harness_eval.utils.similarity")
-        assert not any("sklearn" in m for m in sys.modules), (
-            "sklearn was imported at module load time"
-        )
+        assert not any(
+            "sklearn" in m for m in sys.modules
+        ), "sklearn was imported at module load time"
     finally:
         # Restore removed modules so other tests are not affected
         sys.modules.update(removed)
