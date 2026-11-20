@@ -4,10 +4,13 @@ case-sensitive; the hooks under a misspelt key never run."""
 
 from __future__ import annotations
 
+import re
+
 from harness_eval.core.types import ComponentType
 from harness_eval.data import load_hook_events
 from harness_eval.inspection.rules.frontmatter._keys import normalize_key
 from harness_eval.inspection.types import (
+    FixSuggestion,
     Location,
     ReportDescriptor,
     RuleCategory,
@@ -23,7 +26,7 @@ class HooksEventNameNearMiss:
         tier="provisional",
         effect="block",
         default_severity=Severity.ERROR,
-        fixable=False,
+        fixable=True,
         description=(
             "Flag a hooks event key that differs from a Claude Code event name only by "
             "case or separator; the hooks under it never run"
@@ -49,7 +52,7 @@ class HooksEventNameNearMiss:
         events = load_hook_events()
         known = set(events)
         by_norm = {normalize_key(e): e for e in events}
-        loc = Location(file=hooks_data.file_path)
+        content_lines = hooks_data.raw_content.split("\n")
         seen: set[str] = set()
         for hook in hooks_data.hooks:
             event = hook.get("event")
@@ -59,10 +62,24 @@ class HooksEventNameNearMiss:
             if expected is None:
                 continue
             seen.add(event)
+            # Find the line containing the event key in the JSON for fix
+            # targeting.  Match a quoted JSON key to avoid false positives.
+            fix_line: int | None = None
+            fix: FixSuggestion | None = None
+            pattern = re.compile(re.escape(f'"{event}"'))
+            for i, content_line in enumerate(content_lines, 1):
+                if pattern.search(content_line):
+                    fix_line = i
+                    fix = FixSuggestion(
+                        description=f"Rename '{event}' to '{expected}'",
+                        replacement=content_line.replace(f'"{event}"', f'"{expected}"', 1),
+                    )
+                    break
             context.report(
                 ReportDescriptor(
                     message_id="near_miss",
                     data={"event": event, "expected": expected},
-                    location=loc,
+                    location=Location(file=hooks_data.file_path, start_line=fix_line),
+                    fix=fix,
                 )
             )

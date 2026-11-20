@@ -13,6 +13,7 @@ from harness_eval.inspection.rules.frontmatter._keys import (
     tool_base_name,
 )
 from harness_eval.inspection.types import (
+    FixSuggestion,
     Location,
     ReportDescriptor,
     RuleCategory,
@@ -28,7 +29,7 @@ class FrontmatterAllowedToolsCase:
         tier="provisional",
         effect="block",
         default_severity=Severity.ERROR,
-        fixable=False,
+        fixable=True,
         description=(
             "Flag a tool entry that matches a built-in tool name only case-insensitively; "
             "tool names are case-sensitive, so the entry has no effect"
@@ -78,8 +79,12 @@ class FrontmatterAllowedToolsCase:
         names = load_tool_names()
         exact = set(names)
         by_lower = {n.lower(): n for n in names}
-        loc = Location(file=path, start_line=line)
-        for field, entries in fields:
+        raw_content, _ = context.source_text()
+        content_lines = raw_content.split("\n")
+
+        # Collect all mismatches per field, then produce fixes.
+        for field_name, entries in fields:
+            mismatches: list[tuple[str, str]] = []  # (entry, expected)
             for entry in entries:
                 base = tool_base_name(entry)
                 if not base or base in exact or base.startswith("mcp__") or "*" in base:
@@ -87,10 +92,42 @@ class FrontmatterAllowedToolsCase:
                 expected = by_lower.get(base.lower())
                 if expected is None:
                     continue
+                mismatches.append((entry, expected))
+
+            if not mismatches:
+                continue
+
+            # Find the line containing this field for fix targeting.
+            fix_line = line
+            original_line: str | None = None
+            for i, content_line in enumerate(content_lines, 1):
+                stripped = content_line.lstrip()
+                if stripped.startswith(field_name + ":") or stripped.startswith(field_name + " "):
+                    fix_line = i
+                    original_line = content_line
+                    break
+
+            # Build a fully-corrected replacement line so that the last
+            # fix applied produces the right result regardless of order.
+            replacement_line = original_line
+            if replacement_line is not None:
+                for entry, expected in mismatches:
+                    base = tool_base_name(entry)
+                    corrected = entry.replace(base, expected, 1)
+                    replacement_line = replacement_line.replace(entry, corrected, 1)
+
+            for entry, expected in mismatches:
+                fix: FixSuggestion | None = None
+                if replacement_line is not None:
+                    fix = FixSuggestion(
+                        description=f"Replace '{entry}' with '{expected}'",
+                        replacement=replacement_line,
+                    )
                 context.report(
                     ReportDescriptor(
                         message_id="case_mismatch",
-                        data={"field": field, "entry": entry, "expected": expected},
-                        location=loc,
+                        data={"field": field_name, "entry": entry, "expected": expected},
+                        location=Location(file=path, start_line=fix_line),
+                        fix=fix,
                     )
                 )
