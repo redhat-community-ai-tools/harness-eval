@@ -24,6 +24,10 @@ class GeminiDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "gemini"
 
+    @property
+    def discovery_summary(self) -> str:
+        return "`GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`, `.gemini/settings.json`"
+
     def detect(self, root: Path) -> bool:
         return (root / "GEMINI.md").is_file() or (root / ".gemini").is_dir()
 

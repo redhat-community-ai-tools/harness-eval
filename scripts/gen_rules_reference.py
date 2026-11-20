@@ -19,6 +19,7 @@ from collections import Counter
 from pathlib import Path
 
 import harness_eval.inspection  # noqa: F401 — registers all rules
+from harness_eval.core.discoverers.registry import get_all_discoverers
 from harness_eval.inspection.registry import get_all_rules
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -87,6 +88,17 @@ def render_scope_counts() -> str:
     return "\n".join(rows)
 
 
+def render_discovery_table() -> str:
+    """Generate the per-assistant discovery table from discoverer metadata."""
+    rows = [
+        "| Assistant | What it discovers |",
+        "|-----------|------------------|",
+    ]
+    for disc in get_all_discoverers():
+        rows.append(f"| {disc.tool_name} | {disc.discovery_summary} |")
+    return "\n".join(rows)
+
+
 def replace_block(text: str, marker: str, body: str) -> str:
     begin = f"<!-- BEGIN GENERATED: {marker} -->"
     end = f"<!-- END GENERATED: {marker} -->"
@@ -107,6 +119,7 @@ def apply() -> None:
     text = replace_block(text, "effect-counts", render_effect_counts())
     text = replace_block(text, "tier-counts", render_tier_counts())
     text = replace_block(text, "scope-counts", render_scope_counts())
+    text = replace_block(text, "discovery-table", render_discovery_table())
     readme.write_text(text)
 
 

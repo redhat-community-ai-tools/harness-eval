@@ -149,6 +149,18 @@ class TestGeneratedTierScopeTables:
         )
 
 
+class TestDiscoveryTable:
+    """The README discovery table must match what discoverers declare."""
+
+    def test_readme_discovery_table_current(self) -> None:
+        gen = _load_gen_module()
+        readme = (ROOT / "README.md").read_text()
+        expected = gen.render_discovery_table()
+        assert expected in readme, (
+            "README.md discovery table is stale. Run: uv run scripts/gen_rules_reference.py"
+        )
+
+
 class TestCommandSurfaceSync:
     def test_claude_and_cursor_commands_have_same_names(self) -> None:
         claude_dir = ROOT / "commands"

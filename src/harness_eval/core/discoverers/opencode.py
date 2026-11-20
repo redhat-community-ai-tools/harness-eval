@@ -24,6 +24,13 @@ class OpenCodeDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "opencode"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, "
+            "`.opencode/skills/`, `opencode.json`, `opencode.jsonc`"
+        )
+
     def detect(self, root: Path) -> bool:
         """Detect OpenCode setup files.
 

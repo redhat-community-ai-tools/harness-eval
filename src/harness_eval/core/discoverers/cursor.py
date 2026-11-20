@@ -19,6 +19,13 @@ class CursorDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "cursor"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`AGENTS.md`, `.cursorrules`, `.cursor/rules/`, `.cursor/commands/`, "
+            "`.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json`"
+        )
+
     def detect(self, root: Path) -> bool:
         return (root / ".cursor").is_dir() or (root / ".cursorrules").is_file()
 

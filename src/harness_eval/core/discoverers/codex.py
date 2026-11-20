@@ -28,6 +28,13 @@ class CodexDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "codex"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, "
+            "`.codex/config.toml`, `.codex/skills/`, `.agents/skills/`, `codex.json`"
+        )
+
     def detect(self, root: Path) -> bool:
         return (root / ".codex").is_dir() or (root / "codex.json").is_file()
 

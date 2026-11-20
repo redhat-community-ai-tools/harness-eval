@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- README discovery table is now auto-generated from discoverer metadata
+  via `scripts/gen_rules_reference.py` and checked in CI.
+
 ### Changed
 - `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,
   `AGENTS.md`, Cursor rules, Copilot and Codex instruction files) and on
