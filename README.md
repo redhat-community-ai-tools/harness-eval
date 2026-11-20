@@ -205,7 +205,9 @@ techniques and OWASP / MITRE ATLAS mappings is in
 - **Accept it once** (policy facts): the autonomy policy file above.
 - **Suppress in place**: `<!-- evaluator-ignore: rule/id -->` for a file,
   `<!-- evaluator-ignore-next-line: rule/id -->` for one line. Removed rule
-  ids keep working as aliases.
+  ids keep working as aliases. **Note:** `block`-effect rules cannot be
+  suppressed by inline `evaluator-ignore` comments — the scanned file cannot
+  waive its own blocking defects.
 - **Adopt incrementally**: `harness-eval baseline . --output .harness-eval-baseline.json`,
   then `--baseline` on any command. `harness-autonomy` counts suppressed
   findings in its coverage block instead of hiding them.

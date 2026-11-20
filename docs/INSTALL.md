@@ -66,7 +66,7 @@ Optional: YARA malware signature scanning for security: `pip install harness-eva
 
 ### Suppressing false positives
 
-Add `<!-- evaluator-ignore: rule/id -->` to any file for file-wide suppression, or `<!-- evaluator-ignore-next-line: rule/id -->` for a single line. Use `--baseline` for incremental adoption, `--exclude` to skip files, or `--enforce advisory` to report without failing CI. See the [README](../README.md#suppressing-findings) for details.
+Add `<!-- evaluator-ignore: rule/id -->` to any file for file-wide suppression, or `<!-- evaluator-ignore-next-line: rule/id -->` for a single line. **Note:** `block`-effect rules are immune to inline suppression — the scanned file cannot waive its own blocking defects. Use `--baseline` for incremental adoption, `--exclude` to skip files, or `--enforce advisory` to report without failing CI. See the [README](../README.md#suppressing-findings) for details.
 
 ## GitHub Action
 
