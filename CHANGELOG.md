@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Fixed
+### Changed
 - `docs/THREAT_MODEL.md` rewritten around the four commands, the effect axis,
   and the autonomy use case; documents trust assumptions for inline
   suppressions, the baseline file, and the autonomy policy file; removes stale
@@ -12,8 +12,6 @@ All notable changes to this project will be documented in this file.
 - `pyproject.toml` description aligned with the README.
 - `Containerfile` description label includes Codex, Windsurf, Cline and
   fullsend.
-
-### Changed
 - `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,
   `AGENTS.md`, Cursor rules, Copilot and Codex instruction files) and on
   commands and agents, not only on skills. Hidden text in a rules file is the
