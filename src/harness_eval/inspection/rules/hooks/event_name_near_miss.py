@@ -4,8 +4,6 @@ case-sensitive; the hooks under a misspelt key never run."""
 
 from __future__ import annotations
 
-import re
-
 from harness_eval.core.types import ComponentType
 from harness_eval.data import load_hook_events
 from harness_eval.inspection.rules.frontmatter._keys import normalize_key
@@ -66,9 +64,9 @@ class HooksEventNameNearMiss:
             # targeting.  Match a quoted JSON key to avoid false positives.
             fix_line: int | None = None
             fix: FixSuggestion | None = None
-            pattern = re.compile(re.escape(f'"{event}"'))
+            quoted_event = f'"{event}"'
             for i, content_line in enumerate(content_lines, 1):
-                if pattern.search(content_line):
+                if quoted_event in content_line:
                     fix_line = i
                     fix = FixSuggestion(
                         description=f"Rename '{event}' to '{expected}'",

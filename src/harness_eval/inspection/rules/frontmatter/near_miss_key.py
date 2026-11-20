@@ -81,7 +81,7 @@ class FrontmatterNearMissKey:
             fix: FixSuggestion | None = None
             for i, content_line in enumerate(content_lines, 1):
                 stripped = content_line.lstrip()
-                if stripped.startswith(key + ":") or stripped == key + ":":
+                if stripped.startswith(key + ":"):
                     fix_line = i
                     fix = FixSuggestion(
                         description=f"Rename '{key}' to '{expected}'",

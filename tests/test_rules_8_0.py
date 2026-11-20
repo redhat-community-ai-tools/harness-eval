@@ -15,6 +15,7 @@ from harness_eval.inspection.engine import (
     lint_hooks,
     lint_mcp_config,
 )
+from harness_eval.inspection.fixer import apply_fixes
 from harness_eval.inspection.registry import get_all_rules
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -105,8 +106,6 @@ def test_near_miss_key_skips_other_clients(tmp_path: Path) -> None:
 
 
 def test_near_miss_key_produces_fix(tmp_path: Path) -> None:
-    from harness_eval.inspection.fixer import apply_fixes
-
     path = _skill(tmp_path, "name: demo\ndescription: Does a thing.\nallowed_tools: Read\n")
     found = _diags(lint(path, {NEAR_MISS: "error"}), NEAR_MISS)
     assert len(found) == 1
@@ -120,8 +119,6 @@ def test_near_miss_key_produces_fix(tmp_path: Path) -> None:
 
 
 def test_near_miss_key_fix_on_agent(tmp_path: Path) -> None:
-    from harness_eval.inspection.fixer import apply_fixes
-
     agent = tmp_path / "reviewer.md"
     agent.write_text("---\ndescription: reviews\ndisallowed-tools: Bash\n---\nbody\n")
     found = _diags(lint_agent(str(agent), {NEAR_MISS: "error"}), NEAR_MISS)
@@ -162,8 +159,6 @@ def test_allowed_tools_case_on_agent_tools(tmp_path: Path) -> None:
 
 
 def test_allowed_tools_case_produces_fix(tmp_path: Path) -> None:
-    from harness_eval.inspection.fixer import apply_fixes
-
     path = _skill(tmp_path, "name: demo\ndescription: Does a thing.\nallowed-tools: read bash\n")
     found = _diags(lint(path, {TOOLS_CASE: "error"}), TOOLS_CASE)
     assert len(found) == 2
@@ -175,8 +170,6 @@ def test_allowed_tools_case_produces_fix(tmp_path: Path) -> None:
 
 
 def test_allowed_tools_case_fix_single_entry(tmp_path: Path) -> None:
-    from harness_eval.inspection.fixer import apply_fixes
-
     path = _skill(tmp_path, "name: demo\ndescription: Does a thing.\nallowed-tools: read\n")
     found = _diags(lint(path, {TOOLS_CASE: "error"}), TOOLS_CASE)
     assert len(found) == 1
@@ -187,6 +180,22 @@ def test_allowed_tools_case_fix_single_entry(tmp_path: Path) -> None:
     fixed = (Path(path) / "SKILL.md").read_text()
     assert "allowed-tools: Read" in fixed
     assert "read" not in fixed.split("---")[1]  # not in frontmatter
+
+
+def test_allowed_tools_case_fix_preserves_glob_pattern(tmp_path: Path) -> None:
+    """Replacement must not corrupt a parenthesized glob pattern that contains
+    the misspelled tool name as a substring (e.g. ``Read(bash:*) bash``)."""
+    path = _skill(
+        tmp_path, "name: demo\ndescription: Does a thing.\nallowed-tools: Read(bash:*) bash\n"
+    )
+    found = _diags(lint(path, {TOOLS_CASE: "error"}), TOOLS_CASE)
+    assert len(found) == 1
+    assert found[0].data["entry"] == "bash"
+    assert found[0].fix is not None
+    results = apply_fixes(found)
+    assert len(results) == 1
+    fixed = (Path(path) / "SKILL.md").read_text()
+    assert "allowed-tools: Read(bash:*) Bash" in fixed
 
 
 # --- hooks/event-name-near-miss --------------------------------------------------
@@ -226,8 +235,6 @@ def test_event_name_near_miss_skips_cursor_and_copilot(tmp_path: Path) -> None:
 
 
 def test_event_name_near_miss_produces_fix(tmp_path: Path) -> None:
-    from harness_eval.inspection.fixer import apply_fixes
-
     settings_path = _settings(tmp_path, _hook("preToolUse"))
     result = lint_hooks(settings_path, {EVENT: "error"})
     found = _diags(result, EVENT)

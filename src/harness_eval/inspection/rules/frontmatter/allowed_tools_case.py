@@ -107,14 +107,40 @@ class FrontmatterAllowedToolsCase:
                     original_line = content_line
                     break
 
-            # Build a fully-corrected replacement line so that the last
-            # fix applied produces the right result regardless of order.
+            # Build a fully-corrected replacement line positionally so
+            # that glob patterns inside parentheses are never corrupted.
             replacement_line = original_line
             if replacement_line is not None:
+                correction_map: dict[str, str] = {}
                 for entry, expected in mismatches:
                     base = tool_base_name(entry)
-                    corrected = entry.replace(base, expected, 1)
-                    replacement_line = replacement_line.replace(entry, corrected, 1)
+                    correction_map[entry] = entry.replace(base, expected, 1)
+                colon_pos = replacement_line.find(field_name + ":")
+                if colon_pos >= 0:
+                    prefix = replacement_line[: colon_pos + len(field_name) + 1]
+                    value_part = replacement_line[colon_pos + len(field_name) + 1 :]
+                    # Walk the value part with paren-aware tokenization,
+                    # correcting only standalone entries at depth 0.
+                    rebuilt: list[str] = []
+                    depth = 0
+                    current: list[str] = []
+                    for ch in value_part:
+                        if ch == "(":
+                            depth += 1
+                        elif ch == ")" and depth:
+                            depth -= 1
+                        if depth == 0 and (ch == "," or ch.isspace()):
+                            if current:
+                                token = "".join(current)
+                                rebuilt.append(correction_map.get(token, token))
+                                current = []
+                            rebuilt.append(ch)
+                            continue
+                        current.append(ch)
+                    if current:
+                        token = "".join(current)
+                        rebuilt.append(correction_map.get(token, token))
+                    replacement_line = prefix + "".join(rebuilt)
 
             for entry, expected in mismatches:
                 fix: FixSuggestion | None = None
