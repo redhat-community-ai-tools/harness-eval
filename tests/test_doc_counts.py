@@ -92,9 +92,11 @@ class TestReadmeBadge:
         for line in readme.read_text().splitlines():
             m = badge_pattern.search(line)
             if m:
-                assert (
-                    int(m.group(1)) == total
-                ), f"README.md badge says {m.group(1)} rules but registry has {total}."
+                # fmt: off
+                assert int(m.group(1)) == total, (
+                    f"README.md badge says {m.group(1)} rules but registry has {total}."
+                )
+                # fmt: on
                 return
         raise AssertionError("No rules badge found in README.md")
 
@@ -130,15 +132,17 @@ class TestGeneratedTierScopeTables:
     def test_readme_count_tables_current(self) -> None:
         gen = _load_gen_module()
         readme = (ROOT / "README.md").read_text()
-        assert (
-            gen.render_tier_counts() in readme
-        ), "README.md tier counts are stale. Run: uv run scripts/gen_rules_reference.py"
-        assert (
-            gen.render_scope_counts() in readme
-        ), "README.md scope counts are stale. Run: uv run scripts/gen_rules_reference.py"
-        assert (
-            gen.render_effect_counts() in readme
-        ), "README.md effect counts are stale. Run: uv run scripts/gen_rules_reference.py"
+        # fmt: off
+        assert gen.render_tier_counts() in readme, (
+            "README.md tier counts are stale. Run: uv run scripts/gen_rules_reference.py"
+        )
+        assert gen.render_scope_counts() in readme, (
+            "README.md scope counts are stale. Run: uv run scripts/gen_rules_reference.py"
+        )
+        assert gen.render_effect_counts() in readme, (
+            "README.md effect counts are stale. Run: uv run scripts/gen_rules_reference.py"
+        )
+        # fmt: on
 
     def test_autonomy_rule_table_current(self) -> None:
         gen = _load_gen_module()
@@ -156,9 +160,11 @@ class TestDiscoveryTable:
         gen = _load_gen_module()
         readme = (ROOT / "README.md").read_text()
         expected = gen.render_discovery_table()
-        assert (
-            expected in readme
-        ), "README.md discovery table is stale. Run: uv run scripts/gen_rules_reference.py"
+        # fmt: off
+        assert expected in readme, (
+            "README.md discovery table is stale. Run: uv run scripts/gen_rules_reference.py"
+        )
+        # fmt: on
 
 
 class TestCommandSurfaceSync:
