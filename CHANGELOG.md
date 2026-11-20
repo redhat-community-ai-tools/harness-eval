@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- Cursor discoverer no longer walks the entire tree for `.cursorrules` without `--recursive`; only the root-level file is read in non-recursive mode, matching every other component type.
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.
