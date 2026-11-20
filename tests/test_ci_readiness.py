@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import warnings
 from pathlib import Path
 from unittest.mock import patch
 
@@ -31,8 +32,6 @@ class TestTiktokenFallback:
 
     def test_fallback_no_warning(self):
         """Fallback path must not emit a UserWarning (issue #159)."""
-        import warnings
-
         with (
             patch.object(tokens, "_init_encoder", side_effect=self._force_fallback),
             warnings.catch_warnings(),
@@ -60,18 +59,21 @@ class TestTiktokenFallback:
 class TestAutonomyNoStderrNoise:
     """harness-autonomy must not leak warnings to stderr (issue #159)."""
 
+    def setup_method(self):
+        tokens._reset()
+
+    def teardown_method(self):
+        tokens._reset()
+
     def test_autonomy_no_stderr_noise(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """harness-autonomy on a minimal fixture writes nothing to stderr."""
         (tmp_path / "CLAUDE.md").write_text("# Instructions\n")
         # Force tiktoken fallback so the former warning path is exercised
         monkeypatch.setitem(sys.modules, "tiktoken", None)
         tokens._reset()
-        try:
-            runner = CliRunner()
-            result = runner.invoke(cli, ["harness-autonomy", str(tmp_path)])
-            assert result.stderr == "", f"Unexpected stderr: {result.stderr}"
-        finally:
-            tokens._reset()
+        runner = CliRunner()
+        result = runner.invoke(cli, ["harness-autonomy", str(tmp_path)])
+        assert result.stderr == "", f"Unexpected stderr: {result.stderr}"
 
 
 class TestOrphanDetectionScope:
