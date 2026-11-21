@@ -28,6 +28,10 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `mcp/no-plaintext-secrets` now detects literal secrets in `args`
+  (`--key=value`, `--flag <value>` pairs), URL query-string parameters, and
+  inline shell assignments (`VAR=value` in `sh -c` strings). Previously only
+  `env` and `headers` values were scanned.
 - Cursor discoverer no longer walks the entire tree for `.cursorrules` without `--recursive`; only the root-level file is read in non-recursive mode, matching every other component type.
 - Pre-commit hook `files` pattern now covers all discoverer paths:
   `.github/copilot-instructions.md`, `.github/instructions/`,
