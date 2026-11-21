@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- `CLAUDE.md` "Before committing" section now includes
+  `uv run scripts/sync_commands.py --check` so agents and developers
+  catch command-sync issues locally instead of waiting for CI (#178).
 - `Containerfile` description label includes Codex, Windsurf, Cline and
   fullsend.
 - `pyproject.toml` description aligned with the README.
