@@ -85,16 +85,16 @@ from harness_eval.inspection.types import (
 
 class MyNewRule:
     meta = RuleMeta(
-        id="category/rule-name",          # unique, kebab-case
-        default_severity=Severity.WARNING, # or ERROR, INFO
+        id="category/rule-name",  # unique, kebab-case
+        default_severity=Severity.WARNING,  # or ERROR, INFO
         fixable=False,
         description="One sentence about what this checks",
-        category=RuleCategory.CONTENT,     # match the folder
+        category=RuleCategory.CONTENT,  # match the folder
         messages={
             "message_id": "What to tell the user: {{variable}}",
         },
-        target_type=ComponentType.SKILL,   # what component this applies to
-        tools=None,                        # None = all tools; ("claude",) = Claude Code only; ("cursor",) = Cursor only
+        target_type=ComponentType.SKILL,  # what component this applies to
+        tools=None,  # None = all tools; ("claude",) = Claude Code only; ("cursor",) = Cursor only
     )
 
     def create(self, context: RuleContext) -> None:
@@ -107,11 +107,13 @@ class MyNewRule:
 
         # Check something, report if it fails
         if some_condition:
-            context.report(ReportDescriptor(
-                message_id="message_id",
-                data={"variable": "value"},
-                location=Location(file=skill.skill_md_path, start_line=1),
-            ))
+            context.report(
+                ReportDescriptor(
+                    message_id="message_id",
+                    data={"variable": "value"},
+                    location=Location(file=skill.skill_md_path, start_line=1),
+                )
+            )
 ```
 
 Look at existing rules for real examples. `commands/shadows_builtin.py` is a simple one. `security/no_prompt_injection.py` is a complex one.
@@ -131,8 +133,8 @@ Add your class to `src/harness_eval/inspection/rules/__init__.py`:
 
 ### 4. Update the counts
 
-Run `uv run scripts/gen_rules_reference.py` (effect, tier and scope tables, and the
-autonomy rule table), then update the rule count in all files that reference it:
+Run `uv run scripts/gen_rules_reference.py` (effect, tier and scope tables, the
+autonomy rule table, and the discovery table), then update the rule count in all files that reference it:
 - `README.md` (the badge, the intro, and the "Inspection rules" section)
 - `CLAUDE.md` (the project structure line mentioning rule count)
 - `skills/lint/SKILL.md` (the description field)
@@ -166,6 +168,7 @@ If your rule needs to compare across components (like duplicate detection compar
 ```python
 STATE_KEY = "my-rule/state"
 
+
 def create(self, context: RuleContext) -> None:
     state = context.artifacts.rule_state.setdefault(STATE_KEY, {"seen": {}})
     # use state instead of module-level dicts
@@ -182,6 +185,7 @@ The discovery layer uses per-tool discoverer classes in `src/harness_eval/core/d
 Create `src/harness_eval/core/discoverers/my_tool.py` that subclasses `ToolDiscoverer` from `base.py`. Implement:
 - `tool_name` (display name, e.g., "My Tool")
 - `source_tool` (short identifier for `ParsedComponent.source_tool`, e.g., "mytool")
+- `discovery_summary` (recommended; backtick-quoted paths this discoverer checks, used to auto-generate the README discovery table; defaults to empty string if not overridden)
 - `detect(root)` (return True if the tool's files exist)
 - `discover(root)` (return list of `ParsedComponent` objects)
 - `collect_paths(root)` (return every file path the discoverer reads)
@@ -217,7 +221,7 @@ uv run python scripts/update_corpus_snapshots.py
 
 ### 6. Update docs
 
-- Add the tool to the "Supported AI tools" table in `README.md`
+- Implement `discovery_summary` on the discoverer (the README discovery table is auto-generated from it; run `uv run scripts/gen_rules_reference.py` to regenerate)
 - Add an abbreviation to `docs/rules-reference.md`
 - Add the tool to the intro line in `README.md`
 

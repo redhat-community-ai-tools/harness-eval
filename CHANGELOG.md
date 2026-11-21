@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- README discovery table is now auto-generated from discoverer metadata
+  via `scripts/gen_rules_reference.py` and checked in CI.
 - `frontmatter/near-miss-key`, `frontmatter/allowed-tools-case`, and
   `hooks/event-name-near-miss` now produce auto-fix suggestions. Running
   `harness-lint --fix` corrects misspelt frontmatter keys, wrong-cased tool

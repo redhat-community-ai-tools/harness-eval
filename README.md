@@ -134,18 +134,20 @@ table above.
 
 ## What it checks
 
+<!-- BEGIN GENERATED: discovery-table -->
 | Assistant | What it discovers |
 |-----------|------------------|
-| Claude Code | `CLAUDE.md`, `skills/`, `commands/`, `.claude/agents/`, `agents/*.md`, `.claude/settings.json`, `.mcp.json` |
-| Cursor | `.cursor/rules/*.mdc`, `.cursorrules`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
-| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` (linted as instruction files) |
-| Cline | `.clinerules` (file or directory of `*.md`) (linted as instruction files) |
-| Copilot | `.github/copilot-instructions.md`, `.github/skills/`, `.github/prompts/`, `.github/agents/`, `.vscode/mcp.json` |
-| Gemini CLI | `GEMINI.md`, `.gemini/commands/` (`.md` and `.toml` linted), `.gemini/settings.json` (MCP) |
-| OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `opencode.json` (MCP) |
-| Codex CLI | `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, `codex.json` |
+| Claude Code | `CLAUDE.md`, `skills/`, `.claude/skills/`, `commands/`, `.claude/commands/`, `.claude/settings.json`, `.claude/agents/`, `agents/*.md`, `.mcp.json`, `.claude/rules/`, `.claude/output-styles/` |
+| Cursor | `AGENTS.md`, `.cursorrules`, `.cursor/rules/`, `.cursor/commands/`, `.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json` |
+| Windsurf | `AGENTS.md`, `.windsurfrules`, `.windsurf/rules/`, `.devin/rules/`, `.windsurf/skills/`, `.devin/skills/`, `.agents/skills/`, `.windsurf/workflows/`, `.devin/workflows/`, `.windsurf/hooks.json`, `.windsurf/mcp_config.json` |
+| Cline | `AGENTS.md`, `.clinerules`, `.cline/rules/`, `.cline/skills/`, `.clinerules/skills/`, `.claude/skills/` |
+| Copilot | `.github/copilot-instructions.md`, `.github/instructions/`, `.github/skills/`, `.github/prompts/`, `.github/agents/`, `.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`, `.agents/skills/`, `.claude/skills/` |
+| Gemini CLI | `GEMINI.md`, `.gemini/commands/`, `.gemini/skills/`, `.gemini/settings.json`, `.agents/skills/` |
+| OpenCode | `AGENTS.md`, `.opencode/commands/`, `.opencode/agents/`, `.opencode/skills/`, `opencode.json`, `opencode.jsonc`, `.agents/skills/`, `.claude/skills/` |
+| Codex CLI | `AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, `.codex/config.toml`, `.codex/skills/`, `.agents/skills/`, `codex.json` |
 | fullsend | `harness/*.yaml` pipeline agent harnesses: agent prompt, model, image, policy, scripts, skills, plugins, host files, output contract, per-forge overrides |
 | Third-party modules | `.lola/modules/` (skills, commands, agents installed via package managers) |
+<!-- END GENERATED: discovery-table -->
 
 Because every component lands in one graph, rules can see across files: a
 hook that reads credentials and passes them to a skill that forwards them to a

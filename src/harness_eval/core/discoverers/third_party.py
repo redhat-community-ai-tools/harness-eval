@@ -19,6 +19,10 @@ class ThirdPartyDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "third-party"
 
+    @property
+    def discovery_summary(self) -> str:
+        return "`.lola/modules/` (skills, commands, agents installed via package managers)"
+
     def detect(self, root: Path) -> bool:
         return (root / ".lola" / "modules").is_dir()
 
