@@ -31,6 +31,8 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- `CLAUDE.md` convention: heavy dependencies (`numpy`, `scipy`, `scikit-learn`)
+  must use function-level lazy imports, not module-level (#182).
 - README discovery table is now auto-generated from discoverer metadata
   via `scripts/gen_rules_reference.py` and checked in CI.
 - `frontmatter/near-miss-key`, `frontmatter/allowed-tools-case`, and
