@@ -1,6 +1,6 @@
 - id: harness-autonomy
   name: harness-autonomy
-  description: Decidable checks for an auto-merge policy (block and policy rules; exit 1 FAIL, 2 REVIEW_REQUIRED; no LLM)
+  description: Decidable checks for an auto-merge policy (block and policy rules; exit 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error; no LLM)
   entry: harness-eval harness-autonomy .
   language: python
   pass_filenames: false
@@ -9,9 +9,15 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]
 
@@ -26,9 +32,15 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]
 
@@ -43,9 +55,15 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]
 
@@ -60,8 +78,14 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]

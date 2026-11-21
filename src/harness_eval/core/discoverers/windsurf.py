@@ -24,6 +24,15 @@ class WindsurfDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "windsurf"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`AGENTS.md`, `.windsurfrules`, `.windsurf/rules/`, `.devin/rules/`, "
+            "`.windsurf/skills/`, `.devin/skills/`, `.agents/skills/`, "
+            "`.windsurf/workflows/`, `.devin/workflows/`, "
+            "`.windsurf/hooks.json`, `.windsurf/mcp_config.json`"
+        )
+
     def detect(self, root: Path) -> bool:
         return (
             (root / ".devin").is_dir()

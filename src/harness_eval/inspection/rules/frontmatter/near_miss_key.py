@@ -12,6 +12,7 @@ from harness_eval.inspection.rules.frontmatter._keys import (
     normalize_key,
 )
 from harness_eval.inspection.types import (
+    FixSuggestion,
     Location,
     ReportDescriptor,
     RuleCategory,
@@ -27,7 +28,7 @@ class FrontmatterNearMissKey:
         tier="provisional",
         effect="block",
         default_severity=Severity.ERROR,
-        fixable=False,
+        fixable=True,
         description=(
             "Flag a frontmatter key that differs from a key the client reads only by "
             "case or separator; the client ignores it silently"
@@ -67,17 +68,31 @@ class FrontmatterNearMissKey:
             return
         known = KNOWN_KEYS[component_type]
         by_norm = {normalize_key(k): k for k in known}
-        loc = Location(file=path, start_line=line)
+        raw_content, _ = context.source_text()
+        content_lines = raw_content.split("\n")
         for key in frontmatter:
             if not isinstance(key, str) or key in known:
                 continue
             expected = by_norm.get(normalize_key(key))
             if expected is None:
                 continue
+            # Find the actual line containing this key for fix targeting.
+            fix_line = line
+            fix: FixSuggestion | None = None
+            for i, content_line in enumerate(content_lines, 1):
+                stripped = content_line.lstrip()
+                if stripped.startswith(key + ":"):
+                    fix_line = i
+                    fix = FixSuggestion(
+                        description=f"Rename '{key}' to '{expected}'",
+                        replacement=content_line.replace(key, expected, 1),
+                    )
+                    break
             context.report(
                 ReportDescriptor(
                     message_id="near_miss",
                     data={"key": key, "expected": expected},
-                    location=loc,
+                    location=Location(file=path, start_line=fix_line),
+                    fix=fix,
                 )
             )

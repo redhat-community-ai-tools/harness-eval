@@ -6,8 +6,16 @@ only at tiers that have passed the corpus (``gating`` and ``provisional``).
 Heuristic (``signal``) and quality (``advice``) rules never take part, so a
 finding here is a fact about the configuration, not a pattern match.
 
-Exit codes: 0 PASS (no findings), 1 FAIL (a block finding), 2 REVIEW_REQUIRED
-(policy findings only; a person or a trusted policy file has to accept them).
+Exit codes
+----------
+0  PASS             — no findings.
+1  FAIL             — a block finding (a configuration defect).
+2  REVIEW_REQUIRED  — policy findings only; a person or a trusted policy
+                      file has to accept them.
+64 USAGE_ERROR      — invalid invocation (bad path, unknown flag, missing
+                      ``--policy`` file).  BSD ``EX_USAGE``.
+70 INTERNAL_ERROR   — unexpected internal error.  BSD ``EX_SOFTWARE``.
+
 No LLM, no network, no rules loaded from the scanned tree.
 """
 
@@ -15,7 +23,9 @@ from __future__ import annotations
 
 import fnmatch
 import json as json_mod
+import sys
 import time
+import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -35,6 +45,8 @@ from harness_eval.inspection.types import Finding, InspectionResult, Severity, f
 EXIT_PASS = 0
 EXIT_FAIL = 1
 EXIT_REVIEW_REQUIRED = 2
+EXIT_USAGE = 64  # BSD EX_USAGE — invalid invocation (bad path, unknown flag, etc.)
+EXIT_INTERNAL = 70  # BSD EX_SOFTWARE — unexpected internal error
 
 _HARNESS_FS_RULES = ("harness/referenced-file-exists", "harness/output-schema-valid")
 
@@ -80,9 +92,9 @@ def load_policy(path: str | Path) -> tuple[list[PolicyGrant], list[str]]:
     try:
         data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError) as e:
-        return [], [f"policy file {path}: {e}"]
+        raise ValueError(f"cannot read policy file {path}: {e}") from e
     if not isinstance(data, dict) or not isinstance(data.get("accept"), list):
-        return [], [f"policy file {path}: expected a mapping with an 'accept' list"]
+        raise ValueError(f"policy file {path}: expected a mapping with an 'accept' list")
     grants: list[PolicyGrant] = []
     problems: list[str] = []
     for i, entry in enumerate(data["accept"]):
@@ -336,7 +348,48 @@ def format_terminal(report: AutonomyReport, setup_name: str) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-@cli.command("harness-autonomy")
+class _AutonomyCommand(click.Command):
+    """Click command that remaps usage errors from exit 2 to 64 (EX_USAGE).
+
+    Click exits with code 2 for any ``UsageError`` (bad path, unknown flag,
+    missing file for ``--policy``).  ``harness-autonomy`` reserves exit 2 for
+    ``REVIEW_REQUIRED``, so a caller that reads only the exit code cannot
+    distinguish a legitimate review verdict from a broken invocation.
+
+    This subclass intercepts usage errors and raises ``SystemExit(64)``
+    instead, keeping the verdict range 0–2 unambiguous.
+    """
+
+    def make_context(
+        self,
+        info_name: str | None,
+        args: list[str],
+        parent: click.Context | None = None,
+        **extra: Any,
+    ) -> click.Context:
+        try:
+            return super().make_context(info_name, args, parent=parent, **extra)
+        except click.UsageError as exc:
+            exc.show()
+            raise SystemExit(EXIT_USAGE) from exc
+
+    def invoke(self, ctx: click.Context) -> Any:
+        try:
+            return super().invoke(ctx)
+        except click.UsageError as exc:
+            exc.show()
+            raise SystemExit(EXIT_USAGE) from exc
+        except click.ClickException as exc:
+            exc.show()
+            raise SystemExit(EXIT_INTERNAL) from exc
+        except (click.exceptions.Exit, click.Abort):
+            raise
+        except Exception as exc:
+            traceback.print_exc(file=sys.stderr)
+            raise SystemExit(EXIT_INTERNAL) from exc
+
+
+@cli.command("harness-autonomy", cls=_AutonomyCommand)
 @click.argument("path", type=click.Path(exists=True, file_okay=False))
 @click.option(
     "--format",
@@ -402,26 +455,33 @@ def harness_autonomy(
 
     Runs the block and policy rules at gating and provisional tier. Exit 0
     PASS, 1 FAIL (a configuration defect), 2 REVIEW_REQUIRED (a policy fact
-    nobody has accepted). With --compare <base checkout> only findings the
-    change introduced decide the verdict; the rest are listed as
-    pre-existing. Never loads an LLM, the network, or rules from the
-    scanned tree.
+    nobody has accepted), 64 usage error (bad path, unknown flag), 70
+    internal error. With --compare <base checkout> only findings the change
+    introduced decide the verdict; the rest are listed as pre-existing.
+    Never loads an LLM, the network, or rules from the scanned tree.
     """
     t0 = time.monotonic()
     from harness_eval.config.presets import autonomy_rules
     from harness_eval.core.setup import discover_setup
+    from harness_eval.core.types import ScanLimitExceeded
     from harness_eval.inspection.engine import build_scan_catalog, inspect_setup
     from harness_eval.output.provenance import collect_scan_evidence
 
     config_rules: dict[str, Any] = dict(autonomy_rules())
     target = Path(path)
-    setup = discover_setup(
-        name=target.name,
-        path=path,
-        recursive=recursive,
-        exclude=exclude,
-        limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
-    )
+    try:
+        setup = discover_setup(
+            name=target.name,
+            path=path,
+            recursive=recursive,
+            exclude=exclude,
+            limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+        )
+    except ScanLimitExceeded as e:
+        raise click.UsageError(
+            f"{e}. Raise the limit with --max-file-bytes, --max-total-bytes, "
+            "--max-files, or --max-depth."
+        ) from e
     scan_catalog = build_scan_catalog(path, load_target_yaml=False)
     results = inspect_setup(setup, config_rules, catalog=scan_catalog)
 
@@ -429,7 +489,10 @@ def harness_autonomy(
     if baseline_path:
         from harness_eval.baseline import filter_baselined
 
-        bl_data = json_mod.loads(Path(baseline_path).read_text())
+        try:
+            bl_data = json_mod.loads(Path(baseline_path).read_text())
+        except (OSError, json_mod.JSONDecodeError) as e:
+            raise click.UsageError(f"cannot read baseline file {baseline_path}: {e}") from e
         before = sum(len(r.diagnostics) for r in results)
         results = filter_baselined(results, bl_data)
         baseline_suppressed = before - sum(len(r.diagnostics) for r in results)
@@ -437,7 +500,10 @@ def harness_autonomy(
     grants: list[PolicyGrant] = []
     problems: list[str] = []
     if policy_path:
-        grants, problems = load_policy(policy_path)
+        try:
+            grants, problems = load_policy(policy_path)
+        except ValueError as e:
+            raise click.UsageError(str(e)) from e
 
     pre_existing_keys: set[tuple[str, str, str]] | None = None
     compare_evidence: dict[str, Any] | None = None
@@ -445,13 +511,19 @@ def harness_autonomy(
         from harness_eval.baseline import finding_key
         from harness_eval.output.provenance import git_revision
 
-        base_setup = discover_setup(
-            name=Path(compare_path).name,
-            path=compare_path,
-            recursive=recursive,
-            exclude=exclude,
-            limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
-        )
+        try:
+            base_setup = discover_setup(
+                name=Path(compare_path).name,
+                path=compare_path,
+                recursive=recursive,
+                exclude=exclude,
+                limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+            )
+        except ScanLimitExceeded as e:
+            raise click.UsageError(
+                f"{e}. Raise the limit with --max-file-bytes, --max-total-bytes, "
+                "--max-files, or --max-depth."
+            ) from e
         base_results = inspect_setup(
             base_setup, config_rules, catalog=build_scan_catalog(compare_path)
         )

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Inline `evaluator-ignore` comments no longer suppress findings from
+  `block`-effect rules, in every command (`harness-autonomy`, `harness-gate`,
+  `harness-security` and `harness-lint`). A scanned file cannot waive its own
+  blocking defects, so `harness-autonomy` keeps its `FAIL` verdict. `--baseline`
+  and `--exclude` still apply to block rules; `policy`, `signal` and `advice`
+  rules are still suppressible inline (#136).
+- The GitHub Action's autonomy step now treats unknown exit codes as FAIL
+  instead of `REVIEW_REQUIRED`.
 - `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,
   `AGENTS.md`, Cursor rules, Copilot and Codex instruction files) and on
   commands and agents, not only on skills. Hidden text in a rules file is the
@@ -16,6 +24,12 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- README discovery table is now auto-generated from discoverer metadata
+  via `scripts/gen_rules_reference.py` and checked in CI.
+- `frontmatter/near-miss-key`, `frontmatter/allowed-tools-case`, and
+  `hooks/event-name-near-miss` now produce auto-fix suggestions. Running
+  `harness-lint --fix` corrects misspelt frontmatter keys, wrong-cased tool
+  names, and near-miss hook event names in place.
 - `security/mcp-tool-poisoning` reports invisible Unicode tag characters
   (U+E0001, U+E0020..U+E007F), the "ASCII smuggling" encoding that carries
   readable text to the model without rendering anything.
@@ -24,10 +38,37 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
-- `harness-autonomy`: inline `evaluator-ignore` comments no longer suppress
-  findings from `block`-effect rules. The scanned file cannot waive its own
-  blocking defects; the finding is emitted normally and the verdict remains
-  `FAIL`. Non-block rules (policy, signal, advice) are still suppressible.
+- Lazy-load scikit-learn, scipy and numpy in `utils/similarity` so they are never imported at CLI startup time (#140).
+- An unreadable or malformed `--policy` or `--baseline` file now exits 64
+  (usage error) instead of 1.
+- Unexpected exceptions during a `harness-autonomy` scan now print a
+  traceback to stderr and exit 70 instead of silently exiting 1 (FAIL).
+- `harness-autonomy` usage errors (bad path, unknown flag, missing `--policy`
+  file) now exit 64 (BSD `EX_USAGE`) instead of 2, so callers can distinguish
+  a broken invocation from a `REVIEW_REQUIRED` verdict. Internal errors
+  exit 70 (`EX_SOFTWARE`).
+- `CONTRIBUTING.md` "Before pushing" section: updated `harness-security`
+  flag from `--fail-on-warning` to `--fail-on-error`, removed `--all` from
+  `harness-lint` command, and corrected security gate prose to match
+  CLAUDE.md.
+- `CLAUDE.md` "Before committing" section: corrected job count and list to
+  match CI, fixed security gate prose to match `--fail-on-error` semantics,
+  removed `--all` from `harness-lint` command to match CI, and aligned
+  inline comment spacing.
+- `mcp/no-plaintext-secrets` now detects literal secrets in `args`
+  (`--key=value`, `--flag <value>` pairs), URL query-string parameters, and
+  inline shell assignments (`VAR=value` in `sh -c` strings). Previously only
+  `env` and `headers` values were scanned.
+- Cursor discoverer no longer walks the entire tree for `.cursorrules` without `--recursive`; only the root-level file is read in non-recursive mode, matching every other component type.
+- Pre-commit hook `files` pattern now covers all discoverer paths:
+  `.github/copilot-instructions.md`, `.github/instructions/`,
+  `.github/prompts/`, `.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`,
+  `opencode.json(c)`, `codex.json`, `.windsurf/`, `.devin/`, `.cline/`, and
+  `.agents/`. Anchored `skills/`, `commands/`, `agents/`, and `harness/` to
+  prevent accidental substring matches.
+- `count_tokens` no longer emits a `UserWarning` to stderr when tiktoken is
+  not installed. The fallback is now silent; `is_fallback()` and `doctor`
+  already report the capability.
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.
