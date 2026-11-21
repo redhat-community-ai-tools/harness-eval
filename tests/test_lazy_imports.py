@@ -6,18 +6,34 @@ import importlib
 import sys
 
 
-def test_sklearn_not_imported_at_module_load():
-    """sklearn should only be imported when tfidf_similarity() is called."""
-    # Remove any cached imports of similarity and sklearn
-    mods_to_remove = [m for m in sys.modules if "sklearn" in m or "similarity" in m]
+def test_sklearn_not_imported_at_cli_load():
+    """sklearn should not be imported when the CLI module is loaded."""
+    # Remove any cached imports of the CLI, similarity, and sklearn/scipy
+    mods_to_remove = [
+        m
+        for m in sys.modules
+        if "sklearn" in m or "similarity" in m or m.startswith("harness_eval.cli")
+    ]
     removed = {m: sys.modules.pop(m) for m in mods_to_remove}
     try:
-        importlib.import_module("harness_eval.utils.similarity")
-        assert not any(
-            "sklearn" in m for m in sys.modules
-        ), "sklearn was imported at module load time"
+        importlib.import_module("harness_eval.cli")
+        assert not any("sklearn" in m for m in sys.modules), "sklearn was imported at CLI load time"
     finally:
-        # Restore removed modules so other tests are not affected
+        sys.modules.update(removed)
+
+
+def test_scipy_not_imported_at_cli_load():
+    """scipy should not be imported when the CLI module is loaded."""
+    mods_to_remove = [
+        m
+        for m in sys.modules
+        if "scipy" in m or "similarity" in m or m.startswith("harness_eval.cli")
+    ]
+    removed = {m: sys.modules.pop(m) for m in mods_to_remove}
+    try:
+        importlib.import_module("harness_eval.cli")
+        assert not any("scipy" in m for m in sys.modules), "scipy was imported at CLI load time"
+    finally:
         sys.modules.update(removed)
 
 

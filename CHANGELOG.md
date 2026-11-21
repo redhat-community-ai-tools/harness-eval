@@ -24,7 +24,7 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
-- Lazy-load scikit-learn in `tfidf_similarity` to eliminate its import cost from CLI startup time (#140).
+- Lazy-load scikit-learn, scipy and numpy in `utils/similarity` so they are never imported at CLI startup time (#140).
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.
