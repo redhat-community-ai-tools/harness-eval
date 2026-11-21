@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Pinned `astral-sh/ruff-pre-commit` to v0.17.6 to match the project's resolved
+  ruff version, eliminating formatting conflicts between pre-commit and CI.
+
 ### Changed
 - `Containerfile` description label includes Codex, Windsurf, Cline and
   fullsend.
