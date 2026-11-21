@@ -30,7 +30,7 @@ class CopilotDiscoverer(ToolDiscoverer):
         return (
             "`.github/copilot-instructions.md`, `.github/instructions/`, "
             "`.github/skills/`, `.github/prompts/`, `.github/agents/`, "
-            "`.github/hooks/`, `.github/copilot/settings.json`, `.vscode/mcp.json`, "
+            "`.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`, "
             "`.agents/skills/`, `.claude/skills/`"
         )
 

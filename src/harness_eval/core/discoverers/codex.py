@@ -66,6 +66,10 @@ class CodexDiscoverer(ToolDiscoverer):
             for f in sorted(codex_dir.rglob("*")):
                 if f.is_file() and f.suffix in (".md", ".toml", ".json"):
                     paths.append(f)
+            # setup.sh is a known Codex sandbox setup script
+            setup_sh = codex_dir / "setup.sh"
+            if setup_sh.is_file():
+                paths.append(setup_sh)
 
         cfg = root / "codex.json"
         if cfg.is_file():
