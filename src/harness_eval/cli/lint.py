@@ -213,15 +213,33 @@ def eval_setup_lint(
             ),
         )
 
+        all_findings = [d for r in results for d in r.diagnostics]
+        fixable_count = sum(1 for d in all_findings if d.fix is not None)
+        total_fixed = 0
+        files_fixed = 0
+        if fix:
+            fix_results = apply_fixes(all_findings, project_root=Path(path).resolve())
+            total_fixed = sum(fr.fixes_applied for fr in fix_results)
+            files_fixed = sum(1 for fr in fix_results if fr.fixes_applied > 0)
+
         if fmt == "sarif":
             from harness_eval.output.sarif import format_sarif
 
             sarif_doc = format_sarif(results, metadata, scan_root=path)
+            run_props = sarif_doc["runs"][0].setdefault("properties", {})
+            run_props["fixableCount"] = fixable_count
+            if fix:
+                run_props["fixedCount"] = total_fixed
+                run_props["filesFixed"] = files_fixed
             emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
         elif fmt == "json":
             json_out = format_json(system, results)
             data = json_mod.loads(json_out)
             data["metadata"] = metadata.to_dict()
+            data["fixable_count"] = fixable_count
+            if fix:
+                data["fixed_count"] = total_fixed
+                data["files_fixed"] = files_fixed
             emit_output(json_mod.dumps(data, indent=2), output_path)
         else:
             text = format_terminal(system, results) + "\n" + metadata.format_terminal()
@@ -237,10 +255,24 @@ def eval_setup_lint(
             invocation_source="cli",
         )
 
+        all_findings = [d for r in results for d in r.diagnostics]
+        fixable_count = sum(1 for d in all_findings if d.fix is not None)
+        total_fixed = 0
+        files_fixed = 0
+        if fix:
+            fix_results = apply_fixes(all_findings, project_root=Path(path).resolve())
+            total_fixed = sum(fr.fixes_applied for fr in fix_results)
+            files_fixed = sum(1 for fr in fix_results if fr.fixes_applied > 0)
+
         if fmt == "sarif":
             from harness_eval.output.sarif import format_sarif
 
             sarif_doc = format_sarif(results, metadata, scan_root=path)
+            run_props = sarif_doc["runs"][0].setdefault("properties", {})
+            run_props["fixableCount"] = fixable_count
+            if fix:
+                run_props["fixedCount"] = total_fixed
+                run_props["filesFixed"] = files_fixed
             emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
         elif fmt == "json":
             output = {
@@ -267,7 +299,11 @@ def eval_setup_lint(
                     for r in results
                 ],
                 "metadata": metadata.to_dict(),
+                "fixable_count": fixable_count,
             }
+            if fix:
+                output["fixed_count"] = total_fixed
+                output["files_fixed"] = files_fixed
             emit_output(json_mod.dumps(output, indent=2), output_path)
         else:
             total_errors = sum(r.error_count for r in results)
@@ -286,22 +322,17 @@ def eval_setup_lint(
             lines_out.append(metadata.format_terminal())
             emit_output("\n".join(lines_out), output_path)
 
-    all_findings = [d for r in results for d in r.diagnostics]
-    fixable_count = sum(1 for d in all_findings if d.fix is not None)
-
-    if fix:
-        fix_results = apply_fixes(all_findings, project_root=Path(path).resolve())
-        total_fixed = sum(fr.fixes_applied for fr in fix_results)
-        files_fixed = sum(1 for fr in fix_results if fr.fixes_applied > 0)
-        if total_fixed:
-            click.echo(f"\nFixed {total_fixed} issues across {files_fixed} files.")
-        else:
-            click.echo("\nNo auto-fixable issues found.")
-    elif fixable_count > 0:
-        click.echo(
-            f"\n{fixable_count} of {len(all_findings)} findings are auto-fixable. "
-            f"Run with --fix to apply."
-        )
+    if fmt == "terminal":
+        if fix:
+            if total_fixed:
+                click.echo(f"\nFixed {total_fixed} issues across {files_fixed} files.")
+            else:
+                click.echo("\nNo auto-fixable issues found.")
+        elif fixable_count > 0:
+            click.echo(
+                f"\n{fixable_count} of {len(all_findings)} findings are auto-fixable. "
+                f"Run with --fix to apply."
+            )
 
     if report_card_path:
         from harness_eval.output.report import format_report_card
