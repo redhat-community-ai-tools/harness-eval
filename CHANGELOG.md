@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- Lazy-load scikit-learn, scipy and numpy in `utils/similarity` so they are never imported at CLI startup time (#140).
 - An unreadable or malformed `--policy` or `--baseline` file now exits 64
   (usage error) instead of 1.
 - Unexpected exceptions during a `harness-autonomy` scan now print a

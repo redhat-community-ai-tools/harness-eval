@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
 
 def tfidf_similarity(text_a: str, text_b: str) -> float:
     """Compute cosine similarity between two texts using TF-IDF vectors."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
     if not text_a.strip() or not text_b.strip():
         return 0.0
     vectorizer = TfidfVectorizer()
