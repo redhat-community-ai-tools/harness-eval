@@ -24,6 +24,9 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `count_tokens` no longer emits a `UserWarning` to stderr when tiktoken is
+  not installed. The fallback is now silent; `is_fallback()` and `doctor`
+  already report the capability.
 - `security/mcp-tool-poisoning` no longer reports a byte-order mark at the
   start of a file, nor a zero-width joiner or non-joiner inside an emoji
   sequence or in supported Arabic-script and Indic joining contexts.
