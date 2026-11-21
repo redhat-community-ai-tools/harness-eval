@@ -1,6 +1,6 @@
 ---
 name: autonomy
-description: Run the decidable checks an auto-merge policy can trust on the agent setup (harness-eval harness-autonomy). Block and policy rules only, no heuristics, no LLM. Exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED. Use when the user asks whether a configuration change is safe to merge without a human, or wants the evidence block for a merge decision.
+description: Run the decidable checks an auto-merge policy can trust on the agent setup (harness-eval harness-autonomy). Block and policy rules only, no heuristics, no LLM. Exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error. Use when the user asks whether a configuration change is safe to merge without a human, or wants the evidence block for a merge decision.
 allowed-tools: Bash Read
 ---
 <!-- evaluator-ignore: content/allowed-tools-auto-approve, content/broken-references -->
@@ -31,7 +31,7 @@ If `uvx` is not available, fall back to `pip install harness-eval` and use `harn
 
 Report, in this order:
 
-1. **Verdict** and exit code (0 PASS, 1 FAIL, 2 REVIEW_REQUIRED).
+1. **Verdict** and exit code (0 PASS, 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error).
 2. **Blocking findings**: rule id, file, message. Each one is a configuration defect to fix.
 3. **Policy findings**: rule id, file, message. Each one needs a person (or the policy file) to accept it. Say what accepting it would mean.
 4. **Waived findings**: what the policy file accepted and the reason it recorded.
