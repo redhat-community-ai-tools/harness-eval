@@ -8,10 +8,15 @@ All notable changes to this project will be documented in this file.
 - `harness-autonomy` usage errors (bad path, unknown flag, missing `--policy`
   file) now exit 64 (BSD `EX_USAGE`) instead of 2, so callers can distinguish
   a broken invocation from a `REVIEW_REQUIRED` verdict. Internal errors
-  exit 70 (`EX_SOFTWARE`). The GitHub Action's autonomy step no longer maps
-  unexpected exit codes to `REVIEW_REQUIRED`.
+  exit 70 (`EX_SOFTWARE`).
+- Unexpected exceptions during a `harness-autonomy` scan now print a
+  traceback to stderr and exit 70 instead of silently exiting 1 (FAIL).
+- An unreadable or malformed `--policy` or `--baseline` file now exits 64
+  (usage error) instead of 1.
 
 ### Changed
+- The GitHub Action's autonomy step now treats unknown exit codes as FAIL
+  instead of `REVIEW_REQUIRED`.
 - `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,
   `AGENTS.md`, Cursor rules, Copilot and Codex instruction files) and on
   commands and agents, not only on skills. Hidden text in a rules file is the

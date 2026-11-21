@@ -23,7 +23,9 @@ from __future__ import annotations
 
 import fnmatch
 import json as json_mod
+import sys
 import time
+import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -90,9 +92,9 @@ def load_policy(path: str | Path) -> tuple[list[PolicyGrant], list[str]]:
     try:
         data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError) as e:
-        return [], [f"policy file {path}: {e}"]
+        raise ValueError(f"cannot read policy file {path}: {e}") from e
     if not isinstance(data, dict) or not isinstance(data.get("accept"), list):
-        return [], [f"policy file {path}: expected a mapping with an 'accept' list"]
+        raise ValueError(f"policy file {path}: expected a mapping with an 'accept' list")
     grants: list[PolicyGrant] = []
     problems: list[str] = []
     for i, entry in enumerate(data["accept"]):
@@ -380,6 +382,11 @@ class _AutonomyCommand(click.Command):
         except click.ClickException as exc:
             exc.show()
             raise SystemExit(EXIT_INTERNAL) from exc
+        except (click.exceptions.Exit, click.Abort):
+            raise
+        except Exception as exc:
+            traceback.print_exc(file=sys.stderr)
+            raise SystemExit(EXIT_INTERNAL) from exc
 
 
 @cli.command("harness-autonomy", cls=_AutonomyCommand)
@@ -456,18 +463,25 @@ def harness_autonomy(
     t0 = time.monotonic()
     from harness_eval.config.presets import autonomy_rules
     from harness_eval.core.setup import discover_setup
+    from harness_eval.core.types import ScanLimitExceeded
     from harness_eval.inspection.engine import build_scan_catalog, inspect_setup
     from harness_eval.output.provenance import collect_scan_evidence
 
     config_rules: dict[str, Any] = dict(autonomy_rules())
     target = Path(path)
-    setup = discover_setup(
-        name=target.name,
-        path=path,
-        recursive=recursive,
-        exclude=exclude,
-        limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
-    )
+    try:
+        setup = discover_setup(
+            name=target.name,
+            path=path,
+            recursive=recursive,
+            exclude=exclude,
+            limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+        )
+    except ScanLimitExceeded as e:
+        raise click.UsageError(
+            f"{e}. Raise the limit with --max-file-bytes, --max-total-bytes, "
+            "--max-files, or --max-depth."
+        ) from e
     scan_catalog = build_scan_catalog(path, load_target_yaml=False)
     results = inspect_setup(setup, config_rules, catalog=scan_catalog)
 
@@ -475,7 +489,10 @@ def harness_autonomy(
     if baseline_path:
         from harness_eval.baseline import filter_baselined
 
-        bl_data = json_mod.loads(Path(baseline_path).read_text())
+        try:
+            bl_data = json_mod.loads(Path(baseline_path).read_text())
+        except (OSError, json_mod.JSONDecodeError) as e:
+            raise click.UsageError(f"cannot read baseline file {baseline_path}: {e}") from e
         before = sum(len(r.diagnostics) for r in results)
         results = filter_baselined(results, bl_data)
         baseline_suppressed = before - sum(len(r.diagnostics) for r in results)
@@ -483,7 +500,10 @@ def harness_autonomy(
     grants: list[PolicyGrant] = []
     problems: list[str] = []
     if policy_path:
-        grants, problems = load_policy(policy_path)
+        try:
+            grants, problems = load_policy(policy_path)
+        except ValueError as e:
+            raise click.UsageError(str(e)) from e
 
     pre_existing_keys: set[tuple[str, str, str]] | None = None
     compare_evidence: dict[str, Any] | None = None
@@ -491,13 +511,19 @@ def harness_autonomy(
         from harness_eval.baseline import finding_key
         from harness_eval.output.provenance import git_revision
 
-        base_setup = discover_setup(
-            name=Path(compare_path).name,
-            path=compare_path,
-            recursive=recursive,
-            exclude=exclude,
-            limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
-        )
+        try:
+            base_setup = discover_setup(
+                name=Path(compare_path).name,
+                path=compare_path,
+                recursive=recursive,
+                exclude=exclude,
+                limits=scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth),
+            )
+        except ScanLimitExceeded as e:
+            raise click.UsageError(
+                f"{e}. Raise the limit with --max-file-bytes, --max-total-bytes, "
+                "--max-files, or --max-depth."
+            ) from e
         base_results = inspect_setup(
             base_setup, config_rules, catalog=build_scan_catalog(compare_path)
         )
