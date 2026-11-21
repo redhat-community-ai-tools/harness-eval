@@ -162,6 +162,35 @@ def test_sarif_carries_verdict() -> None:
     assert props["verdict"] == "PASS"
 
 
+def test_inline_suppression_does_not_hide_block_finding(tmp_path: Path) -> None:
+    """Reproduces issue #136: inline evaluator-ignore must not remove block findings."""
+    root = tmp_path / "project"
+    root.mkdir()
+    skill_dir = root / "skills" / "foo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(
+        "---\n"
+        "name: foo\n"
+        "descripton: does a thing with files when asked to do the foo thing\n"
+        "---\n"
+        "# Foo\n"
+        "<!-- evaluator-ignore: frontmatter/near-miss-key, frontmatter/description-required -->\n"
+        "Run it.\n"
+    )
+    claude_dir = root / ".claude"
+    claude_dir.mkdir()
+    (claude_dir / "settings.json").write_text('{"permissions":{"defaultMode":"bypassPermissions"}}')
+    result = _run(str(root), "--format", "json")
+    assert result.exit_code == EXIT_FAIL, (
+        f"Expected FAIL (block finding present despite inline suppression), "
+        f"got exit {result.exit_code}: {result.output}"
+    )
+    data = json.loads(result.output)
+    assert data["verdict"] == "FAIL"
+    block_rules = {f["rule"] for f in data["blocking"]}
+    assert "frontmatter/description-required" in block_rules
+
+
 def test_baseline_suppressions_are_counted_not_hidden(tmp_path: Path) -> None:
     root = tmp_path / "scaffold"
     shutil.copytree(FULLSEND, root)

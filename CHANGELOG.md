@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Inline `evaluator-ignore` comments no longer suppress findings from
+  `block`-effect rules, in every command (`harness-autonomy`, `harness-gate`,
+  `harness-security` and `harness-lint`). A scanned file cannot waive its own
+  blocking defects, so `harness-autonomy` keeps its `FAIL` verdict. `--baseline`
+  and `--exclude` still apply to block rules; `policy`, `signal` and `advice`
+  rules are still suppressible inline (#136).
 - The GitHub Action's autonomy step now treats unknown exit codes as FAIL
   instead of `REVIEW_REQUIRED`.
 - `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,

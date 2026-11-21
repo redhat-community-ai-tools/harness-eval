@@ -133,7 +133,9 @@ def _make_report_fn(
     def report(descriptor: ReportDescriptor) -> None:
         loc = descriptor.location or Location(file=file_path)
         sups = suppressions_by_file.get(loc.file, suppressions_by_file.get(file_path, {}))
-        if is_suppressed(sups, rule_id, loc.start_line):
+        if is_suppressed(sups, rule_id, loc.start_line) and rule_effect != "block":
+            # Block-effect rules cannot be suppressed by inline comments —
+            # the scanned file must not be able to waive its own defects.
             suppression_counter[0] += 1
             return
         template = meta_messages.get(descriptor.message_id, descriptor.message_id)
