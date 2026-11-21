@@ -9,9 +9,15 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]
 
@@ -26,9 +32,15 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]
 
@@ -43,9 +55,15 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]
 
@@ -60,8 +78,14 @@
     (?x)(
       CLAUDE\.md|AGENTS\.md|GEMINI\.md|
       \.cursorrules|\.clinerules|\.windsurfrules|
-      skills/|commands/|agents/|harness/|
+      ^skills/|^commands/|^agents/|^harness/|
       \.claude/|\.cursor/|\.opencode/|\.codex/|\.gemini/|\.lola/|
-      \.mcp\.json
+      \.windsurf/|\.devin/|\.cline/|\.agents/|
+      \.github/copilot-instructions\.md|
+      \.github/instructions/|\.github/prompts/|\.github/agents/|\.github/skills/|
+      \.github/hooks/|\.github/copilot/|
+      \.vscode/mcp\.json|
+      \.mcp\.json|
+      opencode\.jsonc?$|codex\.json$
     )
   stages: [pre-commit]
