@@ -2,7 +2,7 @@
   "name": "harness-eval",
   "displayName": "Setup Eval",
   "version": "8.0.1",
-  "description": "Evaluate AI agent setups for best practices, redundancy, security, and cross-component issues.",
+  "description": "Deterministic configuration checks for AI coding agent setups.",
   "author": {
     "name": "Benjamin Kapner"
   },

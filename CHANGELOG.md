@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- `Containerfile` description label includes Codex, Windsurf, Cline and
+  fullsend.
+- `pyproject.toml` description aligned with the README.
+- `docs/THREAT_MODEL.md` rewritten around the four commands, the effect axis,
+  and the autonomy use case; documents trust assumptions for inline
+  suppressions, the baseline file, and the autonomy policy file; removes stale
+  pre-8.0 references.
 - Inline `evaluator-ignore` comments no longer suppress findings from
   `block`-effect rules, in every command (`harness-autonomy`, `harness-gate`,
   `harness-security` and `harness-lint`). A scanned file cannot waive its own
