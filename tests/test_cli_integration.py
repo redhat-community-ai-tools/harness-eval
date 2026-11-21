@@ -101,6 +101,93 @@ class TestRulesCommand:
         assert len(data) >= 80
 
 
+class TestLintJsonOutputParseable:
+    """JSON/SARIF output must be a single parseable document with no extra text."""
+
+    @staticmethod
+    def _make_fixable_setup(tmp_path: Path) -> str:
+        """Create a minimal project whose SKILL.md triggers a fixable finding."""
+        skill_dir = tmp_path / "skills" / "demo"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: demo\ndescription: Does a thing.\nallowed_tools: Read\n---\n\nBody text.\n"
+        )
+        return str(tmp_path)
+
+    def test_json_output_is_one_document_without_fix(self, tmp_path: Path) -> None:
+        path = self._make_fixable_setup(tmp_path)
+        result = CliRunner().invoke(cli, ["harness-lint", path, "--all", "--format", "json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["fixable_count"] >= 1
+
+    def test_json_output_is_one_document_with_fix(self, tmp_path: Path) -> None:
+        path = self._make_fixable_setup(tmp_path)
+        result = CliRunner().invoke(
+            cli, ["harness-lint", path, "--all", "--format", "json", "--fix"]
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert "fixed_count" in data
+        assert data["fixed_count"] >= 1
+
+    def test_sarif_output_includes_fixable_count(self, tmp_path: Path) -> None:
+        path = self._make_fixable_setup(tmp_path)
+        result = CliRunner().invoke(cli, ["harness-lint", path, "--all", "--format", "sarif"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["runs"][0]["properties"]["fixableCount"] >= 1
+
+
+class TestLintFixIdempotency:
+    """Running --fix twice must be idempotent and leave valid JSON."""
+
+    @staticmethod
+    def _make_fixable_settings(tmp_path: Path) -> Path:
+        """Create .claude/settings.json with a fixable hook event name."""
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        settings = claude_dir / "settings.json"
+        settings.write_text(
+            json.dumps(
+                {
+                    "hooks": {
+                        "preToolUse": [
+                            {
+                                "matcher": "Bash",
+                                "hooks": [{"type": "command", "command": "echo hi"}],
+                            }
+                        ]
+                    }
+                }
+            )
+        )
+        return settings
+
+    def test_fix_twice_is_idempotent(self, tmp_path: Path) -> None:
+        settings = self._make_fixable_settings(tmp_path)
+
+        # First fix pass
+        r1 = CliRunner().invoke(cli, ["harness-lint", str(settings), "--all", "--fix"])
+        assert r1.exit_code == 0
+        content_after_first = settings.read_text()
+        # The fixed file must still be valid JSON.
+        json.loads(content_after_first)
+
+        # Second fix pass — idempotent, nothing left to fix
+        r2 = CliRunner().invoke(cli, ["harness-lint", str(settings), "--all", "--fix"])
+        assert r2.exit_code == 0
+        content_after_second = settings.read_text()
+        assert content_after_first == content_after_second
+
+    def test_fixed_settings_json_is_valid(self, tmp_path: Path) -> None:
+        settings = self._make_fixable_settings(tmp_path)
+        CliRunner().invoke(cli, ["harness-lint", str(settings), "--all", "--fix"])
+        data = json.loads(settings.read_text())
+        assert "PreToolUse" in data.get("hooks", {})
+        assert "preToolUse" not in data.get("hooks", {})
+
+
 class TestVersionFlag:
     def test_version(self) -> None:
         result = CliRunner().invoke(cli, ["--version"])
