@@ -89,24 +89,27 @@ trust assumption about who may edit the file:
 `<!-- evaluator-ignore: rule/id -->` (file-wide) and
 `<!-- evaluator-ignore-next-line: rule/id -->` (single line) suppress findings
 in the file where they appear. Because the suppression lives inside the scanned
-file, anyone who can edit that file can suppress its non-block findings.
+file, anyone who can edit that file can suppress any of its findings — including
+`block`-effect findings.
 
-**Block-effect rules ignore inline suppressions.** A scanned file cannot waive
-its own blocking defects — the finding fires regardless of any
-`evaluator-ignore` comment. This applies across all four commands;
-`harness-autonomy` lists an inline-suppressed block finding in its blocking
-output rather than hiding it.
+**Current behavior:** inline suppressions apply equally to all rule effects
+(`block`, `policy`, `signal`, `advice`). A suppressed finding is silently
+removed from the output with no record in any command's verdict. This means a
+contributor who can edit a scanned file can suppress even its blocking defects,
+and `harness-autonomy` will not report the suppression.
 
-Non-block rules (`policy`, `signal`, `advice`) remain inline-suppressible
-across all commands.
+**Planned improvement (#136):** `block`-effect rules should ignore inline
+suppressions so that a scanned file cannot waive its own blocking defects.
+`harness-autonomy` should list inline-suppressed block findings in its blocking
+output rather than hiding them. Until #136 is implemented, the current behavior
+applies.
 
-**Trust assumption:** for non-block rules, inline suppressions are trusted when
-the file is reviewed by a human before merge. In an auto-merge flow (ADLC),
-where changes may land without human review, a contributor could add a
-suppression to hide an advisory or policy finding. Projects using
-`harness-autonomy` in an auto-merge policy should protect instruction files
-with CODEOWNERS or equivalent review requirements so that suppression edits
-require approval.
+**Trust assumption:** inline suppressions are trusted when the file is reviewed
+by a human before merge. In an auto-merge flow (ADLC), where changes may land
+without human review, a contributor could add a suppression to hide any
+finding — including blocking ones. Projects using `harness-autonomy` in an
+auto-merge policy should protect instruction files with CODEOWNERS or
+equivalent review requirements so that suppression edits require approval.
 
 ### Baseline file
 
