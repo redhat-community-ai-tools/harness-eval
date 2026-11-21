@@ -141,14 +141,28 @@ runs:
           rc=$?
           set -e
           python3 -c "import json; d=json.load(open('$json_dir/autonomy-$i.json')); print(d['verdict']); [print('  BLOCK', f['rule'], f['file'], f['message']) for f in d['blocking']]; [print('  POLICY', f['rule'], f['file'], f['message']) for f in d['policy']]; [print('  WAIVED', f['rule'], f['file'], f['accepted_by']['reason']) for f in d['waived']]; [print('  PRE-EXISTING', f['rule'], f['file']) for f in d.get('pre_existing', [])]" || true
-          # exit 1 (FAIL) outranks exit 2 (REVIEW_REQUIRED)
-          if [ $rc -eq 1 ] || [ $worst -eq 1 ]; then worst=1; elif [ $rc -ne 0 ]; then worst=$rc; fi
+          # Exit codes > 2 are usage or internal errors, not verdicts.
+          # Record the error but continue scanning remaining paths so all
+          # results are reported.  Error codes outrank verdict codes.
+          if [ $rc -gt 2 ]; then
+            echo "::error::harness-autonomy exited $rc (usage or internal error)"
+            if [ $worst -le 2 ]; then worst=$rc; fi
+            i=$((i + 1))
+            continue
+          fi
+          # Verdict codes: exit 1 (FAIL) outranks exit 2 (REVIEW_REQUIRED).
+          # Skip aggregation if a prior error code already set worst.
+          if [ $worst -le 2 ]; then
+            if [ $rc -eq 1 ] || [ $worst -eq 1 ]; then worst=1; elif [ $rc -ne 0 ]; then worst=$rc; fi
+          fi
           i=$((i + 1))
         done <<< "${{ inputs.path }}"
         case $worst in
           0) verdict=PASS ;;
           1) verdict=FAIL ;;
-          *) verdict=REVIEW_REQUIRED ;;
+          2) verdict=REVIEW_REQUIRED ;;
+          *) echo "::error::harness-autonomy exited $worst (unexpected exit code)"
+             verdict=FAIL ;;
         esac
         echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
         echo "json-dir=$json_dir" >> "$GITHUB_OUTPUT"

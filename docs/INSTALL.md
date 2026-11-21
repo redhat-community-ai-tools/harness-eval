@@ -17,7 +17,7 @@ pip install harness-eval[llm,tiktoken]  # everything
 Run:
 
 ```bash
-harness-eval harness-autonomy .                     # decidable checks for auto-merge; exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED
+harness-eval harness-autonomy .                     # decidable checks for auto-merge; exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error
 harness-eval harness-autonomy . --policy policy.yaml --format json   # with a trusted policy file; JSON carries coverage + evidence
 harness-eval harness-lint .                         # quality lint: advice rules + system analysis
 harness-eval harness-lint . --all                   # every one of the 92 rules
@@ -66,7 +66,7 @@ Optional: YARA malware signature scanning for security: `pip install harness-eva
 
 ### Suppressing false positives
 
-Add `<!-- evaluator-ignore: rule/id -->` to any file for file-wide suppression, or `<!-- evaluator-ignore-next-line: rule/id -->` for a single line. Use `--baseline` for incremental adoption, `--exclude` to skip files, or `--enforce advisory` to report without failing CI. See the [README](../README.md#suppressing-findings) for details.
+Add `<!-- evaluator-ignore: rule/id -->` to any file for file-wide suppression, or `<!-- evaluator-ignore-next-line: rule/id -->` for a single line. **Note:** `block`-effect rules are immune to inline suppression — the scanned file cannot waive its own blocking defects. Use `--baseline` for incremental adoption, `--exclude` to skip files, or `--enforce advisory` to report without failing CI. See the [README](../README.md#suppressing-findings) for details.
 
 ## GitHub Action
 
@@ -169,7 +169,7 @@ If you prefer manual setup over the action:
 
 ```yaml
 - run: pip install harness-eval
-- run: harness-eval harness-autonomy .            # exit 1 FAIL, 2 REVIEW_REQUIRED
+- run: harness-eval harness-autonomy .            # exit 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error
 - run: harness-eval harness-security . --fail-on-warning
 - run: harness-eval harness-lint . --fail-on-error
 - run: harness-eval harness-lint . --format sarif --output results.sarif
@@ -240,7 +240,7 @@ repos:
   - repo: https://github.com/redhat-community-ai-tools/harness-eval
     rev: v8.0.0  # pin to a release tag
     hooks:
-      - id: harness-autonomy  # decidable checks; exit 1 FAIL, 2 REVIEW_REQUIRED
+      - id: harness-autonomy  # decidable checks; exit 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error
       - id: harness-gate
       - id: harness-lint
       - id: harness-security  # optional: security scan

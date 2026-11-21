@@ -25,6 +25,15 @@ class CopilotDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "copilot"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`.github/copilot-instructions.md`, `.github/instructions/`, "
+            "`.github/skills/`, `.github/prompts/`, `.github/agents/`, "
+            "`.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`, "
+            "`.agents/skills/`, `.claude/skills/`"
+        )
+
     def detect(self, root: Path) -> bool:
         return (
             (root / ".github" / "prompts").is_dir()

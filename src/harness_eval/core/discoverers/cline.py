@@ -23,6 +23,13 @@ class ClineDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "cline"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`AGENTS.md`, `.clinerules`, `.cline/rules/`, `.cline/skills/`, "
+            "`.clinerules/skills/`, `.claude/skills/`"
+        )
+
     def detect(self, root: Path) -> bool:
         target = root / ".clinerules"
         return target.is_file() or target.is_dir() or (root / ".cline").is_dir()

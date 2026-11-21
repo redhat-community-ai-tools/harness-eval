@@ -34,6 +34,17 @@ def test_gate_fails_on_gating_finding(tmp_path: Path) -> None:
     assert "frontmatter/format-valid" in result.output
 
 
+def test_gate_ignores_inline_suppression_of_block_rule(tmp_path: Path) -> None:
+    # A block rule cannot be waived from inside the scanned file (#136).
+    _make_skill(
+        tmp_path,
+        "<!-- evaluator-ignore: frontmatter/format-valid -->\nJust a body, no frontmatter.\n",
+    )
+    result = CliRunner().invoke(cli, ["harness-gate", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "frontmatter/format-valid" in result.output
+
+
 def test_gate_json_format(tmp_path: Path) -> None:
     _make_skill(tmp_path, "Just a body, no frontmatter.\n")
     result = CliRunner().invoke(cli, ["harness-gate", str(tmp_path), "--format", "json"])

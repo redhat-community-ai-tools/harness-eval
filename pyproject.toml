@@ -1,7 +1,7 @@
 [project]
 name = "harness-eval"
 version = "8.0.1"
-description = "Evaluate and compare AI agent setups through experiments, inspections, and rubric scoring."
+description = "Deterministic configuration checks for AI coding agent setups."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"

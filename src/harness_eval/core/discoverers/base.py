@@ -165,6 +165,19 @@ class ToolDiscoverer(ABC):
     def source_tool(self) -> str:
         """Value for ParsedComponent.source_tool (e.g., 'claude', 'cursor')."""
 
+    @property
+    def discovery_summary(self) -> str:
+        """Human-readable summary of paths this discoverer checks.
+
+        Used to auto-generate the README discovery table.  Keep entries
+        as backtick-quoted path patterns separated by commas, matching the
+        style of the existing "What it discovers" table.
+
+        The default returns an empty string so that third-party
+        ``ToolDiscoverer`` subclasses are not forced to implement it.
+        """
+        return ""
+
     @abstractmethod
     def detect(self, root: Path) -> bool:
         """Return True if this tool's setup files exist in root."""

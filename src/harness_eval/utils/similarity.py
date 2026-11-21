@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-import numpy as np
-from scipy.sparse import spmatrix
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from typing import TYPE_CHECKING
+
+# numpy, scipy and scikit-learn are imported inside the functions that use
+# them: importing them here costs most of the CLI's startup time (#140).
+if TYPE_CHECKING:
+    import numpy as np
+    from scipy.sparse import spmatrix
+    from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 def tfidf_similarity(text_a: str, text_b: str) -> float:
     """Compute cosine similarity between two texts using TF-IDF vectors."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
     if not text_a.strip() or not text_b.strip():
         return 0.0
     vectorizer = TfidfVectorizer()
@@ -46,6 +53,8 @@ class SimilarityMatrix:
 
         Only the upper triangle is returned (each unordered pair once).
         """
+        import numpy as np
+
         n = len(self._names)
         if n < 2:
             return []
@@ -62,6 +71,10 @@ def build_similarity_matrix(texts: dict[str, str]) -> SimilarityMatrix:
 
     Empty or whitespace-only values are silently dropped.
     """
+    import numpy as np
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
     names: list[str] = []
     docs: list[str] = []
     for name, text in texts.items():
@@ -104,6 +117,8 @@ class TfidfIndex:
 
     def query(self, text: str) -> dict[str, float]:
         """Return ``{name: similarity}`` for *text* against every indexed doc."""
+        from sklearn.metrics.pairwise import cosine_similarity
+
         if self._vectorizer is None or not self._names or not text.strip():
             return {}
         try:
@@ -119,6 +134,8 @@ def build_tfidf_index(texts: dict[str, str]) -> TfidfIndex:
 
     Empty or whitespace-only values are silently dropped.
     """
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
     names: list[str] = []
     docs: list[str] = []
     for name, text in texts.items():

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from harness_eval.analysis.budget import analyze_budget
 from harness_eval.analysis.system import analyze_system
+from harness_eval.core.discoverers.cursor import CursorDiscoverer
 from harness_eval.core.setup import discover_setup
 from harness_eval.core.types import ComponentType
 from harness_eval.inspection.engine import inspect_setup, lint_claude_md, lint_hooks
@@ -139,6 +140,79 @@ class TestCursorReport:
         results = inspect_setup(setup)
         output = format_terminal(system, results)
         assert "cursor rules, hooks" in output
+
+
+class TestCursorrulesScopingBug:
+    """Regression tests for #156: .cursorrules should respect --recursive flag."""
+
+    def test_cursorrules_under_node_modules_not_discovered(self, tmp_path: Path) -> None:
+        """Without --recursive, vendored .cursorrules must not be picked up."""
+        nm = tmp_path / "node_modules" / "some-pkg"
+        nm.mkdir(parents=True)
+        (nm / ".cursorrules").write_text("vendored rules")
+        (tmp_path / ".cursor").mkdir()
+        disc = CursorDiscoverer()
+        paths = disc.collect_paths(tmp_path)
+        assert not any("node_modules" in str(p) for p in paths)
+
+    def test_cursorrules_under_node_modules_not_discovered_recursive(self, tmp_path: Path) -> None:
+        """With --recursive, _recursive_glob excludes node_modules."""
+        nm = tmp_path / "node_modules" / "some-pkg"
+        nm.mkdir(parents=True)
+        (nm / ".cursorrules").write_text("vendored rules")
+        (tmp_path / ".cursor").mkdir()
+        disc = CursorDiscoverer()
+        paths = disc.collect_paths(tmp_path, recursive=True)
+        assert not any("node_modules" in str(p) for p in paths)
+
+    def test_nested_cursorrules_not_discovered_without_recursive(self, tmp_path: Path) -> None:
+        """Without --recursive, only root-level .cursorrules is discovered."""
+        sub = tmp_path / "subproject"
+        sub.mkdir()
+        (sub / ".cursorrules").write_text("nested rules")
+        (tmp_path / ".cursor").mkdir()
+        disc = CursorDiscoverer()
+        paths = disc.collect_paths(tmp_path)
+        assert not any("subproject" in str(p) for p in paths)
+
+    def test_nested_cursorrules_discovered_with_recursive(self, tmp_path: Path) -> None:
+        """With --recursive, nested .cursorrules in non-excluded dirs is discovered."""
+        sub = tmp_path / "subproject"
+        sub.mkdir()
+        (sub / ".cursorrules").write_text("nested rules")
+        (tmp_path / ".cursor").mkdir()
+        disc = CursorDiscoverer()
+        paths = disc.collect_paths(tmp_path, recursive=True)
+        assert any("subproject" in str(p) for p in paths)
+
+    def test_root_cursorrules_discovered_without_recursive(self, tmp_path: Path) -> None:
+        """Root-level .cursorrules is still discovered without --recursive."""
+        (tmp_path / ".cursorrules").write_text("root rules")
+        (tmp_path / ".cursor").mkdir()
+        disc = CursorDiscoverer()
+        paths = disc.collect_paths(tmp_path)
+        assert any(str(p).endswith(".cursorrules") for p in paths)
+
+    def test_discover_rules_respects_recursive_flag(self, tmp_path: Path) -> None:
+        """_discover_rules should not pick up nested .cursorrules without --recursive."""
+        sub = tmp_path / "subproject"
+        sub.mkdir()
+        (sub / ".cursorrules").write_text("nested rules")
+        (tmp_path / ".cursorrules").write_text("root rules")
+        (tmp_path / ".cursor").mkdir()
+        disc = CursorDiscoverer()
+
+        # Without recursive: only root .cursorrules
+        results = disc._discover_rules(tmp_path)
+        names = [r.name for r in results]
+        assert ".cursorrules" in names
+        assert not any("subproject" in n for n in names)
+
+        # With recursive: both
+        results_recursive = disc._discover_rules(tmp_path, recursive=True)
+        names_recursive = [r.name for r in results_recursive]
+        assert ".cursorrules" in names_recursive
+        assert any("subproject" in n for n in names_recursive)
 
 
 class TestDeduplication:

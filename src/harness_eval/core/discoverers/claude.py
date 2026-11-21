@@ -29,6 +29,14 @@ class ClaudeCodeDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "claude"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`CLAUDE.md`, `skills/`, `.claude/skills/`, `commands/`, "
+            "`.claude/commands/`, `.claude/settings.json`, `.claude/agents/`, "
+            "`agents/*.md`, `.mcp.json`, `.claude/rules/`, `.claude/output-styles/`"
+        )
+
     def detect(self, root: Path) -> bool:
         return (root / "CLAUDE.md").is_file() or (root / ".claude").is_dir()
 

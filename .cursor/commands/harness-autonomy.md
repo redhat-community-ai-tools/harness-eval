@@ -1,6 +1,6 @@
 # Harness Autonomy
 
-Run the decidable checks an auto-merge policy can trust: block and policy rules only, no heuristics, no LLM. Exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED.
+Run the decidable checks an auto-merge policy can trust: block and policy rules only, no heuristics, no LLM. Exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error.
 
 ## Instructions
 

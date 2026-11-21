@@ -2,7 +2,7 @@ FROM registry.access.redhat.com/ubi9/python-312
 
 LABEL name="harness-eval" \
       summary="Static analysis for AI code agent configurations" \
-      description="Scans AI agent setups (Claude Code, Cursor, Copilot, Gemini CLI, OpenCode) for security, quality, and best-practice issues." \
+      description="Scans AI agent setups (Claude Code, Cursor, Copilot, Gemini CLI, Codex, OpenCode, Windsurf, Cline, fullsend) for security, quality, and best-practice issues." \
       url="https://github.com/redhat-community-ai-tools/harness-eval" \
       io.k8s.display-name="harness-eval" \
       io.openshift.tags="ai,security,static-analysis,tekton" \
