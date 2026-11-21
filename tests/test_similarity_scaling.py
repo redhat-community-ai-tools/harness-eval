@@ -62,6 +62,16 @@ class TestSimilarityMatrix:
         matrix = build_similarity_matrix({"only": "some text here"})
         assert matrix.pairs_above(0.0) == []
 
+    def test_empty_vocabulary_returns_identity(self) -> None:
+        """Texts that produce no tokens (single-char words) trigger ValueError internally."""
+        texts = {"a": "x y z", "b": "p q r"}
+        matrix = build_similarity_matrix(texts)
+        # Falls back to identity matrix — each name maps to itself with sim 1.0
+        assert matrix.get("a", "a") == pytest.approx(1.0)
+        assert matrix.get("b", "b") == pytest.approx(1.0)
+        # Off-diagonal is 0.0 (identity)
+        assert matrix.get("a", "b") == pytest.approx(0.0)
+
 
 class TestTfidfIndex:
     def test_query_identical(self) -> None:
@@ -101,6 +111,13 @@ class TestTfidfIndex:
         index = build_tfidf_index({"a": "some text"})
         assert index.query("") == {}
         assert index.query("   ") == {}
+
+    def test_empty_vocabulary_returns_empty_index(self) -> None:
+        """Texts that produce no tokens (single-char words) trigger ValueError internally."""
+        texts = {"a": "x y z", "b": "p q r"}
+        index = build_tfidf_index(texts)
+        # Falls back to empty index — queries return nothing
+        assert index.query("anything useful here") == {}
 
 
 # ---------------------------------------------------------------------------

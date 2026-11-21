@@ -38,7 +38,7 @@ class DuplicateDetection:
             return
 
         if _STATE_KEY not in context.scan_state:
-            texts = {s.dir_name: s.body for s in context.all_skills if s.body}
+            texts = {s.dir_name: s.body for s in context.all_skills if s.body and s.body.strip()}
             context.scan_state[_STATE_KEY] = {
                 "matrix": build_similarity_matrix(texts),
                 "reported": set(),

@@ -38,7 +38,7 @@ class CommandDuplicateDetection:
             return
 
         if _STATE_KEY not in context.scan_state:
-            texts = {c.dir_name: c.body for c in context.all_commands if c.body}
+            texts = {c.dir_name: c.body for c in context.all_commands if c.body and c.body.strip()}
             context.scan_state[_STATE_KEY] = {
                 "matrix": build_similarity_matrix(texts),
                 "reported": set(),
