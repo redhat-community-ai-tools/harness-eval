@@ -1,6 +1,6 @@
 ---
 name: autonomy
-description: Run the decidable checks an auto-merge policy can trust on the agent setup (harness-eval harness-autonomy). Block and policy rules only, no heuristics, no LLM. Exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED. Use when the user asks whether a configuration change is safe to merge without a human, or wants the evidence block for a merge decision.
+description: Run the decidable checks an auto-merge policy can trust on the agent setup (harness-eval harness-autonomy). Block and policy rules only, no heuristics, no LLM. Exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error. Use when the user asks whether a configuration change is safe to merge without a human, or wants the evidence block for a merge decision.
 allowed-tools: Bash Read
 ---
 <!-- evaluator-ignore: content/allowed-tools-auto-approve, content/broken-references -->

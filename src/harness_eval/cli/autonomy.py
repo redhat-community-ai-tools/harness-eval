@@ -448,10 +448,10 @@ def harness_autonomy(
 
     Runs the block and policy rules at gating and provisional tier. Exit 0
     PASS, 1 FAIL (a configuration defect), 2 REVIEW_REQUIRED (a policy fact
-    nobody has accepted). With --compare <base checkout> only findings the
-    change introduced decide the verdict; the rest are listed as
-    pre-existing. Never loads an LLM, the network, or rules from the
-    scanned tree.
+    nobody has accepted), 64 usage error (bad path, unknown flag), 70
+    internal error. With --compare <base checkout> only findings the change
+    introduced decide the verdict; the rest are listed as pre-existing.
+    Never loads an LLM, the network, or rules from the scanned tree.
     """
     t0 = time.monotonic()
     from harness_eval.config.presets import autonomy_rules
