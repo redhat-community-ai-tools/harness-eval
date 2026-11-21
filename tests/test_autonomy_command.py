@@ -240,9 +240,8 @@ def test_unexpected_exception_exits_internal_with_traceback(tmp_path: Path) -> N
         result = _run(str(tmp_path))
     finally:
         harness_autonomy.callback = original_callback
-    assert result.exit_code == EXIT_INTERNAL, (
-        f"ValueError exited {result.exit_code}; expected {EXIT_INTERNAL}"
-    )
+    msg = f"ValueError exited {result.exit_code}; expected {EXIT_INTERNAL}"
+    assert result.exit_code == EXIT_INTERNAL, msg
     assert "Traceback" in result.stderr
     assert "ValueError" in result.stderr
     assert "simulated scan failure" in result.stderr
@@ -253,9 +252,8 @@ def test_malformed_policy_file_exits_usage(tmp_path: Path) -> None:
     policy = tmp_path / "bad.yaml"
     policy.write_text("{{{not valid yaml")
     result = _run(str(tmp_path), "--policy", str(policy))
-    assert result.exit_code == EXIT_USAGE, (
-        f"Malformed policy exited {result.exit_code}; expected {EXIT_USAGE}"
-    )
+    msg = f"Malformed policy exited {result.exit_code}; expected {EXIT_USAGE}"
+    assert result.exit_code == EXIT_USAGE, msg
 
 
 def test_malformed_baseline_file_exits_usage(tmp_path: Path) -> None:
@@ -263,6 +261,5 @@ def test_malformed_baseline_file_exits_usage(tmp_path: Path) -> None:
     baseline = tmp_path / "bad.json"
     baseline.write_text("not valid json")
     result = _run(str(tmp_path), "--baseline", str(baseline))
-    assert result.exit_code == EXIT_USAGE, (
-        f"Malformed baseline exited {result.exit_code}; expected {EXIT_USAGE}"
-    )
+    msg = f"Malformed baseline exited {result.exit_code}; expected {EXIT_USAGE}"
+    assert result.exit_code == EXIT_USAGE, msg
