@@ -19,6 +19,13 @@ class CursorDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "cursor"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`AGENTS.md`, `.cursorrules`, `.cursor/rules/`, `.cursor/commands/`, "
+            "`.cursor/skills/`, `.cursor/hooks.json`, `.cursor/mcp.json`"
+        )
+
     def detect(self, root: Path) -> bool:
         return (root / ".cursor").is_dir() or (root / ".cursorrules").is_file()
 
@@ -53,12 +60,13 @@ class CursorDiscoverer(ToolDiscoverer):
         if agents_md.is_file():
             paths.append(agents_md)
 
-        for f in sorted(root.rglob(".cursorrules")):
-            if f.is_file() and ".git" not in f.parts:
-                paths.append(f)
+        root_cursorrules = root / ".cursorrules"
+        if root_cursorrules.is_file():
+            paths.append(root_cursorrules)
         if recursive:
             for f in _recursive_glob(root, ".cursorrules"):
-                paths.append(f)
+                if f != root_cursorrules:
+                    paths.append(f)
 
         # Cursor commands
         cursor_commands = root / ".cursor" / "commands"
@@ -139,16 +147,19 @@ class CursorDiscoverer(ToolDiscoverer):
                         parse_file(f, ComponentType.CLAUDE_MD, name=f.stem, source_tool="cursor")
                     )
 
-        for f in sorted(root.rglob(".cursorrules")):
-            if f.is_file() and ".git" not in f.parts:
-                resolved = str(f.resolve())
-                if resolved not in seen_paths:
-                    seen_paths.add(resolved)
-                    rel = f.relative_to(root)
-                    name = str(rel) if rel != Path(".cursorrules") else ".cursorrules"
-                    results.append(
-                        parse_file(f, ComponentType.CLAUDE_MD, name=name, source_tool="cursor")
+        root_cursorrules = root / ".cursorrules"
+        if root_cursorrules.is_file():
+            resolved = str(root_cursorrules.resolve())
+            if resolved not in seen_paths:
+                seen_paths.add(resolved)
+                results.append(
+                    parse_file(
+                        root_cursorrules,
+                        ComponentType.CLAUDE_MD,
+                        name=".cursorrules",
+                        source_tool="cursor",
                     )
+                )
 
         if recursive:
             for f in _recursive_glob(root, ".cursorrules"):

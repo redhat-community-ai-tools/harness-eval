@@ -80,6 +80,14 @@ class FullsendDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "fullsend"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`harness/*.yaml` pipeline agent harnesses: agent prompt, model, "
+            "image, policy, scripts, skills, plugins, host files, output "
+            "contract, per-forge overrides"
+        )
+
     def detect(self, root: Path) -> bool:
         return any(is_harness_file(f) for f in _candidate_files(root, recursive=False))
 

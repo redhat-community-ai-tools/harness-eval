@@ -28,6 +28,13 @@ class CodexDiscoverer(ToolDiscoverer):
     def source_tool(self) -> str:
         return "codex"
 
+    @property
+    def discovery_summary(self) -> str:
+        return (
+            "`AGENTS.md`, `.codex/instructions.md`, `.codex/setup.sh`, "
+            "`.codex/config.toml`, `.codex/skills/`, `.agents/skills/`, `codex.json`"
+        )
+
     def detect(self, root: Path) -> bool:
         return (root / ".codex").is_dir() or (root / "codex.json").is_file()
 
@@ -59,6 +66,10 @@ class CodexDiscoverer(ToolDiscoverer):
             for f in sorted(codex_dir.rglob("*")):
                 if f.is_file() and f.suffix in (".md", ".toml", ".json"):
                     paths.append(f)
+            # setup.sh is a known Codex sandbox setup script
+            setup_sh = codex_dir / "setup.sh"
+            if setup_sh.is_file():
+                paths.append(setup_sh)
 
         cfg = root / "codex.json"
         if cfg.is_file():

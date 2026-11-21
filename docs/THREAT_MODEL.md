@@ -89,27 +89,26 @@ trust assumption about who may edit the file:
 `<!-- evaluator-ignore: rule/id -->` (file-wide) and
 `<!-- evaluator-ignore-next-line: rule/id -->` (single line) suppress findings
 in the file where they appear. Because the suppression lives inside the scanned
-file, anyone who can edit that file can suppress any of its findings — including
-`block`-effect findings.
+file, anyone who can edit that file can write one, so what it may waive is
+restricted:
 
-**Current behavior:** inline suppressions apply equally to all rule effects
-(`block`, `policy`, `signal`, `advice`). A suppressed finding is silently
-removed from the output with no record in any command's verdict. This means a
-contributor who can edit a scanned file can suppress even its blocking defects,
-and `harness-autonomy` will not report the suppression.
+- **`block`-effect rules ignore inline suppressions**, in every command. A
+  scanned file cannot waive its own blocking defects: the finding is reported
+  as usual and `harness-autonomy` keeps its `FAIL` verdict. This stops a
+  contributor from disabling a gate by adding a comment to the component that
+  trips it.
+- **`policy`, `signal` and `advice` rules remain inline-suppressible**, in
+  every command. A suppressed finding is removed from the output, and
+  `harness-autonomy` does not currently list inline suppressions in its
+  coverage block.
 
-**Planned improvement (#136):** `block`-effect rules should ignore inline
-suppressions so that a scanned file cannot waive its own blocking defects.
-`harness-autonomy` should list inline-suppressed block findings in its blocking
-output rather than hiding them. Until #136 is implemented, the current behavior
-applies.
-
-**Trust assumption:** inline suppressions are trusted when the file is reviewed
-by a human before merge. In an auto-merge flow (ADLC), where changes may land
-without human review, a contributor could add a suppression to hide any
-finding — including blocking ones. Projects using `harness-autonomy` in an
-auto-merge policy should protect instruction files with CODEOWNERS or
-equivalent review requirements so that suppression edits require approval.
+**Trust assumption:** for non-block rules, an inline suppression is trusted
+when the file is reviewed by a human before merge. In an auto-merge flow
+(ADLC), where changes may land without human review, a contributor could add a
+suppression to hide a policy finding and turn `REVIEW_REQUIRED` into `PASS`.
+Projects using `harness-autonomy` in an auto-merge policy should protect
+instruction files with CODEOWNERS or equivalent review requirements so that
+suppression edits require approval.
 
 ### Baseline file
 
@@ -117,11 +116,17 @@ equivalent review requirements so that suppression edits require approval.
 current findings. Subsequent runs with `--baseline` treat baselined findings
 as pre-existing and exclude them from the verdict. `harness-autonomy` counts
 baselined suppressions in its `coverage` block rather than hiding them.
+Unlike an inline comment, a baseline applies to every rule effect, including
+`block`: it is project-level configuration, not part of the scanned content.
 
 **Trust assumption:** the baseline file records the state of the setup at a
 point in time. A contributor who can edit the baseline file can mark new
 findings as pre-existing. The baseline file should be protected by CODEOWNERS
 or kept outside the scanned tree so that only trusted reviewers can update it.
+
+`--exclude` patterns are command-line flags set by whoever invokes the tool,
+not by the scanned content, so they carry the trust of the CI configuration
+that passes them.
 
 ### Autonomy policy file
 

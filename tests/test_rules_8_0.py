@@ -15,6 +15,7 @@ from harness_eval.inspection.engine import (
     lint_hooks,
     lint_mcp_config,
 )
+from harness_eval.inspection.fixer import apply_fixes
 from harness_eval.inspection.registry import get_all_rules
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -45,9 +46,10 @@ def test_signal_and_advice_rules_are_never_gating_or_provisional() -> None:
 def test_block_and_policy_rules_have_passed_the_corpus() -> None:
     for r in get_all_rules():
         if r.meta.effect in {"block", "policy"}:
-            assert r.meta.tier in {"gating", "provisional"}, (
-                f"{r.meta.id} is decidable but tier={r.meta.tier}"
-            )
+            assert r.meta.tier in {
+                "gating",
+                "provisional",
+            }, f"{r.meta.id} is decidable but tier={r.meta.tier}"
 
 
 def test_multi_target_rules_register_for_each_target() -> None:
@@ -103,6 +105,32 @@ def test_near_miss_key_skips_other_clients(tmp_path: Path) -> None:
     assert _diags(result, NEAR_MISS) == []
 
 
+def test_near_miss_key_produces_fix(tmp_path: Path) -> None:
+    path = _skill(tmp_path, "name: demo\ndescription: Does a thing.\nallowed_tools: Read\n")
+    found = _diags(lint(path, {NEAR_MISS: "error"}), NEAR_MISS)
+    assert len(found) == 1
+    assert found[0].fix is not None
+    assert found[0].fix.replacement == "allowed-tools: Read"
+    results = apply_fixes(found)
+    assert len(results) == 1
+    fixed = (Path(path) / "SKILL.md").read_text()
+    assert "allowed-tools: Read" in fixed
+    assert "allowed_tools" not in fixed
+
+
+def test_near_miss_key_fix_on_agent(tmp_path: Path) -> None:
+    agent = tmp_path / "reviewer.md"
+    agent.write_text("---\ndescription: reviews\ndisallowed-tools: Bash\n---\nbody\n")
+    found = _diags(lint_agent(str(agent), {NEAR_MISS: "error"}), NEAR_MISS)
+    assert len(found) == 1
+    assert found[0].fix is not None
+    results = apply_fixes(found)
+    assert len(results) == 1
+    fixed = agent.read_text()
+    assert "disallowedTools: Bash" in fixed
+    assert "disallowed-tools" not in fixed
+
+
 # --- frontmatter/allowed-tools-case ---------------------------------------------
 
 TOOLS_CASE = "frontmatter/allowed-tools-case"
@@ -128,6 +156,46 @@ def test_allowed_tools_case_on_agent_tools(tmp_path: Path) -> None:
     agent.write_text("---\ndescription: reviews\ntools: edit, Read\n---\nbody\n")
     found = _diags(lint_agent(str(agent), {TOOLS_CASE: "error"}), TOOLS_CASE)
     assert [(d.data["field"], d.data["expected"]) for d in found] == [("tools", "Edit")]
+
+
+def test_allowed_tools_case_produces_fix(tmp_path: Path) -> None:
+    path = _skill(tmp_path, "name: demo\ndescription: Does a thing.\nallowed-tools: read bash\n")
+    found = _diags(lint(path, {TOOLS_CASE: "error"}), TOOLS_CASE)
+    assert len(found) == 2
+    assert all(d.fix is not None for d in found)
+    results = apply_fixes(found)
+    assert len(results) == 1
+    fixed = (Path(path) / "SKILL.md").read_text()
+    assert "allowed-tools: Read Bash" in fixed
+
+
+def test_allowed_tools_case_fix_single_entry(tmp_path: Path) -> None:
+    path = _skill(tmp_path, "name: demo\ndescription: Does a thing.\nallowed-tools: read\n")
+    found = _diags(lint(path, {TOOLS_CASE: "error"}), TOOLS_CASE)
+    assert len(found) == 1
+    assert found[0].fix is not None
+    assert found[0].fix.replacement == "allowed-tools: Read"
+    results = apply_fixes(found)
+    assert len(results) == 1
+    fixed = (Path(path) / "SKILL.md").read_text()
+    assert "allowed-tools: Read" in fixed
+    assert "read" not in fixed.split("---")[1]  # not in frontmatter
+
+
+def test_allowed_tools_case_fix_preserves_glob_pattern(tmp_path: Path) -> None:
+    """Replacement must not corrupt a parenthesized glob pattern that contains
+    the misspelled tool name as a substring (e.g. ``Read(bash:*) bash``)."""
+    path = _skill(
+        tmp_path, "name: demo\ndescription: Does a thing.\nallowed-tools: Read(bash:*) bash\n"
+    )
+    found = _diags(lint(path, {TOOLS_CASE: "error"}), TOOLS_CASE)
+    assert len(found) == 1
+    assert found[0].data["entry"] == "bash"
+    assert found[0].fix is not None
+    results = apply_fixes(found)
+    assert len(results) == 1
+    fixed = (Path(path) / "SKILL.md").read_text()
+    assert "allowed-tools: Read(bash:*) Bash" in fixed
 
 
 # --- hooks/event-name-near-miss --------------------------------------------------
@@ -164,6 +232,20 @@ def test_event_name_near_miss_skips_cursor_and_copilot(tmp_path: Path) -> None:
         _settings(tmp_path, _hook("preToolUse")), {EVENT: "error"}, source_tool="copilot"
     )
     assert _diags(result, EVENT) == []
+
+
+def test_event_name_near_miss_produces_fix(tmp_path: Path) -> None:
+    settings_path = _settings(tmp_path, _hook("preToolUse"))
+    result = lint_hooks(settings_path, {EVENT: "error"})
+    found = _diags(result, EVENT)
+    assert len(found) == 1
+    assert found[0].fix is not None
+    assert '"PreToolUse"' in found[0].fix.replacement
+    results = apply_fixes(found)
+    assert len(results) == 1
+    fixed = Path(settings_path).read_text()
+    assert '"PreToolUse"' in fixed
+    assert '"preToolUse"' not in fixed
 
 
 # --- agent/tools-disallowed-overlap ----------------------------------------------
