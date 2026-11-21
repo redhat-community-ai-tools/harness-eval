@@ -24,6 +24,10 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- `frontmatter/near-miss-key`, `frontmatter/allowed-tools-case`, and
+  `hooks/event-name-near-miss` now produce auto-fix suggestions. Running
+  `harness-lint --fix` corrects misspelt frontmatter keys, wrong-cased tool
+  names, and near-miss hook event names in place.
 - `security/mcp-tool-poisoning` reports invisible Unicode tag characters
   (U+E0001, U+E0020..U+E007F), the "ASCII smuggling" encoding that carries
   readable text to the model without rendering anything.
