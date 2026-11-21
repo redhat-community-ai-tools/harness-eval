@@ -89,15 +89,24 @@ trust assumption about who may edit the file:
 `<!-- evaluator-ignore: rule/id -->` (file-wide) and
 `<!-- evaluator-ignore-next-line: rule/id -->` (single line) suppress findings
 in the file where they appear. Because the suppression lives inside the scanned
-file, **anyone who can edit that file can suppress its findings** — including a
-`block` rule.
+file, anyone who can edit that file can suppress its non-block findings.
 
-**Trust assumption:** inline suppressions are trusted when the file is reviewed
-by a human before merge. In an auto-merge flow (ADLC), where changes may land
-without human review, a contributor could add a suppression to hide a defect.
-Projects using `harness-autonomy` in an auto-merge policy should protect
-instruction files with CODEOWNERS or equivalent review requirements so that
-suppression edits require approval.
+**Block-effect rules ignore inline suppressions.** A scanned file cannot waive
+its own blocking defects — the finding fires regardless of any
+`evaluator-ignore` comment. This applies across all four commands;
+`harness-autonomy` lists an inline-suppressed block finding in its blocking
+output rather than hiding it.
+
+Non-block rules (`policy`, `signal`, `advice`) remain inline-suppressible
+across all commands.
+
+**Trust assumption:** for non-block rules, inline suppressions are trusted when
+the file is reviewed by a human before merge. In an auto-merge flow (ADLC),
+where changes may land without human review, a contributor could add a
+suppression to hide an advisory or policy finding. Projects using
+`harness-autonomy` in an auto-merge policy should protect instruction files
+with CODEOWNERS or equivalent review requirements so that suppression edits
+require approval.
 
 ### Baseline file
 
@@ -124,14 +133,15 @@ accept:
 The policy file tells `harness-autonomy` which `policy` findings the project
 has accepted. Accepted findings appear as `waived` with the recorded reason;
 they are never hidden. Only `policy` rules can be accepted — a `block` rule in
-the policy file is reported and ignored.
+the policy file is logged as a policy-file problem and the entry is not
+applied.
 
 **Trust assumption:** the policy file is an explicit trust decision. A
 contributor who can edit it can waive any policy finding, turning a
 `REVIEW_REQUIRED` verdict into `PASS`. The policy file should be:
 
-- **Kept outside the scanned tree** (e.g., `.harness-eval/` if the scan root
-  is the project directory), or
+- **Kept outside the repository** (e.g., a separate config checkout or a path
+  managed by the CI system such as `/opt/harness-policy/`), or
 - **Protected by CODEOWNERS** so that changes require approval from a
   designated reviewer.
 
