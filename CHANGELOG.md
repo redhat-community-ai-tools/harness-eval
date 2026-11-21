@@ -45,6 +45,9 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `harness-lint` no longer scales quadratically with the number of skills.
+  Similarity rules now vectorise once per scan and compare in bulk instead
+  of fitting a new TF-IDF vectorizer for every pair of texts (#153).
 - Lazy-load scikit-learn, scipy and numpy in `utils/similarity` so they are never imported at CLI startup time (#140).
 - An unreadable or malformed `--policy` or `--baseline` file now exits 64
   (usage error) instead of 1.

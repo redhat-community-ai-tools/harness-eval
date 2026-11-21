@@ -2,39 +2,37 @@
 
 from __future__ import annotations
 
-import importlib
+import subprocess
 import sys
 
+import pytest
 
-def test_sklearn_not_imported_at_cli_load():
-    """sklearn should not be imported when the CLI module is loaded."""
-    # Remove any cached imports of the CLI, similarity, and sklearn/scipy
-    mods_to_remove = [
-        m
-        for m in sys.modules
-        if "sklearn" in m or "similarity" in m or m.startswith("harness_eval.cli")
-    ]
-    removed = {m: sys.modules.pop(m) for m in mods_to_remove}
-    try:
-        importlib.import_module("harness_eval.cli")
-        assert not any("sklearn" in m for m in sys.modules), "sklearn was imported at CLI load time"
-    finally:
-        sys.modules.update(removed)
+_PROBE = """
+import sys
+import harness_eval.cli  # noqa: F401
+heavy = sorted({m.split(".")[0] for m in sys.modules} & {"sklearn", "scipy", "numpy"})
+print(",".join(heavy))
+"""
 
 
-def test_scipy_not_imported_at_cli_load():
-    """scipy should not be imported when the CLI module is loaded."""
-    mods_to_remove = [
-        m
-        for m in sys.modules
-        if "scipy" in m or "similarity" in m or m.startswith("harness_eval.cli")
-    ]
-    removed = {m: sys.modules.pop(m) for m in mods_to_remove}
-    try:
-        importlib.import_module("harness_eval.cli")
-        assert not any("scipy" in m for m in sys.modules), "scipy was imported at CLI load time"
-    finally:
-        sys.modules.update(removed)
+def _heavy_modules_after_cli_import() -> set[str]:
+    """Import the CLI in a fresh interpreter and report which heavy packages loaded.
+
+    A subprocess is required: inside the test process, modules that already
+    imported ``utils.similarity`` stay cached in ``sys.modules``, so re-importing
+    the CLI there proves nothing.
+    """
+    out = subprocess.run(
+        [sys.executable, "-c", _PROBE], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    return set(out.split(",")) - {""}
+
+
+@pytest.mark.parametrize("package", ["sklearn", "scipy", "numpy"])
+def test_heavy_package_not_imported_at_cli_load(package: str) -> None:
+    """Importing the CLI must not import scikit-learn, scipy or numpy (#140)."""
+    loaded = _heavy_modules_after_cli_import()
+    assert package not in loaded, f"{package} was imported at CLI load time"
 
 
 def test_tfidf_similarity_produces_correct_results():
