@@ -27,7 +27,7 @@ commands select on:
 
 | Command | Asks | Runs | Exit code |
 |---------|------|------|-----------|
-| `harness-autonomy` | Can this change merge without a person? | `block` + `policy` rules that have passed the corpus. Never a heuristic. | 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED |
+| `harness-autonomy` | Can this change merge without a person? | `block` + `policy` rules that have passed the corpus. Never a heuristic. | 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error |
 | `harness-gate` | Is the configuration broken? | `block` rules at gating tier (`--include-provisional` adds the rest) | 1 on any error or warning |
 | `harness-security` | What should a security reviewer read? | `policy` + `signal` rules, security `block` rules, YARA, optional OSV lookup and LLM review | 0 unless `--fail-on-*` |
 | `harness-lint` | How healthy is the setup? | `advice` rules plus system analysis (token budget, triggers, dependencies). `--all` runs every rule. | 0 unless `--fail-on-*` |
@@ -92,6 +92,8 @@ should have:
 - **Three outcomes.** `PASS` (exit 0): no defect, no unaccepted policy fact.
   `FAIL` (exit 1): a defect; the change is wrong. `REVIEW_REQUIRED` (exit 2):
   the change introduces a policy fact that a person has not accepted yet.
+  Usage errors (bad path, unknown flag) exit 64 and internal errors exit 70,
+  so callers can distinguish a verdict from a broken invocation.
 - **Accept once, not every time.** A repository records the policy facts it
   accepts in a file kept out of the scanned tree or protected by CODEOWNERS.
   Accepted findings appear as `waived` with the recorded reason; they are never

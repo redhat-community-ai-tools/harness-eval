@@ -11,13 +11,11 @@ for non-OpenAI models (Claude, Gemini, etc.).
 from __future__ import annotations
 
 import logging
-import warnings
 
 _log = logging.getLogger(__name__)
 
 _ENCODER = None
 _FALLBACK = False
-_WARNED = False
 
 
 def _init_encoder():
@@ -33,10 +31,9 @@ def _init_encoder():
 
 def _reset():
     """Reset module state. Used by tests only."""
-    global _ENCODER, _FALLBACK, _WARNED
+    global _ENCODER, _FALLBACK
     _ENCODER = None
     _FALLBACK = False
-    _WARNED = False
 
 
 def is_fallback() -> bool:
@@ -46,18 +43,10 @@ def is_fallback() -> bool:
 
 
 def count_tokens(text: str) -> int:
-    global _WARNED
-
     if _ENCODER is None and not _FALLBACK:
         _init_encoder()
 
     if _ENCODER is not None:
         return len(_ENCODER.encode(text, disallowed_special=()))
 
-    if not _WARNED:
-        warnings.warn(
-            "tiktoken not available; token counts use chars/4 approximation",
-            stacklevel=2,
-        )
-        _WARNED = True
     return len(text) // 4
