@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - `CONTRIBUTING.md` replaces duplicated CI check commands with a
-  cross-reference to `CLAUDE.md#before-committing`, making CLAUDE.md the
+  cross-reference to `CLAUDE.md#before-committing`, making `CLAUDE.md` the
   single source of truth for harness gate commands.
 - `Containerfile` description label includes Codex, Windsurf, Cline and
   fullsend.
