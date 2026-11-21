@@ -4,14 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Fixed
-- Pre-commit hook `files` pattern now covers all discoverer paths:
-  `.github/copilot-instructions.md`, `.github/instructions/`,
-  `.github/prompts/`, `.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`,
-  `opencode.json(c)`, `codex.json`, `.windsurf/`, `.devin/`, `.cline/`, and
-  `.agents/`. Anchored `skills/`, `commands/`, `agents/`, and `harness/` to
-  prevent accidental substring matches.
-
 ### Changed
 - `security/mcp-tool-poisoning` now runs on instruction files (`CLAUDE.md`,
   `AGENTS.md`, Cursor rules, Copilot and Codex instruction files) and on
@@ -36,6 +28,13 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- Cursor discoverer no longer walks the entire tree for `.cursorrules` without `--recursive`; only the root-level file is read in non-recursive mode, matching every other component type.
+- Pre-commit hook `files` pattern now covers all discoverer paths:
+  `.github/copilot-instructions.md`, `.github/instructions/`,
+  `.github/prompts/`, `.github/hooks/`, `.github/copilot/`, `.vscode/mcp.json`,
+  `opencode.json(c)`, `codex.json`, `.windsurf/`, `.devin/`, `.cline/`, and
+  `.agents/`. Anchored `skills/`, `commands/`, `agents/`, and `harness/` to
+  prevent accidental substring matches.
 - `count_tokens` no longer emits a `UserWarning` to stderr when tiktoken is
   not installed. The fallback is now silent; `is_fallback()` and `doctor`
   already report the capability.
