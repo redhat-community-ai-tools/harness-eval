@@ -9,7 +9,14 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from harness_eval.cli import cli
-from harness_eval.cli.autonomy import EXIT_FAIL, EXIT_PASS, EXIT_REVIEW_REQUIRED, load_policy
+from harness_eval.cli.autonomy import (
+    EXIT_FAIL,
+    EXIT_INTERNAL,
+    EXIT_PASS,
+    EXIT_REVIEW_REQUIRED,
+    EXIT_USAGE,
+    load_policy,
+)
 from harness_eval.config.presets import autonomy_rules, gate_rules, lint_rules, security_rules
 from harness_eval.inspection.registry import get_all_rules
 
@@ -182,3 +189,77 @@ def test_baseline_suppressions_are_counted_not_hidden(tmp_path: Path) -> None:
     data = json.loads(result.output)
     assert data["coverage"]["baseline_suppressed"] == len(first["blocking"]) + len(first["policy"])
     assert data["evidence"]["baseline"]["suppressed"] == data["coverage"]["baseline_suppressed"]
+
+
+# --- usage errors exit outside the verdict range --------------------------------
+
+
+def test_usage_error_exit_code_not_in_verdict_range() -> None:
+    """A usage error (nonexistent path) must not exit 0, 1 or 2."""
+    result = _run("./does-not-exist")
+    assert result.exit_code not in (
+        EXIT_PASS,
+        EXIT_FAIL,
+        EXIT_REVIEW_REQUIRED,
+    ), f"Usage error exited {result.exit_code}; expected outside the verdict range"
+    assert result.exit_code == EXIT_USAGE
+
+
+def test_internal_error_exit_code(tmp_path: Path) -> None:
+    """A ClickException inside the command exits 70 (EX_SOFTWARE), not 1 or 2."""
+
+    import click
+
+    from harness_eval.cli.autonomy import harness_autonomy
+
+    original_callback = harness_autonomy.callback
+
+    def _raise(*args: object, **kwargs: object) -> None:
+        raise click.ClickException("simulated internal error")
+
+    harness_autonomy.callback = _raise
+    try:
+        result = _run(str(tmp_path))
+    finally:
+        harness_autonomy.callback = original_callback
+    msg = f"ClickException exited {result.exit_code}; expected {EXIT_INTERNAL}"
+    assert result.exit_code == EXIT_INTERNAL, msg
+
+
+def test_unexpected_exception_exits_internal_with_traceback(tmp_path: Path) -> None:
+    """An unexpected Exception during the scan exits 70 with traceback on stderr."""
+    from harness_eval.cli.autonomy import harness_autonomy
+
+    original_callback = harness_autonomy.callback
+
+    def _raise(*args: object, **kwargs: object) -> None:
+        raise ValueError("simulated scan failure")
+
+    harness_autonomy.callback = _raise
+    try:
+        result = _run(str(tmp_path))
+    finally:
+        harness_autonomy.callback = original_callback
+    msg = f"ValueError exited {result.exit_code}; expected {EXIT_INTERNAL}"
+    assert result.exit_code == EXIT_INTERNAL, msg
+    assert "Traceback" in result.stderr
+    assert "ValueError" in result.stderr
+    assert "simulated scan failure" in result.stderr
+
+
+def test_malformed_policy_file_exits_usage(tmp_path: Path) -> None:
+    """A malformed --policy file exits 64 (EX_USAGE), not 0 or 1."""
+    policy = tmp_path / "bad.yaml"
+    policy.write_text("{{{not valid yaml")
+    result = _run(str(tmp_path), "--policy", str(policy))
+    msg = f"Malformed policy exited {result.exit_code}; expected {EXIT_USAGE}"
+    assert result.exit_code == EXIT_USAGE, msg
+
+
+def test_malformed_baseline_file_exits_usage(tmp_path: Path) -> None:
+    """A malformed --baseline file exits 64 (EX_USAGE), not 1."""
+    baseline = tmp_path / "bad.json"
+    baseline.write_text("not valid json")
+    result = _run(str(tmp_path), "--baseline", str(baseline))
+    msg = f"Malformed baseline exited {result.exit_code}; expected {EXIT_USAGE}"
+    assert result.exit_code == EXIT_USAGE, msg
