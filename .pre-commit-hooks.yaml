@@ -1,6 +1,6 @@
 - id: harness-autonomy
   name: harness-autonomy
-  description: Decidable checks for an auto-merge policy (block and policy rules; exit 1 FAIL, 2 REVIEW_REQUIRED; no LLM)
+  description: Decidable checks for an auto-merge policy (block and policy rules; exit 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error; no LLM)
   entry: harness-eval harness-autonomy .
   language: python
   pass_filenames: false
