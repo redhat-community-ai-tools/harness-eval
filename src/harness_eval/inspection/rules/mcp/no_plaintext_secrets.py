@@ -244,7 +244,8 @@ class McpNoPlaintextSecrets:
 
             # 4. Fallback: check the raw string for known prefixes
             if not handled:
-                self._check_value(context, loc, server, "args", arg, prefixes)
+                stripped_arg = arg.strip("\"'")
+                self._check_value(context, loc, server, "args", stripped_arg, prefixes)
 
     def _check_url(
         self,

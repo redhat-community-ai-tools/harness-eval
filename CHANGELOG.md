@@ -59,6 +59,9 @@ All notable changes to this project will be documented in this file.
 - `mcp/no-plaintext-secrets` now strips shell quotes from inline `VAR=value`
   assignments so prefix matching detects secrets in quoted values like
   `GITHUB_TOKEN="ghp_..."` (#177).
+- `mcp/no-plaintext-secrets` now strips surrounding quotes from bare
+  positional args in the fallback path, so prefix matching detects
+  secrets wrapped in literal quotes (e.g., `"ghp_abc123"`) (#192).
 - `harness-lint` no longer scales quadratically with the number of skills.
   Similarity rules now vectorise once per scan and compare in bulk instead
   of fitting a new TF-IDF vectorizer for every pair of texts (#153).
