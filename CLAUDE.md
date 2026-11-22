@@ -15,7 +15,7 @@ AI agent setup evaluation tool. See [`README.md`](README.md) for usage, features
 
 ## Changelog
 
-Every PR that adds a feature, fixes a bug, or changes behavior must include a CHANGELOG.md entry under `[Unreleased]`. Add it in the appropriate subsection (Added, Changed, Fixed, Removed). One line per change.
+Every PR that adds a feature, fixes a bug, or changes behavior must include a CHANGELOG.md entry under `[Unreleased]`. Add it in the appropriate subsection (Added, Changed, Fixed, Removed). One line per change. Soft-wrap long entries at ~80 characters with a 2-space continuation indent to match the existing style.
 
 To cut a release: `uv run scripts/release.py minor` (or `patch`/`major`). This moves unreleased entries to a dated version, bumps pyproject.toml, commits, and tags.
 

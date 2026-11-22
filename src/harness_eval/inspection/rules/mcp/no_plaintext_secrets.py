@@ -275,4 +275,5 @@ class McpNoPlaintextSecrets:
         """Scan a shell string for inline VAR=value assignments."""
         for m in _ENV_ASSIGN_INLINE_RE.finditer(text):
             var_name, value = m.group(1), m.group(2)
+            value = value.strip("\"'")
             self._check_value(context, loc, server, f"{field} ({var_name})", value, prefixes)
