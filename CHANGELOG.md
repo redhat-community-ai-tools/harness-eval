@@ -45,6 +45,9 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- `mcp/no-plaintext-secrets` now strips shell quotes from inline `VAR=value`
+  assignments so prefix matching detects secrets in quoted values like
+  `GITHUB_TOKEN="ghp_..."` (#177).
 - `harness-lint` no longer scales quadratically with the number of skills.
   Similarity rules now vectorise once per scan and compare in bulk instead
   of fitting a new TF-IDF vectorizer for every pair of texts (#153).
