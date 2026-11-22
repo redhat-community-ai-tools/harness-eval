@@ -15,7 +15,7 @@ AI agent setup evaluation tool. See [`README.md`](README.md) for usage, features
 
 ## Changelog
 
-Every PR that adds a feature, fixes a bug, or changes behavior must include a CHANGELOG.md entry under `[Unreleased]`. Add it in the appropriate subsection (Added, Changed, Fixed, Removed). One line per change.
+Every PR that adds a feature, fixes a bug, or changes behavior must include a CHANGELOG.md entry under `[Unreleased]`. Add it in the appropriate subsection (Added, Changed, Fixed, Removed). One line per change. Soft-wrap long entries at ~80 characters with a 2-space continuation indent to match the existing style.
 
 To cut a release: `uv run scripts/release.py minor` (or `patch`/`major`). This moves unreleased entries to a dated version, bumps pyproject.toml, commits, and tags.
 
@@ -29,6 +29,7 @@ uv run harness-eval harness-autonomy .                      # decidable rules on
 uv run harness-eval harness-security . --fail-on-error      # security gate: errors block (warnings are informational)
 uv run harness-eval harness-gate .                          # validated block rules; exits 1 on errors and warnings
 uv run harness-eval harness-lint . --fail-on-error          # structural errors block, advisory findings do not
+uv run scripts/sync_commands.py --check                     # verify commands/ matches .cursor/commands/ source
 ```
 
 The most common CI failure is forgetting `ruff format`. The security gate blocks on errors (`--fail-on-error`); warnings are informational. `harness-autonomy` and `harness-gate` are the integrity gates.

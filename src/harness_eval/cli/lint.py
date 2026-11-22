@@ -5,6 +5,7 @@ from __future__ import annotations
 import json as json_mod
 import time
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -18,6 +19,33 @@ from harness_eval.cli._helpers import (
 from harness_eval.core.setup import discover_setup
 from harness_eval.inspection.types import finding_data_field
 from harness_eval.output.metadata import EvalMetadata
+
+
+def _inject_fix_counts(
+    target: dict[str, Any],
+    fixable_count: int,
+    total_fixed: int,
+    files_fixed: int,
+    *,
+    applied: bool,
+    sarif: bool = False,
+) -> None:
+    """Inject fix-computation counts into a structured output dict.
+
+    For SARIF, writes camelCase keys into *target* (the run-level
+    ``properties`` dict).  For JSON, writes snake_case keys into the
+    top-level output dict.
+    """
+    if sarif:
+        target["fixableCount"] = fixable_count
+        if applied:
+            target["fixedCount"] = total_fixed
+            target["filesFixed"] = files_fixed
+    else:
+        target["fixable_count"] = fixable_count
+        if applied:
+            target["fixed_count"] = total_fixed
+            target["files_fixed"] = files_fixed
 
 
 @cli.command("harness-lint")
@@ -167,6 +195,8 @@ def eval_setup_lint(
     target = Path(path)
     limits = scan_limits_from(max_file_bytes, max_total_bytes, max_files, max_depth)
 
+    system = None
+
     if target.is_dir():
         setup = discover_setup(
             name=target.name,
@@ -212,38 +242,6 @@ def eval_setup_lint(
                 baseline_suppressed=baseline_suppressed,
             ),
         )
-
-        all_findings = [d for r in results for d in r.diagnostics]
-        fixable_count = sum(1 for d in all_findings if d.fix is not None)
-        total_fixed = 0
-        files_fixed = 0
-        if fix:
-            fix_results = apply_fixes(all_findings, project_root=Path(path).resolve())
-            total_fixed = sum(fr.fixes_applied for fr in fix_results)
-            files_fixed = sum(1 for fr in fix_results if fr.fixes_applied > 0)
-
-        if fmt == "sarif":
-            from harness_eval.output.sarif import format_sarif
-
-            sarif_doc = format_sarif(results, metadata, scan_root=path)
-            run_props = sarif_doc["runs"][0].setdefault("properties", {})
-            run_props["fixableCount"] = fixable_count
-            if fix:
-                run_props["fixedCount"] = total_fixed
-                run_props["filesFixed"] = files_fixed
-            emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
-        elif fmt == "json":
-            json_out = format_json(system, results)
-            data = json_mod.loads(json_out)
-            data["metadata"] = metadata.to_dict()
-            data["fixable_count"] = fixable_count
-            if fix:
-                data["fixed_count"] = total_fixed
-                data["files_fixed"] = files_fixed
-            emit_output(json_mod.dumps(data, indent=2), output_path)
-        else:
-            text = format_terminal(system, results) + "\n" + metadata.format_terminal()
-            emit_output(text, output_path)
     else:
         results = _inspect_single_file(target, config_rules)
 
@@ -255,27 +253,33 @@ def eval_setup_lint(
             invocation_source="cli",
         )
 
-        all_findings = [d for r in results for d in r.diagnostics]
-        fixable_count = sum(1 for d in all_findings if d.fix is not None)
-        total_fixed = 0
-        files_fixed = 0
-        if fix:
-            fix_results = apply_fixes(all_findings, project_root=Path(path).resolve())
-            total_fixed = sum(fr.fixes_applied for fr in fix_results)
-            files_fixed = sum(1 for fr in fix_results if fr.fixes_applied > 0)
+    # -- Fix computation (shared across both branches) --
+    all_findings = [d for r in results for d in r.diagnostics]
+    fixable_count = sum(1 for d in all_findings if d.fix is not None)
+    total_fixed = 0
+    files_fixed = 0
+    if fix:
+        fix_results = apply_fixes(all_findings, project_root=Path(path).resolve())
+        total_fixed = sum(fr.fixes_applied for fr in fix_results)
+        files_fixed = sum(1 for fr in fix_results if fr.fixes_applied > 0)
 
-        if fmt == "sarif":
-            from harness_eval.output.sarif import format_sarif
+    # -- Output dispatch --
+    if fmt == "sarif":
+        from harness_eval.output.sarif import format_sarif
 
-            sarif_doc = format_sarif(results, metadata, scan_root=path)
-            run_props = sarif_doc["runs"][0].setdefault("properties", {})
-            run_props["fixableCount"] = fixable_count
-            if fix:
-                run_props["fixedCount"] = total_fixed
-                run_props["filesFixed"] = files_fixed
-            emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
-        elif fmt == "json":
-            output = {
+        sarif_doc = format_sarif(results, metadata, scan_root=path)
+        run_props = sarif_doc["runs"][0].setdefault("properties", {})
+        _inject_fix_counts(
+            run_props, fixable_count, total_fixed, files_fixed, applied=fix, sarif=True
+        )
+        emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
+    elif fmt == "json":
+        if system is not None:
+            json_out = format_json(system, results)
+            data = json_mod.loads(json_out)
+            data["metadata"] = metadata.to_dict()
+        else:
+            data = {
                 "results": [
                     {
                         "target": f"{r.target_type}/{r.target_name}",
@@ -299,16 +303,16 @@ def eval_setup_lint(
                     for r in results
                 ],
                 "metadata": metadata.to_dict(),
-                "fixable_count": fixable_count,
             }
-            if fix:
-                output["fixed_count"] = total_fixed
-                output["files_fixed"] = files_fixed
-            emit_output(json_mod.dumps(output, indent=2), output_path)
+        _inject_fix_counts(data, fixable_count, total_fixed, files_fixed, applied=fix)
+        emit_output(json_mod.dumps(data, indent=2), output_path)
+    else:
+        if system is not None:
+            text = format_terminal(system, results) + "\n" + metadata.format_terminal()
         else:
             total_errors = sum(r.error_count for r in results)
             total_warnings = sum(r.warning_count for r in results)
-            lines_out = []
+            lines_out: list[str] = []
             for r in results:
                 if r.diagnostics:
                     lines_out.append(f"\n{r.target_type}/{r.target_name} ({r.tokens} tokens):")
@@ -320,7 +324,8 @@ def eval_setup_lint(
                 f"{total_errors} errors, {total_warnings} warnings"
             )
             lines_out.append(metadata.format_terminal())
-            emit_output("\n".join(lines_out), output_path)
+            text = "\n".join(lines_out)
+        emit_output(text, output_path)
 
     if fmt == "terminal":
         if fix:
