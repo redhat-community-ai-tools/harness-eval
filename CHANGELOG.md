@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- `CLAUDE.md` "Before committing" section now includes
+  `uv run scripts/sync_commands.py --check` so agents and developers
+  catch command-sync issues locally instead of waiting for CI (#178).
 - `CONTRIBUTING.md` replaces duplicated CI check commands with a
   cross-reference to `CLAUDE.md#before-committing`, making `CLAUDE.md` the
   single source of truth for harness gate commands.

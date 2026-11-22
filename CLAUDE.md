@@ -29,6 +29,7 @@ uv run harness-eval harness-autonomy .                      # decidable rules on
 uv run harness-eval harness-security . --fail-on-error      # security gate: errors block (warnings are informational)
 uv run harness-eval harness-gate .                          # validated block rules; exits 1 on errors and warnings
 uv run harness-eval harness-lint . --fail-on-error          # structural errors block, advisory findings do not
+uv run scripts/sync_commands.py --check                     # verify commands/ matches .cursor/commands/ source
 ```
 
 The most common CI failure is forgetting `ruff format`. The security gate blocks on errors (`--fail-on-error`); warnings are informational. `harness-autonomy` and `harness-gate` are the integrity gates.
