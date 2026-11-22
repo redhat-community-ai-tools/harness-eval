@@ -36,7 +36,7 @@ dev = [
     "harness-eval[llm]",
     "pytest>=8.0",
     "pytest-cov>=4.0",
-    "ruff>=0.4",
+    "ruff>=0.17.6",  # lower bound matches .pre-commit-config.yaml
     "mypy>=1.10",
     "pre-commit>=4.0",
     "types-PyYAML>=6.0",
