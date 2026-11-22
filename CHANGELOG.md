@@ -45,6 +45,8 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- Pinned `astral-sh/ruff-pre-commit` to v0.17.6 to match the project's resolved
+  ruff version, eliminating formatting conflicts between pre-commit and CI.
 - `mcp/no-plaintext-secrets` now strips shell quotes from inline `VAR=value`
   assignments so prefix matching detects secrets in quoted values like
   `GITHUB_TOKEN="ghp_..."` (#177).

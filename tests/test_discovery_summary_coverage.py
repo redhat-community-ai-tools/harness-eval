@@ -217,13 +217,11 @@ class TestDiscoverySummaryCoverage:
             rel = str(path.relative_to(root))
             if not any(_path_matches_pattern(rel, p) for p in patterns):
                 uncovered.append(rel)
-        # fmt: off
         assert not uncovered, (
             f"{disc.tool_name}: collect_paths() returned paths not covered "
             f"by discovery_summary:\n  {uncovered}\n"
             f"Summary patterns: {patterns}"
         )
-        # fmt: on
 
         # Direction 2: every summary pattern must match at least one path
         rel_paths = [str(p.relative_to(root)) for p in collected]
@@ -231,13 +229,11 @@ class TestDiscoverySummaryCoverage:
         for pattern in patterns:
             if not any(_path_matches_pattern(r, pattern) for r in rel_paths):
                 unmatched.append(pattern)
-        # fmt: off
         assert not unmatched, (
             f"{disc.tool_name}: discovery_summary patterns with no matching "
             f"collected path:\n  {unmatched}\n"
             f"Collected paths: {rel_paths}"
         )
-        # fmt: on
 
 
 class TestDiscoverySummaryDefault:
