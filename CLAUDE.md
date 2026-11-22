@@ -15,7 +15,7 @@ AI agent setup evaluation tool. See [`README.md`](README.md) for usage, features
 
 ## Changelog
 
-Every PR that adds a feature, fixes a bug, or changes behavior must include a CHANGELOG.md entry under `[Unreleased]`. Add it in the appropriate subsection (Added, Changed, Fixed, Removed). One line per change.
+Every PR that adds a feature, fixes a bug, or changes behavior must include a CHANGELOG.md entry under `[Unreleased]`. Add it in the appropriate subsection (Added, Changed, Fixed, Removed). One line per change. Soft-wrap long entries at ~80 characters with a 2-space continuation indent to match the existing style.
 
 To cut a release: `uv run scripts/release.py minor` (or `patch`/`major`). This moves unreleased entries to a dated version, bumps pyproject.toml, commits, and tags.
 
@@ -29,6 +29,7 @@ uv run harness-eval harness-autonomy .                      # decidable rules on
 uv run harness-eval harness-security . --fail-on-error      # security gate: errors block (warnings are informational)
 uv run harness-eval harness-gate .                          # validated block rules; exits 1 on errors and warnings
 uv run harness-eval harness-lint . --fail-on-error          # structural errors block, advisory findings do not
+uv run scripts/sync_commands.py --check                     # verify commands/ matches .cursor/commands/ source
 ```
 
 The most common CI failure is forgetting `ruff format`. The security gate blocks on errors (`--fail-on-error`); warnings are informational. `harness-autonomy` and `harness-gate` are the integrity gates.
@@ -65,3 +66,4 @@ The most common CI failure is forgetting `ruff format`. The security gate blocks
 - Rules that resolve file paths from user content must use `safe_join()` from `utils.paths` to prevent path traversal; never join untrusted paths with raw `/` or `Path()`
 - CLI commands that support `--format json` or `--format sarif` must not print free-form text to stdout in those modes. All user-facing messages (hints, summaries, progress) go to stderr or are gated behind `fmt == "terminal"`. Structured output formats must be a single valid JSON or SARIF document parseable by `json.load()`. When adding CLI output, verify structured formats remain parseable (see `TestLintJsonOutputParseable` for the pattern).
 - Security detection rules in `src/harness_eval/inspection/rules/security/` intentionally contain attack signatures (suspicious paths, bidi characters, URL calls, shell patterns) as part of their detection logic. When writing or modifying these rules, add inline `# nosec BXXX` annotations (with a brief comment) on any line bandit would flag. Use the specific rule ID (e.g., `B108`, `B310`, `B603`) rather than a bare `# nosec`. Run `bandit -r src/` locally to verify no unannotated findings remain.
+- Heavy dependencies (`numpy`, `scipy`, `scikit-learn`) must NOT be imported at module level — they add ~0.8 s to CLI startup (#140). Import them inside the functions that use them. Use `TYPE_CHECKING` guards for type annotations. See `utils/similarity.py` for the pattern and `tests/test_lazy_imports.py` for the CI gate.
