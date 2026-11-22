@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- `CLAUDE.md` convention: CLI commands with `--format json` or `--format sarif` must not print free-form text to stdout; all user-facing messages must be gated behind `fmt == "terminal"` or sent to stderr.
 - `CLAUDE.md` convention: heavy dependencies (`numpy`, `scipy`, `scikit-learn`)
   must use function-level lazy imports, not module-level (#182).
 - README discovery table is now auto-generated from discoverer metadata
