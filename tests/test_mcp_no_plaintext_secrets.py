@@ -338,3 +338,18 @@ class TestMcpNoPlaintextSecrets:
         result = lint_mcp_config(path, RULE_CONFIG)
         diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
         assert len(diags) == 0
+
+    def test_flags_secret_in_command_inline_env(self, tmp_path: Path) -> None:
+        path = _make_mcp_config(
+            tmp_path,
+            {
+                "cmd-inline": {
+                    "command": "GITHUB_TOKEN=ghp_abc123 npx -y pkg@1.0",
+                    "args": [],
+                }
+            },
+        )
+        result = lint_mcp_config(path, RULE_CONFIG)
+        diags = [d for d in result.diagnostics if d.rule_id == "mcp/no-plaintext-secrets"]
+        assert len(diags) == 1
+        assert "cmd-inline" in diags[0].message
