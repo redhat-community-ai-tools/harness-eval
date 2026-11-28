@@ -3,14 +3,14 @@
 [![CI](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/redhat-community-ai-tools/harness-eval/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/harness-eval)](https://pypi.org/project/harness-eval/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![Rules](https://img.shields.io/badge/rules-92-blue)](https://github.com/redhat-community-ai-tools/harness-eval#rules)
+[![Rules](https://img.shields.io/badge/rules-93-blue)](https://github.com/redhat-community-ai-tools/harness-eval#rules)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Deterministic checks for the configuration that AI coding agents run with:
 instruction files, skills, commands, hooks, MCP configs, agent definitions and
 pipeline harnesses. It auto-detects the tools a repository uses (Claude Code,
 Cursor, Copilot, Gemini CLI, Codex, OpenCode, Windsurf, Cline, fullsend),
-builds one component graph across them, and runs 92 deterministic rules
+builds one component graph across them, and runs 93 deterministic rules
 against it. No LLM, no network, same answer every run.
 
 Every rule declares what a finding **means**, and that is the only thing the
@@ -158,7 +158,7 @@ prompt never mentions. A per-file linter cannot see any of these.
 
 ## Rules
 
-92 deterministic rules across 13 categories. Three axes, all recorded on
+93 deterministic rules across 13 categories. Three axes, all recorded on
 the rule itself and all generated into the docs by
 `scripts/gen_rules_reference.py` (see [`docs/rule-taxonomy.md`](docs/rule-taxonomy.md)):
 
@@ -175,7 +175,7 @@ the rule itself and all generated into the docs by
 <!-- BEGIN GENERATED: effect-counts -->
 | Effect | Rules | Run by |
 |--------|-------|--------|
-| block | 34 | `harness-gate`, `harness-autonomy`, `harness-security` (security category) |
+| block | 35 | `harness-gate`, `harness-autonomy`, `harness-security` (security category) |
 | policy | 13 | `harness-autonomy` (REVIEW_REQUIRED), `harness-security` |
 | signal | 21 | `harness-security` |
 | advice | 24 | `harness-lint` |
@@ -185,7 +185,7 @@ the rule itself and all generated into the docs by
 | Tier | Rules |
 |------|-------|
 | gating | 22 |
-| provisional | 25 |
+| provisional | 26 |
 | advisory | 45 |
 <!-- END GENERATED: tier-counts -->
 
@@ -193,7 +193,7 @@ the rule itself and all generated into the docs by
 | Scope | Rules |
 |-------|-------|
 | FILE | 66 |
-| FILE_FS | 12 |
+| FILE_FS | 13 |
 | PAIRWISE | 9 |
 | SETUP | 5 |
 <!-- END GENERATED: scope-counts -->
