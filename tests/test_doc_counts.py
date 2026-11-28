@@ -148,6 +148,14 @@ class TestGeneratedTierScopeTables:
             "Run: uv run scripts/gen_rules_reference.py"
         )
 
+    def test_tool_matrix_current(self) -> None:
+        gen = _load_gen_module()
+        content = (ROOT / "docs" / "rules-reference.md").read_text()
+        assert gen.render_tool_matrix() in content, (
+            "docs/rules-reference.md tool matrix is stale. "
+            "Run: uv run scripts/gen_rules_reference.py"
+        )
+
 
 class TestDiscoveryTable:
     """The README discovery table must match what discoverers declare."""

@@ -99,6 +99,41 @@ def render_discovery_table() -> str:
     return "\n".join(rows)
 
 
+# Tools used in the rule × tool matrix, in display order.
+_TOOL_MATRIX_TOOLS = ["claude", "cursor", "windsurf", "copilot", "gemini", "opencode", "codex"]
+_TOOL_ABBREVS = {
+    "claude": "CC",
+    "cursor": "CU",
+    "windsurf": "WS",
+    "copilot": "CP",
+    "gemini": "GE",
+    "opencode": "OC",
+    "codex": "CX",
+}
+
+
+def render_tool_matrix() -> str:
+    """Generate a rule × tool matrix showing which tools each rule applies to.
+
+    - ✓  = rule applies to this tool (tool listed in ``RuleMeta.tools``, or
+           ``tools`` is ``None`` meaning all tools)
+    - —  = rule does not apply (tool not listed in ``RuleMeta.tools``)
+    """
+    abbrevs = [_TOOL_ABBREVS[t] for t in _TOOL_MATRIX_TOOLS]
+    header = "| Rule | " + " | ".join(abbrevs) + " |"
+    sep = "|------|" + "|".join("----" for _ in abbrevs) + "|"
+    rows = [header, sep]
+    for r in sorted(get_all_rules(), key=lambda x: x.meta.id):
+        cells = []
+        for tool in _TOOL_MATRIX_TOOLS:
+            if r.meta.tools is None or tool in r.meta.tools:
+                cells.append(" ✓ ")
+            else:
+                cells.append(" — ")
+        rows.append(f"| `{r.meta.id}` |" + "|".join(cells) + "|")
+    return "\n".join(rows)
+
+
 def replace_block(text: str, marker: str, body: str) -> str:
     begin = f"<!-- BEGIN GENERATED: {marker} -->"
     end = f"<!-- END GENERATED: {marker} -->"
@@ -113,6 +148,8 @@ def apply() -> None:
     ref.write_text(replace_block(ref.read_text(), "rule-tiers", render_rule_table()))
 
     ref.write_text(replace_block(ref.read_text(), "autonomy-rules", render_autonomy_rules()))
+
+    ref.write_text(replace_block(ref.read_text(), "tool-matrix", render_tool_matrix()))
 
     readme = ROOT / "README.md"
     text = readme.read_text()

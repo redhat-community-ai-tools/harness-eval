@@ -87,6 +87,7 @@ class HooksPermissionContradiction:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion="Remove the allow entry or narrow the deny entry so they do not overlap.",
     )
 

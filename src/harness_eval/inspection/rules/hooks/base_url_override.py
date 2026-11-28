@@ -46,6 +46,7 @@ class HooksBaseUrlOverride:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion="Move this setting to user-scoped config or environment variables.",
     )
 

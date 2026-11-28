@@ -50,6 +50,7 @@ class HooksDangerousPermissionGrant:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion="Remove the entry from permissions.allow or narrow the pattern.",
     )
 

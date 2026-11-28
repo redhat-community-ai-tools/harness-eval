@@ -59,6 +59,7 @@ class HooksLocalSettingsCommitted:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion=(
             "Remove settings.local.json from version control and add it to .gitignore;"
             " move any shared grants into settings.json deliberately."

@@ -87,6 +87,7 @@ class CommandAllowedToolsCoverage:
             ),
         },
         target_type=ComponentType.COMMAND,
+        tools=("claude",),
         default_suggestion="Update the allowed-tools list to match the tools the command uses.",
     )
 
