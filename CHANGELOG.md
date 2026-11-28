@@ -56,6 +56,12 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Pinned `astral-sh/ruff-pre-commit` to v0.17.6 to match the project's resolved
   ruff version, eliminating formatting conflicts between pre-commit and CI.
+- `harness-review` and `harness-security --review` reported a component as
+  clean when the reviewer's response could not be read (a refusal, an empty or
+  truncated reply, a JSON object that is not a review). Such a component is now
+  marked not reviewed: `harness-review` prints `NOT REVIEWED` and counts it
+  separately, its JSON output gains `error` per component and a top-level
+  `unreviewed` list, and `harness-security` lists it under skipped checks.
 - `mcp/no-plaintext-secrets` now strips shell quotes from inline `VAR=value`
   assignments so prefix matching detects secrets in quoted values like
   `GITHUB_TOKEN="ghp_..."` (#177).

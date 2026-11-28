@@ -560,6 +560,12 @@ def eval_setup_security(
         for rr in all_sec_results:
             if rr.issues:
                 rubric_results.append(rr)
+        unreviewed = sorted(rr.component_name for rr in all_sec_results if not rr.reviewed)
+        if unreviewed:
+            skip_notices.append(
+                f"Semantic review skipped for {len(unreviewed)} component(s), "
+                f"the reviewer's response could not be read: {', '.join(unreviewed)}"
+            )
 
     total_semantic = sum(len(rr.issues) for rr in rubric_results)
     risk, effective_errors, effective_warnings, false_positive_count, downgraded_count = (

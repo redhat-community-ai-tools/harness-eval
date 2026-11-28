@@ -34,3 +34,10 @@ class RubricResult:
     issues: list[RubricIssue] = field(default_factory=list)
     summary: str = ""
     verdict: str = ""
+    # Why the component was not reviewed. An empty `issues` list means "the
+    # reviewer found nothing" only when this is empty too.
+    error: str = ""
+
+    @property
+    def reviewed(self) -> bool:
+        return not self.error
