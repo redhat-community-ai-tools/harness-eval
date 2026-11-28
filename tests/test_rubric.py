@@ -337,3 +337,61 @@ def test_verdict_must_be_consistent_with_validated_issues() -> None:
 
     result = RubricChecker(UnsupportedRemoveLLM()).check("skill", "test", "body")
     assert result.verdict == "KEEP"
+
+
+class _FixedLLM:
+    def __init__(self, response: str) -> None:
+        self.response = response
+
+    def generate(self, system: str, prompt: str) -> str:
+        return self.response
+
+
+def _check(response: str):
+    return RubricChecker(_FixedLLM(response)).check("skill", "demo", "body")
+
+
+def test_refusal_is_not_reported_as_a_clean_review() -> None:
+    result = _check("I'm sorry, but I can't help with reviewing this content.")
+    assert not result.reviewed
+    assert result.error
+    assert result.verdict == ""
+    assert result.issues == []
+
+
+def test_empty_response_is_not_reported_as_a_clean_review() -> None:
+    assert not _check("").reviewed
+    assert not _check("   \n").reviewed
+
+
+def test_truncated_json_is_not_reported_as_a_clean_review() -> None:
+    result = _check('{"issues": [{"description": "Vague", "category": "specific')
+    assert not result.reviewed
+
+
+def test_json_object_that_is_not_a_review_is_not_a_clean_review() -> None:
+    assert not _check('{"error": {"type": "overloaded", "message": "try again"}}').reviewed
+
+
+def test_issues_that_are_not_a_list_is_not_a_clean_review() -> None:
+    assert not _check('{"issues": "none", "verdict": "KEEP"}').reviewed
+
+
+def test_clean_json_review_is_still_reviewed() -> None:
+    result = _check('{"issues": [], "summary": "clean", "verdict": "KEEP"}')
+    assert result.reviewed
+    assert result.verdict == "KEEP"
+
+
+def test_clean_text_review_is_still_reviewed() -> None:
+    result = _check("SUMMARY: Well-built skill with no issues.")
+    assert result.reviewed
+    assert result.verdict == "KEEP"
+
+
+def test_batch_item_that_is_not_an_object_is_not_a_clean_review() -> None:
+    response = json.dumps([{"issues": [], "summary": "first", "verdict": "KEEP"}, "n/a"])
+    results = RubricChecker(_FixedLLM(response)).check_batch(
+        [("skill", "one", "first"), ("skill", "two", "second")]
+    )
+    assert [r.reviewed for r in results] == [True, False]

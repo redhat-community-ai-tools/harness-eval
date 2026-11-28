@@ -24,6 +24,8 @@ _SUMMARY_RE = re.compile(r"SUMMARY:\s*(.+)")
 _VERDICT_RE = re.compile(r"VERDICT:\s*(\S+)")
 
 _JSON_BLOCK_RE = re.compile(r"```json\s*\n(.*?)\n\s*```", re.DOTALL)
+_REVIEW_KEYS = ("issues", "verdict", "summary")
+_UNREADABLE = "the reviewer's response could not be read as a review"
 _SEVERITY_ALIASES = {
     "critical": "error",
     "high": "error",
@@ -125,7 +127,7 @@ class RubricChecker:
                     for i, item in enumerate(data):
                         if not isinstance(item, dict):
                             ct, cn, _ = components[i]
-                            results.append(RubricResult(component_name=cn, component_type=ct))
+                            results.append(self._unreadable(cn, ct))
                             continue
                         ct, cn, _ = components[i]
                         result = self._parse_single_json(item, cn, ct, categories)
@@ -145,11 +147,14 @@ class RubricChecker:
     ) -> RubricResult:
         issues: list[RubricIssue] = []
         raw_issues = data.get("issues", [])
-        if isinstance(raw_issues, list):
-            for item in raw_issues[:20]:
-                issue = self._validated_json_issue(item, categories)
-                if issue is not None:
-                    issues.append(issue)
+        # An object with none of the review's keys, or whose `issues` is not a
+        # list, is not a review that found nothing.
+        if not any(key in data for key in _REVIEW_KEYS) or not isinstance(raw_issues, list):
+            return self._unreadable(component_name, component_type)
+        for item in raw_issues[:20]:
+            issue = self._validated_json_issue(item, categories)
+            if issue is not None:
+                issues.append(issue)
         verdict = str(data.get("verdict", "")).upper()
         if verdict not in {"KEEP", "REVIEW", "REMOVE"}:
             verdict = "REVIEW" if issues else "KEEP"
@@ -163,6 +168,12 @@ class RubricChecker:
             issues=issues,
             summary=str(data.get("summary", "")),
             verdict=verdict,
+        )
+
+    @staticmethod
+    def _unreadable(component_name: str, component_type: str) -> RubricResult:
+        return RubricResult(
+            component_name=component_name, component_type=component_type, error=_UNREADABLE
         )
 
     @staticmethod
@@ -315,6 +326,12 @@ class RubricChecker:
             sum_match = _SUMMARY_RE.match(line)
             if sum_match:
                 summary = sum_match.group(1).strip()
+
+        if not issues and not summary and not verdict:
+            # Nothing in the response is in either format: a refusal, an empty
+            # or truncated reply. Reporting it as a clean review would hide
+            # that the component was never reviewed.
+            return self._unreadable(component_name, component_type)
 
         allowed = {category.name for category in categories}
         issues = [

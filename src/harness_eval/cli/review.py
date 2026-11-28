@@ -39,9 +39,11 @@ def _format_json_review(
                 "issues": [rubric_issue_to_dict(issue) for issue in rr.issues],
                 "summary": rr.summary,
                 "verdict": rr.verdict,
+                "error": rr.error,
             }
             for rr in rubric_results
         ],
+        "unreviewed": [rr.component_name for rr in rubric_results if not rr.reviewed],
         "metadata": metadata.to_dict(),
     }
     return json_mod.dumps(output, indent=2)
@@ -203,6 +205,10 @@ def eval_setup_review(
         click.echo("")
 
         for rr in rubric_results:
+            if not rr.reviewed:
+                click.echo(f"  {rr.component_type}/{rr.component_name}: NOT REVIEWED ({rr.error})")
+                click.echo("")
+                continue
             if rr.issues:
                 click.echo(f"  {rr.component_type}/{rr.component_name}:")
                 for issue in rr.issues:
@@ -215,6 +221,13 @@ def eval_setup_review(
             click.echo("")
 
         total_issues = sum(len(rr.issues) for rr in rubric_results)
-        click.echo(f"{len(rubric_results)} components reviewed, {total_issues} rubric issues found")
+        unreviewed = sum(1 for rr in rubric_results if not rr.reviewed)
+        reviewed = len(rubric_results) - unreviewed
+        click.echo(f"{reviewed} components reviewed, {total_issues} rubric issues found")
+        if unreviewed:
+            click.echo(
+                f"{unreviewed} components NOT reviewed: the reviewer's response could not be "
+                "read. Run the review again; absence of issues above says nothing about them."
+            )
         click.echo(metadata.format_terminal())
         click.echo("")
