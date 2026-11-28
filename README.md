@@ -208,10 +208,15 @@ techniques and OWASP / MITRE ATLAS mappings is in
 - **Fix it.** Most `block` findings name the file and the line.
 - **Accept it once** (policy facts): the autonomy policy file above.
 - **Suppress in place**: `<!-- evaluator-ignore: rule/id -->` for a file,
-  `<!-- evaluator-ignore-next-line: rule/id -->` for one line. Removed rule
-  ids keep working as aliases. **Note:** `block`-effect rules cannot be
-  suppressed by inline `evaluator-ignore` comments — the scanned file cannot
-  waive its own blocking defects.
+  `<!-- evaluator-ignore-next-line: rule/id -->` for one line.  In YAML
+  and TOML files (which have no HTML comments), use the hash-comment
+  form instead: `# evaluator-ignore: rule/id` (file-wide) or
+  `# evaluator-ignore-next-line: rule/id` (next line). The comment
+  syntax is chosen by file extension (`.yaml`, `.yml`, `.toml`).
+  A `#` inside a quoted string is not treated as a comment.
+  Removed rule ids keep working as aliases. **Note:** `block`-effect
+  rules cannot be suppressed by inline `evaluator-ignore` comments —
+  the scanned file cannot waive its own blocking defects.
 - **Adopt incrementally**: `harness-eval baseline . --output .harness-eval-baseline.json`,
   then `--baseline` on any command. `harness-autonomy` counts suppressed
   findings in its coverage block instead of hiding them.

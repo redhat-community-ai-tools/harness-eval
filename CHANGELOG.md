@@ -37,6 +37,13 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- Inline suppression in YAML and TOML files via
+  `# evaluator-ignore: rule/id` (file-wide) and
+  `# evaluator-ignore-next-line: rule/id` (next line).  Comment
+  syntax is chosen by file extension (`.yaml`, `.yml`, `.toml`);
+  a `#` inside a quoted string is not treated as a comment.
+  `block`-effect rules remain immune, matching the HTML-comment
+  behaviour (#160).
 - `CLAUDE.md` convention: CLI commands with `--format json` or `--format sarif` must not print free-form text to stdout; all user-facing messages must be gated behind `fmt == "terminal"` or sent to stderr.
 - `CLAUDE.md` convention: heavy dependencies (`numpy`, `scipy`, `scikit-learn`)
   must use function-level lazy imports, not module-level (#182).
