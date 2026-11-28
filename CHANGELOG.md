@@ -37,6 +37,10 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- `harness-autonomy --require-components`: a scan that discovers zero
+  components returns verdict FAIL (exit 1) instead of PASS, so a merge
+  policy can distinguish "nothing was evaluated" from "everything
+  evaluated is fine" (#157).
 - `CLAUDE.md` convention: CLI commands with `--format json` or `--format sarif` must not print free-form text to stdout; all user-facing messages must be gated behind `fmt == "terminal"` or sent to stderr.
 - `CLAUDE.md` convention: heavy dependencies (`numpy`, `scipy`, `scikit-learn`)
   must use function-level lazy imports, not module-level (#182).

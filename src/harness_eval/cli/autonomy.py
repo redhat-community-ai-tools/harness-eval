@@ -136,6 +136,7 @@ class AutonomyReport:
     policy_problems: list[str] = field(default_factory=list)
     evidence: dict[str, Any] | None = None
     duration_seconds: float = 0.0
+    no_components: bool = False
 
     @property
     def exit_code(self) -> int:
@@ -288,11 +289,17 @@ def format_json(report: AutonomyReport, setup_name: str) -> str:
         "evidence": report.evidence,
         "duration_seconds": round(report.duration_seconds, 3),
     }
+    if report.no_components:
+        out["no_components"] = True
     return json_mod.dumps(out, indent=2)
 
 
 def format_terminal(report: AutonomyReport, setup_name: str) -> str:
     lines = [f"harness-autonomy: {setup_name}", f"Verdict: {report.verdict}", ""]
+
+    if report.no_components:
+        lines.append("No components discovered. --require-components is set, so this is a FAIL.")
+        lines.append("")
 
     def _section(title: str, items: list[Finding]) -> None:
         if not items:
@@ -435,6 +442,15 @@ class _AutonomyCommand(click.Command):
 @click.option(
     "--recursive", is_flag=True, help="Recursively search subdirectories for agent configs."
 )
+@click.option(
+    "--require-components",
+    is_flag=True,
+    help=(
+        "Fail when no components are discovered. Without this flag an empty scan "
+        "is a PASS; with it, exit 1 FAIL so a merge policy can distinguish "
+        "'nothing was evaluated' from 'everything evaluated is fine'."
+    ),
+)
 @exclude_option
 @scan_limit_options
 def harness_autonomy(
@@ -445,6 +461,7 @@ def harness_autonomy(
     baseline_path: str | None,
     compare_path: str | None,
     recursive: bool,
+    require_components: bool,
     exclude: tuple[str, ...],
     max_file_bytes: int,
     max_total_bytes: int,
@@ -538,6 +555,9 @@ def harness_autonomy(
         }
 
     report = classify(results, grants, target, pre_existing_keys)
+    if require_components and not setup.components:
+        report.verdict = "FAIL"
+        report.no_components = True
     report.policy_problems = problems
     report.coverage = _coverage(setup, results, config_rules, baseline_suppressed)
     evidence = collect_scan_evidence(
@@ -571,13 +591,16 @@ def harness_autonomy(
             evidence=evidence,
         )
         sarif_doc = format_sarif(results, metadata, scan_root=path)
-        sarif_doc["runs"][0].setdefault("properties", {})["harnessEval.autonomy"] = {
+        autonomy_props: dict[str, Any] = {
             "verdict": report.verdict,
             "exit_code": report.exit_code,
             "waived": len(report.waived),
             "pre_existing": len(report.pre_existing),
             "coverage": report.coverage,
         }
+        if report.no_components:
+            autonomy_props["no_components"] = True
+        sarif_doc["runs"][0].setdefault("properties", {})["harnessEval.autonomy"] = autonomy_props
         emit_output(json_mod.dumps(sarif_doc, indent=2), output_path)
     elif fmt == "json":
         emit_output(format_json(report, setup.name), output_path)

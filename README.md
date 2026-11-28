@@ -94,6 +94,12 @@ should have:
   the change introduces a policy fact that a person has not accepted yet.
   Usage errors (bad path, unknown flag) exit 64 and internal errors exit 70,
   so callers can distinguish a verdict from a broken invocation.
+- **Require components.** With `--require-components`, a scan that discovers
+  zero components is a `FAIL` (exit 1) instead of `PASS`. This catches
+  misconfigured CI paths, over-broad `--exclude` patterns, and checkout steps
+  that did not fetch the right files. The JSON output includes a
+  `no_components` field when the flag triggers. Without the flag the behaviour
+  is unchanged: an empty scan is `PASS`.
 - **Accept once, not every time.** A repository records the policy facts it
   accepts in a file kept out of the scanned tree or protected by CODEOWNERS.
   Accepted findings appear as `waived` with the recorded reason; they are never
