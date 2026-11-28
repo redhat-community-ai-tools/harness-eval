@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- `content/broken-references` separates a broken reference from an unverified
+  one. A missing markdown link target, or a missing path under the skill's own
+  `scripts/`, `references/` or `assets/`, is still an error (`broken_ref`). Any
+  other missing path-shaped string is a warning (`unverified_ref`) that a
+  severity preset cannot raise: the skill may write it at run time
+  (`output/score.json`) or only probe for it. On agent-eval-harness this turns
+  7 errors, 6 of them false, into 1 error and 6 warnings.
 - `CLAUDE.md` "Before committing" section now includes
   `uv run scripts/sync_commands.py --check` so agents and developers
   catch command-sync issues locally instead of waiting for CI (#178).
@@ -54,6 +61,9 @@ All notable changes to this project will be documented in this file.
   Rule effect is reported separately from severity, not as an execution verdict.
 
 ### Fixed
+- The terminal report labelled every finding of a rule with the severity of
+  the rule's first finding, so an error could be printed as `WARNING`. Findings
+  are now grouped by rule and severity.
 - Pinned `astral-sh/ruff-pre-commit` to v0.17.6 to match the project's resolved
   ruff version, eliminating formatting conflicts between pre-commit and CI.
 - `mcp/no-plaintext-secrets` now strips shell quotes from inline `VAR=value`
