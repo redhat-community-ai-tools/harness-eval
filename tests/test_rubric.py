@@ -6,6 +6,7 @@ import json
 import textwrap
 
 from harness_eval.rubric.scorer import RubricChecker
+from harness_eval.rubric.types import RubricResult
 
 
 class MockLLMWithIssues:
@@ -347,7 +348,7 @@ class _FixedLLM:
         return self.response
 
 
-def _check(response: str):
+def _check(response: str) -> RubricResult:
     return RubricChecker(_FixedLLM(response)).check("skill", "demo", "body")
 
 
