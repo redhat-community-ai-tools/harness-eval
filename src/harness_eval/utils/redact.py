@@ -34,13 +34,20 @@ _FLAG_RE = re.compile(r"(?<!\S)(--?[A-Za-z][\w-]*)([ \t]+)(?=[^\s-])")
 # command"). An unquoted value this short is not worth hiding.
 _MIN_BARE_FLAG_VALUE = 6
 
-# An Authorization header keeps its scheme, which says how the credential is
-# used and is not secret.
+# An Authorization header keeps a scheme it recognises, which says how the
+# credential is used and is not secret. With any other first word (`NTLM`,
+# `AWS4-HMAC-SHA256`, or the credential itself) nothing tells the scheme from
+# the secret, so that word and the one after it are both hidden.
 _AUTHORIZATION_RE = re.compile(
     r"(?i)\b((?:proxy-)?authorization[\"']?[ \t]*[:=][ \t]*[\"']?)"
-    r"((?:basic|bearer|token|digest|negotiate|apikey|key|bot|ssws)[ \t]+)?"
-    r"[^\s\"',;]+"
+    r"(?:((?:basic|bearer|token|digest|negotiate|apikey|key|bot|ssws)[ \t]+)[^\s\"',;]+"
+    r"|" + re.escape(_REDACTED) + r"|[^\s\"',;]+(?:[ \t]+[^\s\"',;]+)?)"
 )
+
+# A quote, and any closing punctuation after it, at the end of an unquoted
+# value: `config: "API_KEY=abc"` gives the value `abc"`, whose quote closes
+# the string around the pair and is not part of the secret.
+_CLOSING_QUOTE_RE = re.compile(r"[\"'`][)}\],;]*$")
 
 # `scheme://user:password@host`, and `scheme://token@host` when the user part
 # is long enough to be a token and not a login name (`git@`, `deploy@`).
@@ -88,6 +95,17 @@ def _names_credential(key: str) -> bool:
     return False
 
 
+def _secret_end(value: re.Match[str]) -> int:
+    """Where the secret ends inside a matched value."""
+    text = value.group(0)
+    if text == _REDACTED or text[0] in "\"'`":
+        return value.end()
+    closing = _CLOSING_QUOTE_RE.search(text)
+    if closing is not None and closing.start() > 0:
+        return value.start() + closing.start()
+    return value.end()
+
+
 def _redact_keyed(text: str) -> str:
     out: list[str] = []
     pos = 0
@@ -108,7 +126,7 @@ def _redact_keyed(text: str) -> str:
             continue
         out.append(text[pos : match.end()])
         out.append(_REDACTED)
-        pos = value.end()
+        pos = _secret_end(value)
     out.append(text[pos:])
     return "".join(out)
 
@@ -132,7 +150,7 @@ def _redact_flags(text: str) -> str:
             continue
         out.append(text[pos : match.end()])
         out.append(_REDACTED)
-        pos = value.end()
+        pos = _secret_end(value)
     out.append(text[pos:])
     return "".join(out)
 

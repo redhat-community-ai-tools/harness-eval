@@ -132,3 +132,37 @@ def test_redaction_is_idempotent() -> None:
     )
     once = redact_secrets(text)
     assert redact_secrets(once) == once
+
+
+def test_redacts_credential_flag_with_equals() -> None:
+    assert redact_secrets("mytool --token=abc123def456 run") == "mytool --token=[REDACTED] run"
+
+
+def test_redacts_proxy_authorization_header() -> None:
+    assert (
+        redact_secrets("Proxy-Authorization: Basic dXNlcjpwYXNzd29yZA==")
+        == "Proxy-Authorization: Basic [REDACTED]"
+    )
+
+
+def test_redacts_credential_after_an_unlisted_authorization_scheme() -> None:
+    redacted = redact_secrets("Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAA= trailing")
+    assert "TlRMTVNTUAAB" not in redacted
+    assert redacted == "Authorization: [REDACTED] trailing"
+
+
+def test_redacts_bare_authorization_credential_before_other_arguments() -> None:
+    redacted = redact_secrets("curl -H Authorization:s3cr3tvalue https://api.example.com")
+    assert "s3cr3tvalue" not in redacted
+
+
+def test_keeps_the_quote_that_closes_an_enclosing_string() -> None:
+    assert redact_secrets('config: "API_KEY=secret123"') == 'config: "API_KEY=[REDACTED]"'
+    assert redact_secrets('{"cmd": "run --token abc123def456"}') == (
+        '{"cmd": "run --token [REDACTED]"}'
+    )
+
+
+def test_unlisted_authorization_scheme_is_idempotent() -> None:
+    once = redact_secrets("Authorization: NTLM TlRMTVNTUAABAAAAB4IIogAAAAA= trailing words")
+    assert redact_secrets(once) == once
