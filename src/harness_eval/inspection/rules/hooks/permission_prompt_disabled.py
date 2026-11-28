@@ -56,6 +56,7 @@ class HooksPermissionPromptDisabled:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion=(
             "Remove the setting from project-scoped settings.json; keep prompt-bypass"
             " choices in user-scoped settings where they apply only to the person who made them."

@@ -34,6 +34,7 @@ class HooksApiKeyHelper:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion="Move apiKeyHelper to user-scoped settings.",
     )
 

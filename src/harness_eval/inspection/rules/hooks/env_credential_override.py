@@ -41,6 +41,7 @@ class HooksEnvCredentialOverride:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion="Move credential env vars to user-scoped settings or shell profile.",
     )
 

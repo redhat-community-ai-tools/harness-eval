@@ -145,6 +145,7 @@ class OverpermissiveGrants:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion="Scope the permission grant to specific commands or paths.",
     )
 

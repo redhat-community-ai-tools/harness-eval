@@ -206,6 +206,112 @@ and verified against the registry in CI. Do not edit it by hand.
 | `structural/symlink-escape` | block | gating | FILE_FS | skill |
 <!-- END GENERATED: rule-tiers -->
 
+### Tool applicability matrix
+
+Some rules apply only to specific assistants (declared via `RuleMeta.tools`).
+Rules with no `tools` restriction apply to all assistants. The matrix below
+is generated from `RuleMeta.tools` by `scripts/gen_rules_reference.py`.
+
+CC = Claude Code, CU = Cursor, WS = Windsurf, CP = Copilot, GE = Gemini CLI,
+OC = OpenCode, CX = Codex.
+
+<!-- BEGIN GENERATED: tool-matrix -->
+| Rule | CC | CU | WS | CP | GE | OC | CX |
+|------|----|----|----|----|----|----|----|
+| `agent/constraint-body-match` | ✓ | — | — | — | — | — | — |
+| `agent/description-required` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `agent/disallowed-tools-parseable` | ✓ | — | — | — | — | — | — |
+| `agent/excessive-permissions` | ✓ | — | — | — | — | — | — |
+| `agent/referenced-skills-exist` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `agent/tools-disallowed-overlap` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `claude-md/include-exists` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `claude-md/skill-duplication` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `command/allowed-tools-coverage` | ✓ | — | — | — | — | — | — |
+| `command/description-quality` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `command/description-required` | ✓ | — | — | — | — | — | — |
+| `command/duplicate-detection` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `command/references-nonexistent-skill` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `command/script-exists` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `command/shadows-builtin` | ✓ | — | — | — | — | — | — |
+| `command/skill-overlap` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `config/dangerous-autonomy` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `config/valid-structure` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/activation-valid` | — | — | — | ✓ | — | — | — |
+| `content/allowed-tools-auto-approve` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/broken-references` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/circular-references` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/description-length` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/duplicate-detection` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/hardcoded-machine-path` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/token-budget` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `content/total-description-budget` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `cross/config-component-conflict` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `cross/config-instruction-conflict` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `cross/duplicate-skill-id` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `cross/overpermissive-grants` | ✓ | — | — | — | — | — | — |
+| `frontmatter/allowed-tools-case` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `frontmatter/description-quality` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `frontmatter/description-required` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `frontmatter/format-valid` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `frontmatter/near-miss-key` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `harness/host-file-dest-collision` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `harness/image-unpinned` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `harness/output-contract-instructed` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `harness/output-schema-valid` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `harness/referenced-file-exists` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/api-key-helper` | ✓ | — | — | — | — | — | — |
+| `hooks/base-url-override` | ✓ | — | — | — | — | — | — |
+| `hooks/command-script-exists` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/dangerous-command` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/env-credential-override` | ✓ | — | — | — | — | — | — |
+| `hooks/env-leakage` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/event-name-near-miss` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/json-duplicate-keys` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/local-settings-committed` | ✓ | — | — | — | — | — | — |
+| `hooks/matcher-matches-no-tool` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/network-access` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/permission-contradiction` | ✓ | — | — | — | — | — | — |
+| `hooks/permission-prompt-disabled` | ✓ | — | — | — | — | — | — |
+| `hooks/pre-trust-permissions` | ✓ | — | — | — | — | — | — |
+| `hooks/script-boundary` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/silent-failure-masking` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `hooks/valid-structure` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/args-reference-missing-file` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/auto-approve-risk` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/cross-assistant-divergence` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/endpoint-integrity` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/json-duplicate-keys` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/no-plaintext-secrets` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/unpinned-package` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `mcp/valid-config` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `quality/imprecise-instruction` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `quality/redundant-guidance` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `quality/scope-grab-description` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `quality/stale-references` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `quality/unfinished-content` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/ast-behavioral` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/bash-taint-flow` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/coercive-override` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/credential-file-present` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/cross-component-flow` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/cve-lookup` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/dangerous-permission-grant` | ✓ | — | — | — | — | — | — |
+| `security/data-exfiltration` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/mcp-tool-poisoning` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/memory-write-unscoped` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/no-credential-access` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/no-prompt-injection` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/obfuscation` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/prompt-exfiltration` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/reverse-shell` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/stealth-persistence` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/taint-flow` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/unbounded-delegation` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `security/yara-signatures` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `structural/skill-md-exists` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `structural/symlink-escape` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+<!-- END GENERATED: tool-matrix -->
+
 ---
 
 ## Skills (SKILL.md)

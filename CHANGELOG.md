@@ -37,6 +37,15 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- Declared `tools=("claude",)` in `RuleMeta` for 14 rules that guard
+  on `source_tool != "claude"` at runtime. The engine now skips them
+  for non-Claude components via `RuleMeta.tools` (#138).
+- `docs/rules-reference.md` now includes a rule × tool applicability
+  matrix generated from `RuleMeta.tools` by
+  `scripts/gen_rules_reference.py` (#138).
+- CI test (`test_source_tool_metadata.py`) that fails when a rule body
+  guards on `source_tool` but its metadata does not declare `tools`
+  (#138).
 - `CLAUDE.md` convention: CLI commands with `--format json` or `--format sarif` must not print free-form text to stdout; all user-facing messages must be gated behind `fmt == "terminal"` or sent to stderr.
 - `CLAUDE.md` convention: heavy dependencies (`numpy`, `scipy`, `scikit-learn`)
   must use function-level lazy imports, not module-level (#182).

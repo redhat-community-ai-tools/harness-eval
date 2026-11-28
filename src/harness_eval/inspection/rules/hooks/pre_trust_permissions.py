@@ -50,6 +50,7 @@ class HooksPreTrustPermissions:
             ),
         },
         target_type=ComponentType.HOOKS,
+        tools=("claude",),
         default_suggestion="Move permissions.allow entries to user-scoped settings.",
     )
 
