@@ -292,3 +292,41 @@ def test_malformed_baseline_file_exits_usage(tmp_path: Path) -> None:
     result = _run(str(tmp_path), "--baseline", str(baseline))
     msg = f"Malformed baseline exited {result.exit_code}; expected {EXIT_USAGE}"
     assert result.exit_code == EXIT_USAGE, msg
+
+
+# --- --require-components -------------------------------------------------------
+
+
+def test_require_components_empty_dir(tmp_path: Path) -> None:
+    """--require-components should FAIL when no components are found."""
+    result = _run(str(tmp_path), "--require-components")
+    assert result.exit_code == EXIT_FAIL, (
+        f"Expected FAIL (exit {EXIT_FAIL}), got exit {result.exit_code}: {result.output}"
+    )
+    assert "no components" in result.output.lower()
+
+
+def test_require_components_with_components(tmp_path: Path) -> None:
+    """--require-components should PASS when components exist."""
+    (tmp_path / "CLAUDE.md").write_text("# Instructions")
+    result = _run(str(tmp_path), "--require-components")
+    assert result.exit_code == EXIT_PASS, (
+        f"Expected PASS (exit {EXIT_PASS}), got exit {result.exit_code}: {result.output}"
+    )
+
+
+def test_without_require_components_empty_dir(tmp_path: Path) -> None:
+    """Without the flag, empty dirs still PASS (backward compat)."""
+    result = _run(str(tmp_path))
+    assert result.exit_code == EXIT_PASS, (
+        f"Expected PASS (exit {EXIT_PASS}), got exit {result.exit_code}: {result.output}"
+    )
+
+
+def test_require_components_json_parseable(tmp_path: Path) -> None:
+    """JSON output with --require-components parses as a single document."""
+    result = _run(str(tmp_path), "--require-components", "--format", "json")
+    assert result.exit_code == EXIT_FAIL
+    data = json.loads(result.output)
+    assert data["verdict"] == "FAIL"
+    assert data["no_components"] is True
