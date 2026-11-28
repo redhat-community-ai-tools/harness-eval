@@ -114,7 +114,7 @@ def _is_not_a_file_ref(ref: str) -> bool:
         return True
     if _COMMAND_RE.match(ref):
         return True
-    if " " in ref and not ref.startswith(("scripts/", "references/", "assets/")):
+    if " " in ref and not ref.startswith(_SKILL_RESOURCE_DIRS):
         return True
     if ref.startswith("~"):
         return True
