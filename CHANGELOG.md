@@ -65,6 +65,10 @@ All notable changes to this project will be documented in this file.
 - Lazy-load scikit-learn, scipy and numpy in `utils/similarity` so they are never imported at CLI startup time (#140).
 - An unreadable or malformed `--policy` or `--baseline` file now exits 64
   (usage error) instead of 1.
+- `command/references-nonexistent-skill` cut a dotted skill name at the first
+  dot, so a command that invokes the skill `rfe.create` was reported as
+  referencing a missing skill `rfe` even though `rfe.create` exists. Dotted
+  names are now read whole, and a missing one is reported by its full name.
 - Unexpected exceptions during a `harness-autonomy` scan now print a
   traceback to stderr and exit 70 instead of silently exiting 1 (FAIL).
 - `harness-autonomy` usage errors (bad path, unknown flag, missing `--policy`

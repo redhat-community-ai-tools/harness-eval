@@ -17,16 +17,22 @@ from harness_eval.inspection.types import (
     Severity,
 )
 
+# A skill name may contain dots (`rfe.create`, `speckit.plan`). A dot that
+# ends a sentence is not part of the name: it has no word character after it.
+_NAME = r"(\w[\w-]{2,}(?:\.\w[\w-]*)*)"
+
 _SKILL_REF_PATTERNS = [
     re.compile(
-        r"(?:invokes?|calls?|triggers?|runs?|uses?)\s+(?:the\s+)?skill\s+[\"'`/](\w[\w-]{2,})[\"'`]?",
+        r"(?:invokes?|calls?|triggers?|runs?|uses?)\s+(?:the\s+)?skill\s+[\"'`/]"
+        + _NAME
+        + r"[\"'`]?",
         re.IGNORECASE,
     ),
     # A bare /name counts only where it is written as an invocation: at the
     # start of a line or list item, inside backticks, or after run/invoke/use/call.
     re.compile(
         r"(?:^\s*(?:[-*\d.]+\s+)?|`|(?:\b(?:run|invoke|use|call|execute|trigger|then|and|or)s?\s+))"
-        r"/(\w[\w-]{2,})(?:`|\s|$|[),.\]])",
+        r"/" + _NAME + r"(?:`|\s|$|[),.\]])",
         re.IGNORECASE | re.MULTILINE,
     ),
 ]
@@ -39,6 +45,10 @@ _INSTALL_CMD = re.compile(
 )
 
 _PATH_CONTINUATION = re.compile(r"/(?=[/]?)(\w[\w-]{2,})(?=[/.])")
+
+
+def _is_known(name: str, idx: dict[str, set[str]]) -> bool:
+    return name in idx["skills"] or name in idx["commands"] or name in idx["agents"]
 
 
 class CommandReferencesNonexistentSkill:
@@ -84,6 +94,12 @@ class CommandReferencesNonexistentSkill:
             for pat_idx, pattern in enumerate(_SKILL_REF_PATTERNS):
                 for match in pattern.finditer(line):
                     name = match.group(1)
+                    if pat_idx == 1 and "." in name and not _is_known(name, idx):
+                        # `/setup.py` is a file and `/rfe.create` is a skill;
+                        # only a component of that name tells them apart. An
+                        # unknown dotted token is read as before: its first
+                        # segment, which the path check below then drops.
+                        name = name.split(".", 1)[0]
                     if name == cmd.dir_name or len(name) <= 1:
                         continue
                     if pat_idx == 1 and in_code_fence:
