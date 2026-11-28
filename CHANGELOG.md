@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `.containerignore` to exclude tests, docs, CI configuration, caches,
+  and virtualenvs from the container image build context (#141).
+- Renovate `packageRules` entry for the `dockerfile` manager with
+  `pinDigests: true` so the base image digest is kept current (#141).
+
 ### Changed
 - `CLAUDE.md` "Before committing" section now includes
   `uv run scripts/sync_commands.py --check` so agents and developers

@@ -20,6 +20,10 @@
     {
       "matchManagers": ["github-actions"],
       "pinDigests": true
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
     }
   ]
 }
