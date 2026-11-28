@@ -80,14 +80,18 @@ def _shorten_rule_id(rule_id: str) -> str:
 
 
 def _compress_findings(diagnostics: list) -> list[str]:
-    """Group identical rule findings into compressed lines."""
-    by_rule: dict[str, list] = defaultdict(list)
+    """Group a rule's findings of one severity into compressed lines.
+
+    A rule can report at more than one severity (a broken reference and an
+    unverified one), so the group key includes it: labelling the whole rule by
+    its first finding would show an error as a warning.
+    """
+    by_rule: dict[tuple[str, str], list] = defaultdict(list)
     for d in diagnostics:
-        by_rule[d.rule_id].append(d)
+        by_rule[(d.rule_id, d.severity.value)].append(d)
 
     compressed: list[str] = []
-    for rule_id, findings in by_rule.items():
-        severity = findings[0].severity.value
+    for (rule_id, severity), findings in by_rule.items():
         label = "FAIL" if severity == "error" else ("INFO" if severity == "info" else "WARNING")
         short_id = _shorten_rule_id(rule_id)
         if len(findings) <= 2:

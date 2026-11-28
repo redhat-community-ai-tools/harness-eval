@@ -73,8 +73,32 @@ _DATE_PLACEHOLDER_RE = re.compile(r"YYYY|MM-DD|<[^>]+>")
 _PLACEHOLDER_NAMES = frozenset({"url", "path", "file", "filename", "name"})
 
 
+# Directories a skill ships its own resources in. A path rooted in one of them
+# names a file the skill owns, so it has to exist.
+_SKILL_RESOURCE_DIRS = ("scripts/", "references/", "assets/")
+
+
 def _strip_trailing_punctuation(ref: str) -> str:
     return _TRAILING_PUNCT_RE.sub("", ref)
+
+
+def _is_anchored(ref: str, source: str) -> bool:
+    """True when a missing *ref* is a broken reference rather than an unverified one.
+
+    A markdown link target, or a path rooted in one of the skill's own resource
+    directories, names a file that has to be in the repository. Any other
+    path-shaped string in backticks may equally be a file the skill writes at
+    run time (`output/score.json`), an optional file it probes for
+    (`./.claude/CLAUDE.md`) or an illustration, and an unquoted
+    `references/gold` in prose may not be a path at all. Those are reported at
+    a lower severity instead of as defects.
+    """
+    if source == "link":
+        return True
+    normalized = ref[2:] if ref.startswith("./") else ref
+    if not normalized.startswith(_SKILL_RESOURCE_DIRS):
+        return False
+    return source == "backtick" or "." in PurePosixPath(normalized).name
 
 
 def _is_not_a_file_ref(ref: str) -> bool:
@@ -90,7 +114,7 @@ def _is_not_a_file_ref(ref: str) -> bool:
         return True
     if _COMMAND_RE.match(ref):
         return True
-    if " " in ref and not ref.startswith(("scripts/", "references/", "assets/")):
+    if " " in ref and not ref.startswith(_SKILL_RESOURCE_DIRS):
         return True
     if ref.startswith("~"):
         return True
@@ -185,6 +209,10 @@ class BrokenReferences:
         category=RuleCategory.CONTENT,
         messages={
             "broken_ref": "Referenced file '{{ref}}' does not exist",
+            "unverified_ref": (
+                "Path '{{ref}}' is not in the repository; "
+                "this is expected if the skill creates it at run time"
+            ),
         },
         default_suggestion="Fix or remove the broken file reference.",
     )
@@ -212,18 +240,18 @@ class BrokenReferences:
 
             example_marker = _EXAMPLE_MARKER_RE.search(line)
 
-            refs_on_line: list[str] = []
+            refs_on_line: list[tuple[str, str]] = []
             for match in _MD_LINK_PATTERN.finditer(line):
-                refs_on_line.append(match.group(1).strip())
+                refs_on_line.append((match.group(1).strip(), "link"))
             line_without_md_links = _MD_LINK_PATTERN.sub("", line)
             for match in _BACKTICK_PATH_PATTERN.finditer(line):
                 if example_marker is not None and match.start() >= example_marker.start():
                     continue
-                refs_on_line.append(match.group(1).strip())
+                refs_on_line.append((match.group(1).strip(), "backtick"))
             for match in _DIR_REF_PATTERN.finditer(line_without_md_links):
-                refs_on_line.append(match.group(0).strip())
+                refs_on_line.append((match.group(0).strip(), "prose"))
 
-            for raw_ref in refs_on_line:
+            for raw_ref, source in refs_on_line:
                 if raw_ref.startswith(("http://", "https://", "#", "mailto:")):
                     continue
                 ref = _strip_trailing_punctuation(raw_ref)
@@ -264,13 +292,27 @@ class BrokenReferences:
                     if _exists_under_path_bases(project_root_path, paths_dirs, ref):
                         continue
 
-                context.report(
-                    ReportDescriptor(
-                        message_id="broken_ref",
-                        data={"ref": ref},
-                        location=Location(
-                            file=skill.skill_md_path,
-                            start_line=skill.body_start_line + i,
-                        ),
-                    )
+                location = Location(
+                    file=skill.skill_md_path,
+                    start_line=skill.body_start_line + i,
                 )
+                if _is_anchored(ref, source):
+                    context.report(
+                        ReportDescriptor(
+                            message_id="broken_ref", data={"ref": ref}, location=location
+                        )
+                    )
+                else:
+                    context.report(
+                        ReportDescriptor(
+                            message_id="unverified_ref",
+                            data={"ref": ref},
+                            location=location,
+                            severity_override=Severity.WARNING,
+                            contextual_downgrade=True,
+                            suggestion=(
+                                "Fix the path if the file is meant to be in the repository; "
+                                "no action is needed for a file created at run time."
+                            ),
+                        )
+                    )
