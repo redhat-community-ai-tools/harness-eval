@@ -20,7 +20,7 @@ Run:
 harness-eval harness-autonomy .                     # decidable checks for auto-merge; exit 0 PASS, 1 FAIL, 2 REVIEW_REQUIRED, 64 usage error, 70 internal error
 harness-eval harness-autonomy . --policy policy.yaml --format json   # with a trusted policy file; JSON carries coverage + evidence
 harness-eval harness-lint .                         # quality lint: advice rules + system analysis
-harness-eval harness-lint . --all                   # every one of the 92 rules
+harness-eval harness-lint . --all                   # every one of the 93 rules
 harness-eval harness-lint . --rules-from-target     # also load YAML from <path>/.harness-eval/rules
 harness-eval harness-lint . --watch                 # re-run automatically on file changes
 harness-eval harness-lint . --fail-on-error         # exit code 1 on errors (CI gate)
@@ -37,7 +37,7 @@ harness-eval harness-security .                     # policy + heuristic securit
 harness-eval harness-security . --cve               # add networked OSV vulnerability lookup
 harness-eval harness-security . --review            # security scan + LLM semantic review (requires [llm] extra)
 harness-eval harness-security . --fail-on-warning   # exit code 1 on any security finding
-harness-eval rules                          # list all 92 rules
+harness-eval rules                          # list all 93 rules
 harness-eval rules --effect block           # list the decidable-defect rules
 harness-eval rules --category security      # list security rules only
 harness-eval rules --target hooks           # list rules that apply to hooks
@@ -107,7 +107,7 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
           autonomy-allow-review: "false" # "true": REVIEW_REQUIRED passes the step (a human gates it elsewhere)
           preset: "recommended"  # severity preset for lint: recommended or strict
           security-gate: "true"  # run security checks
-          lint-gate: "true"      # run the quality lint (advice rules; lint-all: "true" for all 92)
+          lint-gate: "true"      # run the quality lint (advice rules; lint-all: "true" for all 93)
           lint-fail-on: "error"  # "error" (default) or "warning" (strict)
           sarif: "true"          # inline PR annotations via Code Scanning
           comment: "true"        # post summary comment on PRs

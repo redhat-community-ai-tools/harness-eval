@@ -65,6 +65,7 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
     from harness_eval.inspection.rules.content.description_length import DescriptionLength
     from harness_eval.inspection.rules.content.duplicate_detection import DuplicateDetection
     from harness_eval.inspection.rules.content.hardcoded_machine_path import HardcodedMachinePath
+    from harness_eval.inspection.rules.content.skill_script_exists import SkillScriptExists
     from harness_eval.inspection.rules.content.token_budget import TokenBudget
     from harness_eval.inspection.rules.content.total_description_budget import (
         TotalDescriptionBudget,
@@ -240,6 +241,7 @@ def register_all_rules(catalog: RuleCatalog | None = None) -> RuleCatalog:
         McpUnpinnedPackage,
         HooksMatcherMatchesNoTool,
         HardcodedMachinePath,
+        SkillScriptExists,
         ConfigInstructionConflict,
         CommandAllowedToolsCoverage,
         OverpermissiveGrants,

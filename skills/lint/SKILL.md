@@ -1,13 +1,13 @@
 ---
 name: lint
-description: Run the quality lint on the full agent setup (instruction files, skills, commands, hooks, agents, settings, MCP configs, harnesses). Advice rules plus system-level analysis by default; add --all for every one of the 92 rules. No LLM. Use when the user wants a fast structural health report. For a merge gate use /autonomy; for security use /security.
+description: Run the quality lint on the full agent setup (instruction files, skills, commands, hooks, agents, settings, MCP configs, harnesses). Advice rules plus system-level analysis by default; add --all for every one of the 93 rules. No LLM. Use when the user wants a fast structural health report. For a merge gate use /autonomy; for security use /security.
 allowed-tools: Bash Read
 ---
 <!-- evaluator-ignore: content/broken-references, security/ast-behavioral, content/allowed-tools-auto-approve -->
 
 # Lint Setup
 
-Run the advice rules (quality and consistency) plus system-level analysis on the user's agent setup. No LLM involved. Fast and reproducible. Add `--all` to run every one of the 92 deterministic rules; block, policy and heuristic findings then appear too.
+Run the advice rules (quality and consistency) plus system-level analysis on the user's agent setup. No LLM involved. Fast and reproducible. Add `--all` to run every one of the 93 deterministic rules; block, policy and heuristic findings then appear too.
 
 ## Hard Rules
 

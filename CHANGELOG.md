@@ -37,6 +37,13 @@ All notable changes to this project will be documented in this file.
   a markdown file.
 
 ### Added
+- `content/skill-script-exists` (block, provisional): a script a skill runs
+  through `${CLAUDE_SKILL_DIR}` or `${CLAUDE_PLUGIN_ROOT}` must exist. This is
+  the form skills use to call their own scripts, usually inside a code block,
+  and no rule looked at it: `content/broken-references` skips code blocks and
+  anything containing `${`. Paths that leave the project, data files, globs and
+  placeholders are not checked. Runs in `harness-autonomy` and in
+  `harness-gate --include-provisional`.
 - `CLAUDE.md` convention: CLI commands with `--format json` or `--format sarif` must not print free-form text to stdout; all user-facing messages must be gated behind `fmt == "terminal"` or sent to stderr.
 - `CLAUDE.md` convention: heavy dependencies (`numpy`, `scipy`, `scikit-learn`)
   must use function-level lazy imports, not module-level (#182).

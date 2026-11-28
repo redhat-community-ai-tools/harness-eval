@@ -1,6 +1,6 @@
 # Eval Setup Lint
 
-Run the quality lint (advice rules + system-level analysis) on the agent setup; add --all for every one of the 92 deterministic rules. No LLM. Fast, reproducible.
+Run the quality lint (advice rules + system-level analysis) on the agent setup; add --all for every one of the 93 deterministic rules. No LLM. Fast, reproducible.
 
 ## Instructions
 
