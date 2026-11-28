@@ -273,6 +273,36 @@ class TestSkillReferences:
         assert len(diags) == 1
         assert "'ghost'" in diags[0].message
 
+    def _dotted(self, tmp_path: Path, body: str) -> list:
+        self._repo(tmp_path)
+        skill = tmp_path / "skills" / "rfe.create"
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text("---\nname: rfe.create\ndescription: d\n---\nbody\n")
+        cmd = tmp_path / ".claude" / "commands" / "ship.md"
+        cmd.write_text(f"---\ndescription: d\n---\n{body}\n")
+        result = lint_command(
+            str(cmd),
+            {"command/references-nonexistent-skill": "warning"},
+            all_skills=[parse_skill(str(skill))],
+            scan_state={"project_root": str(tmp_path)},
+        )
+        return _diags(result, "command/references-nonexistent-skill")
+
+    def test_command_reference_to_a_dotted_skill_name_resolves(self, tmp_path: Path) -> None:
+        body = "Run `/rfe.create`, then invoke the skill `rfe.create` again."
+        assert self._dotted(tmp_path, body) == []
+
+    def test_missing_dotted_skill_is_reported_by_its_full_name(self, tmp_path: Path) -> None:
+        (diag,) = self._dotted(tmp_path, 'Then use the skill "speckit.plan".')
+        assert "'speckit.plan'" in diag.message
+
+    def test_sentence_period_is_not_part_of_a_skill_name(self, tmp_path: Path) -> None:
+        (diag,) = self._dotted(tmp_path, "Then use the skill /ghost. After that, stop.")
+        assert "'ghost'" in diag.message
+
+    def test_slash_file_name_is_still_not_a_skill_reference(self, tmp_path: Path) -> None:
+        assert self._dotted(tmp_path, "Then run /setup.py and `/install.sh` by hand.") == []
+
 
 class TestSecondRound:
     def test_cursor_rule_imports_resolve_from_project_root(self, tmp_path: Path) -> None:
