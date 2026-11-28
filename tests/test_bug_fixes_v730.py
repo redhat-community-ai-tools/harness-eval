@@ -143,19 +143,20 @@ class TestLintOutputFlag:
 
     def test_terminal_output_written_to_file(self, tmp_path: Path) -> None:
         runner = CliRunner()
+        project = tmp_path / "project"
+        project.mkdir()
         output_file = tmp_path / "report.txt"
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test project\n\nUse /alpha for stuff.")
-            skill_dir = Path("skills/alpha")
-            skill_dir.mkdir(parents=True)
-            (skill_dir / "SKILL.md").write_text(
-                "---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff."
-            )
-            result = runner.invoke(
-                cli, ["harness-lint", ".", "--format", "terminal", "--output", str(output_file)]
-            )
-            assert result.exit_code == 0
-
+        (project / "CLAUDE.md").write_text("# Test project\n\nUse /alpha for stuff.")
+        skill_dir = project / "skills" / "alpha"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff."
+        )
+        result = runner.invoke(
+            cli,
+            ["harness-lint", str(project), "--format", "terminal", "--output", str(output_file)],
+        )
+        assert result.exit_code == 0
         assert output_file.exists()
         content = output_file.read_text()
         assert len(content) > 0
@@ -164,44 +165,45 @@ class TestLintOutputFlag:
         import json
 
         runner = CliRunner()
+        project = tmp_path / "project"
+        project.mkdir()
         output_file = tmp_path / "report.json"
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test project")
-            skill_dir = Path("skills/alpha")
-            skill_dir.mkdir(parents=True)
-            (skill_dir / "SKILL.md").write_text(
-                "---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff."
-            )
-            result = runner.invoke(
-                cli, ["harness-lint", ".", "--format", "json", "--output", str(output_file)]
-            )
-            assert result.exit_code == 0
-
+        (project / "CLAUDE.md").write_text("# Test project")
+        skill_dir = project / "skills" / "alpha"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff."
+        )
+        result = runner.invoke(
+            cli,
+            ["harness-lint", str(project), "--format", "json", "--output", str(output_file)],
+        )
+        assert result.exit_code == 0
         assert output_file.exists()
         data = json.loads(output_file.read_text())
         assert "inspection" in data
 
     def test_single_file_terminal_output_written_to_file(self, tmp_path: Path) -> None:
         runner = CliRunner()
+        project = tmp_path / "project"
+        project.mkdir()
         output_file = tmp_path / "report.txt"
-        with runner.isolated_filesystem():
-            skill_dir = Path("skills/alpha")
-            skill_dir.mkdir(parents=True)
-            skill_md = skill_dir / "SKILL.md"
-            skill_md.write_text("---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff.")
-            result = runner.invoke(
-                cli,
-                [
-                    "harness-lint",
-                    str(skill_md),
-                    "--format",
-                    "terminal",
-                    "--output",
-                    str(output_file),
-                ],
-            )
-            assert result.exit_code == 0
-
+        skill_dir = project / "skills" / "alpha"
+        skill_dir.mkdir(parents=True)
+        skill_md = skill_dir / "SKILL.md"
+        skill_md.write_text("---\nname: alpha\ndescription: Test skill\n---\n\nDo stuff.")
+        result = runner.invoke(
+            cli,
+            [
+                "harness-lint",
+                str(skill_md),
+                "--format",
+                "terminal",
+                "--output",
+                str(output_file),
+            ],
+        )
+        assert result.exit_code == 0
         assert output_file.exists()
         content = output_file.read_text()
         assert len(content) > 0

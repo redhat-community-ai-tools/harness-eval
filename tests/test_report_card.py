@@ -121,17 +121,18 @@ class TestFormatReportCard:
 class TestReportCardCLI:
     def test_report_card_writes_json(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test")
-            skill_dir = Path("skills/clean-skill")
-            skill_dir.mkdir(parents=True)
-            (skill_dir / "SKILL.md").write_text(
-                "---\nname: clean-skill\ndescription: A clean skill\n---\n\nDo the thing."
-            )
-            card_path = str(tmp_path / "card.json")
-            result = runner.invoke(cli, ["harness-lint", ".", "--report-card", card_path])
-            assert result.exit_code == 0
-            card = json.loads(Path(card_path).read_text())
-            assert "verdict" in card
-            assert "certification" in card
-            assert "tier" in card["certification"]
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / "CLAUDE.md").write_text("# Test")
+        skill_dir = project / "skills" / "clean-skill"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: clean-skill\ndescription: A clean skill\n---\n\nDo the thing."
+        )
+        card_path = str(tmp_path / "card.json")
+        result = runner.invoke(cli, ["harness-lint", str(project), "--report-card", card_path])
+        assert result.exit_code == 0
+        card = json.loads(Path(card_path).read_text())
+        assert "verdict" in card
+        assert "certification" in card
+        assert "tier" in card["certification"]

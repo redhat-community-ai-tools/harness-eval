@@ -34,56 +34,49 @@ def _setup_clean(cwd: Path) -> None:
 
 
 class TestEnforceLint:
-    def test_enforce_strict_exits_1_on_findings(self) -> None:
+    def test_enforce_strict_exits_1_on_findings(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "strict"])
-            assert result.exit_code == 1
+        _setup_with_finding(tmp_path)
+        result = runner.invoke(cli, ["harness-lint", str(tmp_path), "--enforce", "strict"])
+        assert result.exit_code == 1
 
-    def test_enforce_advisory_exits_0(self) -> None:
+    def test_enforce_advisory_exits_0(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "advisory"])
-            assert result.exit_code == 0
+        _setup_with_finding(tmp_path)
+        result = runner.invoke(cli, ["harness-lint", str(tmp_path), "--enforce", "advisory"])
+        assert result.exit_code == 0
 
-    def test_enforce_off_exits_0(self) -> None:
+    def test_enforce_off_exits_0(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "off"])
-            assert result.exit_code == 0
+        _setup_with_finding(tmp_path)
+        result = runner.invoke(cli, ["harness-lint", str(tmp_path), "--enforce", "off"])
+        assert result.exit_code == 0
 
-    def test_enforce_strict_exits_0_when_clean(self) -> None:
+    def test_enforce_strict_exits_0_when_clean(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Clean project\n\nFollow these rules.")
-            result = runner.invoke(cli, ["harness-lint", ".", "--enforce", "strict"])
-            assert result.exit_code == 0
+        (tmp_path / "CLAUDE.md").write_text("# Clean project\n\nFollow these rules.")
+        result = runner.invoke(cli, ["harness-lint", str(tmp_path), "--enforce", "strict"])
+        assert result.exit_code == 0
 
-    def test_enforce_mutual_exclusion_with_fail_on_error(self) -> None:
+    def test_enforce_mutual_exclusion_with_fail_on_error(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            _setup_clean(Path("."))
-            result = runner.invoke(
-                cli, ["harness-lint", ".", "--enforce", "strict", "--fail-on-error"]
-            )
-            assert result.exit_code != 0
-            assert "mutually exclusive" in result.output.lower() or result.exception
+        _setup_clean(tmp_path)
+        result = runner.invoke(
+            cli, ["harness-lint", str(tmp_path), "--enforce", "strict", "--fail-on-error"]
+        )
+        assert result.exit_code != 0
+        assert "mutually exclusive" in result.output.lower() or result.exception
 
 
 class TestEnforceSecurity:
-    def test_enforce_advisory_exits_0(self) -> None:
+    def test_enforce_advisory_exits_0(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["harness-security", ".", "--enforce", "advisory"])
-            assert result.exit_code == 0
+        _setup_with_finding(tmp_path)
+        result = runner.invoke(cli, ["harness-security", str(tmp_path), "--enforce", "advisory"])
+        assert result.exit_code == 0
 
-    def test_enforce_off_exits_0(self) -> None:
+    def test_enforce_off_exits_0(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            _setup_with_finding(Path("."))
-            result = runner.invoke(cli, ["harness-security", ".", "--enforce", "off"])
-            assert result.exit_code == 0
+        _setup_with_finding(tmp_path)
+        result = runner.invoke(cli, ["harness-security", str(tmp_path), "--enforce", "off"])
+        assert result.exit_code == 0

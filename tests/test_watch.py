@@ -212,95 +212,90 @@ class TestGetWatchDirectories:
 
 
 class TestCLIWatchFlag:
-    def test_cli_accepts_watch_flag(self) -> None:
+    def test_cli_accepts_watch_flag(self, tmp_path: Path) -> None:
         """The --watch flag is accepted by lint without error."""
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test")
-            # Mock run_watch to avoid actually starting the watcher
-            with patch("harness_eval.watch.run_watch") as mock_watch:
-                result = runner.invoke(cli, ["harness-lint", ".", "--watch"])
-                assert result.exit_code == 0
-                mock_watch.assert_called_once()
+        (tmp_path / "CLAUDE.md").write_text("# Test")
+        # Mock run_watch to avoid actually starting the watcher
+        with patch("harness_eval.watch.run_watch") as mock_watch:
+            result = runner.invoke(cli, ["harness-lint", str(tmp_path), "--watch"])
+            assert result.exit_code == 0
+            mock_watch.assert_called_once()
 
-    def test_watch_flag_passes_options(self) -> None:
+    def test_watch_flag_passes_options(self, tmp_path: Path) -> None:
         """The --watch flag forwards preset and format options."""
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test")
-            with patch("harness_eval.watch.run_watch") as mock_watch:
-                result = runner.invoke(
-                    cli,
-                    ["harness-lint", ".", "--watch", "--preset", "strict"],
-                )
-                assert result.exit_code == 0
-                mock_watch.assert_called_once_with(
-                    path=".",
-                    preset="strict",
-                    everything=False,
-                    fmt="terminal",
-                    user_config=None,
-                    recursive=False,
-                    load_target_yaml=False,
-                    limits=ScanLimits(),
-                    exclude=(),
-                )
+        (tmp_path / "CLAUDE.md").write_text("# Test")
+        with patch("harness_eval.watch.run_watch") as mock_watch:
+            result = runner.invoke(
+                cli,
+                ["harness-lint", str(tmp_path), "--watch", "--preset", "strict"],
+            )
+            assert result.exit_code == 0
+            mock_watch.assert_called_once_with(
+                path=str(tmp_path),
+                preset="strict",
+                everything=False,
+                fmt="terminal",
+                user_config=None,
+                recursive=False,
+                load_target_yaml=False,
+                limits=ScanLimits(),
+                exclude=(),
+            )
 
-    def test_watch_flag_forwards_exclude(self) -> None:
+    def test_watch_flag_forwards_exclude(self, tmp_path: Path) -> None:
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test")
-            with patch("harness_eval.watch.run_watch") as mock_watch:
-                result = runner.invoke(
-                    cli,
-                    ["harness-lint", ".", "--watch", "--exclude", "**/secret.json"],
-                )
-                assert result.exit_code == 0
-                mock_watch.assert_called_once_with(
-                    path=".",
-                    preset="recommended",
-                    everything=False,
-                    fmt="terminal",
-                    user_config=None,
-                    recursive=False,
-                    load_target_yaml=False,
-                    limits=ScanLimits(),
-                    exclude=("**/secret.json",),
-                )
+        (tmp_path / "CLAUDE.md").write_text("# Test")
+        with patch("harness_eval.watch.run_watch") as mock_watch:
+            result = runner.invoke(
+                cli,
+                ["harness-lint", str(tmp_path), "--watch", "--exclude", "**/secret.json"],
+            )
+            assert result.exit_code == 0
+            mock_watch.assert_called_once_with(
+                path=str(tmp_path),
+                preset="recommended",
+                everything=False,
+                fmt="terminal",
+                user_config=None,
+                recursive=False,
+                load_target_yaml=False,
+                limits=ScanLimits(),
+                exclude=("**/secret.json",),
+            )
 
 
 class TestCLIWatchWithIncompatibleFlags:
-    def test_watch_with_fix_warns(self) -> None:
+    def test_watch_with_fix_warns(self, tmp_path: Path) -> None:
         """Using --watch with --fix prints a warning."""
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test")
-            with patch("harness_eval.watch.run_watch"):
-                result = runner.invoke(
-                    cli,
-                    ["harness-lint", ".", "--watch", "--fix"],
-                )
-                assert result.exit_code == 0
-                assert (
-                    "--fix is ignored in watch mode" in result.output
-                    or "--fix is ignored in watch mode" in (result.stderr or "")
-                )
+        (tmp_path / "CLAUDE.md").write_text("# Test")
+        with patch("harness_eval.watch.run_watch"):
+            result = runner.invoke(
+                cli,
+                ["harness-lint", str(tmp_path), "--watch", "--fix"],
+            )
+            assert result.exit_code == 0
+            assert (
+                "--fix is ignored in watch mode" in result.output
+                or "--fix is ignored in watch mode" in (result.stderr or "")
+            )
 
-    def test_watch_with_fail_on_error_warns(self) -> None:
+    def test_watch_with_fail_on_error_warns(self, tmp_path: Path) -> None:
         """Using --watch with --fail-on-error prints a warning."""
         runner = CliRunner()
-        with runner.isolated_filesystem():
-            Path("CLAUDE.md").write_text("# Test")
-            with patch("harness_eval.watch.run_watch"):
-                result = runner.invoke(
-                    cli,
-                    ["harness-lint", ".", "--watch", "--fail-on-error"],
-                )
-                assert result.exit_code == 0
-                assert (
-                    "--fail-on-error is ignored in watch mode" in result.output
-                    or "--fail-on-error is ignored in watch mode" in (result.stderr or "")
-                )
+        (tmp_path / "CLAUDE.md").write_text("# Test")
+        with patch("harness_eval.watch.run_watch"):
+            result = runner.invoke(
+                cli,
+                ["harness-lint", str(tmp_path), "--watch", "--fail-on-error"],
+            )
+            assert result.exit_code == 0
+            assert (
+                "--fail-on-error is ignored in watch mode" in result.output
+                or "--fail-on-error is ignored in watch mode" in (result.stderr or "")
+            )
 
 
 class TestRunWatch:
