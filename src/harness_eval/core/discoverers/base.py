@@ -6,6 +6,7 @@ import json
 import re
 import tomllib
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
 
 from harness_eval.core.types import (
@@ -120,6 +121,70 @@ def _toml_top_level_keys(filepath: Path) -> set[str]:
     return set(data.keys()) if isinstance(data, dict) else set()
 
 
+@dataclass(frozen=True)
+class SourceEntry:
+    """One row in a discoverer's declarative source table.
+
+    Attributes
+    ----------
+    pattern:
+        Relative path or glob (e.g. ``".cursor/rules/*.mdc"``).
+    component_type:
+        The :class:`ComponentType` for discovered components.
+    recursive:
+        When True, also search nested project directories via
+        :func:`_recursive_glob`.
+    deep:
+        When True, use ``rglob`` instead of ``glob`` within the target
+        directory.  Useful for rules directories that may contain
+        subdirectories.
+    source_tool:
+        Override for the discoverer's :attr:`~ToolDiscoverer.source_tool`.
+        ``None`` uses the discoverer's default.
+    name_mode:
+        How to compute the component name from the matched file:
+
+        ``"stem"``
+            ``f.stem`` — default for rules, commands.
+        ``"parent"``
+            ``f.parent.name`` — for skills (directory name is the name).
+        ``"literal"``
+            Use the fixed value in *name_literal*.
+        ``"literal_or_relative"``
+            Use *name_literal* for root-level matches, the relative path
+            for nested matches found via recursive scan.
+    name_literal:
+        Fixed name for ``name_mode="literal"`` or the root-level fallback
+        for ``name_mode="literal_or_relative"``.
+    """
+
+    pattern: str
+    component_type: ComponentType
+    recursive: bool = False
+    deep: bool = False
+    source_tool: str | None = None
+    name_mode: str = "stem"
+    name_literal: str | None = None
+
+
+def _has_glob(pattern: str) -> bool:
+    """Return True if *pattern* contains glob metacharacters."""
+    return any(c in pattern for c in ("*", "?", "["))
+
+
+def _split_at_glob(pattern: str) -> tuple[str, str]:
+    """Split *pattern* into ``(directory-prefix, glob-suffix)``.
+
+    The split happens at the first path component that contains a glob
+    metacharacter.  Returns ``(pattern, "")`` when there is none.
+    """
+    parts = pattern.split("/")
+    for i, part in enumerate(parts):
+        if any(c in part for c in ("*", "?", "[")):
+            return "/".join(parts[:i]), "/".join(parts[i:])
+    return pattern, ""
+
+
 def parse_file(
     filepath: Path,
     component_type: ComponentType,
@@ -153,7 +218,14 @@ def parse_file(
 
 
 class ToolDiscoverer(ABC):
-    """Base class for tool-specific setup discoverers."""
+    """Base class for tool-specific setup discoverers.
+
+    Subclasses may either override :meth:`discover` and :meth:`collect_paths`
+    directly (the traditional approach), or populate :attr:`source_entries` to
+    let the base class derive both methods from a single declarative table.
+    Override hooks :meth:`_extra_collect_paths` and :meth:`_extra_discover`
+    handle special cases that the table cannot express.
+    """
 
     @property
     @abstractmethod
@@ -178,28 +250,136 @@ class ToolDiscoverer(ABC):
         """
         return ""
 
+    # --- declarative source table -------------------------------------------
+
+    @property
+    def source_entries(self) -> tuple[SourceEntry, ...]:
+        """Declarative table of sources this discoverer handles.
+
+        When non-empty, the base class derives :meth:`collect_paths` and
+        :meth:`discover` from this table automatically.  Subclasses that
+        populate this property can omit those two methods unless they need
+        the override hooks :meth:`_extra_collect_paths` and
+        :meth:`_extra_discover`.
+        """
+        return ()
+
+    # --- table-driven helpers -----------------------------------------------
+
+    def _collect_entry_paths(
+        self, root: Path, entry: SourceEntry, *, recursive: bool
+    ) -> list[Path]:
+        """Return files matching one :class:`SourceEntry`."""
+        paths: list[Path] = []
+        pattern = entry.pattern
+        if _has_glob(pattern):
+            dir_part, glob_part = _split_at_glob(pattern)
+            dir_path = root / dir_part if dir_part else root
+            if dir_path.is_dir():
+                fn = dir_path.rglob if entry.deep else dir_path.glob
+                for f in sorted(fn(glob_part)):
+                    if f.is_file() and not _is_excluded_path(f, root):
+                        paths.append(f)
+        else:
+            filepath = root / pattern
+            if filepath.is_file():
+                paths.append(filepath)
+        if entry.recursive and recursive:
+            paths.extend(_recursive_glob(root, pattern))
+        return paths
+
+    def _entry_name(self, f: Path, root: Path, entry: SourceEntry) -> str:
+        """Compute the component name for *f* based on *entry.name_mode*."""
+        if entry.name_mode == "parent":
+            return f.parent.name
+        if entry.name_mode == "literal":
+            return entry.name_literal or f.stem
+        if entry.name_mode == "literal_or_relative":
+            rel = f.relative_to(root)
+            if str(rel) == entry.pattern:
+                return entry.name_literal or entry.pattern
+            return str(rel)
+        # default: "stem"
+        return f.stem
+
+    def _extra_collect_paths(
+        self,
+        root: Path,
+        user_config_dir: Path | None = None,
+        *,
+        recursive: bool = False,
+    ) -> list[Path]:
+        """Override hook for paths not covered by :attr:`source_entries`."""
+        return []
+
+    def _extra_discover(
+        self,
+        root: Path,
+        user_config_dir: Path | None = None,
+        seen: set[str] | None = None,
+        *,
+        recursive: bool = False,
+    ) -> list[ParsedComponent]:
+        """Override hook for components not covered by :attr:`source_entries`."""
+        return []
+
+    # --- core discovery methods ---------------------------------------------
+
     @abstractmethod
     def detect(self, root: Path) -> bool:
         """Return True if this tool's setup files exist in root."""
 
-    @abstractmethod
     def discover(
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[ParsedComponent]:
-        """Discover all components for this tool."""
+        """Discover all components for this tool.
 
-    @abstractmethod
+        When :attr:`source_entries` is populated, the default implementation
+        iterates over the table and deduplicates by resolved path.
+        Subclasses without a table must override this method.
+        """
+        if not self.source_entries:
+            raise NotImplementedError(
+                f"{type(self).__name__} must either populate source_entries or override discover()"
+            )
+        results: list[ParsedComponent] = []
+        seen: set[str] = set()
+        for entry in self.source_entries:
+            source = entry.source_tool if entry.source_tool is not None else self.source_tool
+            for f in self._collect_entry_paths(root, entry, recursive=recursive):
+                resolved = str(f.resolve())
+                if resolved in seen:
+                    continue
+                seen.add(resolved)
+                name = self._entry_name(f, root, entry)
+                results.append(parse_file(f, entry.component_type, name=name, source_tool=source))
+        results.extend(self._extra_discover(root, user_config_dir, seen, recursive=recursive))
+        return results
+
     def collect_paths(
         self, root: Path, user_config_dir: Path | None = None, *, recursive: bool = False
     ) -> list[Path]:
         """Return every file path this discoverer would read.
 
         This feeds the shared setup inventory, which bounds scan limits, seeds
-        the fingerprint, and drives watch mode. It must be a superset of the
+        the fingerprint, and drives watch mode.  It must be a superset of the
         paths ``discover`` returns components for: anything missing here is read
         without being measured, and editing it does not change the fingerprint.
         ``test_inventory_covers_every_component`` enforces that.
+
+        When :attr:`source_entries` is populated, the default implementation
+        iterates over the table.  Subclasses without a table must override.
         """
+        if not self.source_entries:
+            raise NotImplementedError(
+                f"{type(self).__name__} must either populate source_entries "
+                f"or override collect_paths()"
+            )
+        paths: list[Path] = []
+        for entry in self.source_entries:
+            paths.extend(self._collect_entry_paths(root, entry, recursive=recursive))
+        paths.extend(self._extra_collect_paths(root, user_config_dir, recursive=recursive))
+        return paths
 
 
 # Files that live in an agents directory but are not agent definitions: the

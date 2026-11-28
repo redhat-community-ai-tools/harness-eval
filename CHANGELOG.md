@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- `ToolDiscoverer` base class gains a declarative `source_entries`
+  table; `collect_paths()` and `discover()` are now derived from
+  the same table, eliminating the hand-synced duplication.  Codex,
+  Windsurf and Cursor discoverers are migrated; other discoverers
+  keep their existing overrides (#158).
 - `CLAUDE.md` "Before committing" section now includes
   `uv run scripts/sync_commands.py --check` so agents and developers
   catch command-sync issues locally instead of waiting for CI (#178).

@@ -194,7 +194,7 @@ class TestCursorrulesScopingBug:
         assert any(str(p).endswith(".cursorrules") for p in paths)
 
     def test_discover_rules_respects_recursive_flag(self, tmp_path: Path) -> None:
-        """_discover_rules should not pick up nested .cursorrules without --recursive."""
+        """discover() should not pick up nested .cursorrules without --recursive."""
         sub = tmp_path / "subproject"
         sub.mkdir()
         (sub / ".cursorrules").write_text("nested rules")
@@ -203,14 +203,16 @@ class TestCursorrulesScopingBug:
         disc = CursorDiscoverer()
 
         # Without recursive: only root .cursorrules
-        results = disc._discover_rules(tmp_path)
-        names = [r.name for r in results]
+        results = disc.discover(tmp_path)
+        names = [r.name for r in results if r.component_type == ComponentType.CLAUDE_MD]
         assert ".cursorrules" in names
         assert not any("subproject" in n for n in names)
 
         # With recursive: both
-        results_recursive = disc._discover_rules(tmp_path, recursive=True)
-        names_recursive = [r.name for r in results_recursive]
+        results_recursive = disc.discover(tmp_path, recursive=True)
+        names_recursive = [
+            r.name for r in results_recursive if r.component_type == ComponentType.CLAUDE_MD
+        ]
         assert ".cursorrules" in names_recursive
         assert any("subproject" in n for n in names_recursive)
 
