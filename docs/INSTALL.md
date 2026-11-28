@@ -90,15 +90,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@main
+      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@v8.0.1
 ```
 
-No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on the PR with the autonomy verdict (PASS / FAIL / REVIEW_REQUIRED), the security and lint results, which components were scanned and which rules ran. The step exposes `autonomy-verdict` and `autonomy-passed` outputs for a downstream policy step.
+No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on the PR with the autonomy verdict (PASS / FAIL / REVIEW_REQUIRED), the security and lint results, which components were scanned and which rules ran. The step exposes `autonomy-verdict` and `autonomy-passed` outputs for a downstream policy step. For a check that feeds an auto-merge decision, pinning by commit SHA (e.g. `@<full-sha>`) is the strictest option because a tag can be force-pushed.
 
 ### Options
 
 ```yaml
-      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@main
+      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@v8.0.1
         with:
           path: "."              # directories to scan, one per line (default: repo root)
           autonomy: "true"       # harness-autonomy: block + policy rules; fails on FAIL and REVIEW_REQUIRED
@@ -119,7 +119,7 @@ No API key needed. No LLM calls. Fully deterministic. Posts a summary comment on
 For monorepos or repos with nested agent configs:
 
 ```yaml
-      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@main
+      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@v8.0.1
         with:
           path: |
             .
@@ -142,7 +142,7 @@ harness-eval harness-security . --recursive
 GitHub Action:
 
 ```yaml
-      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@main
+      - uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@v8.0.1
         with:
           recursive: "true"
 ```

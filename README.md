@@ -120,11 +120,15 @@ should have:
 A minimal wiring, as a GitHub Actions step:
 
 ```yaml
-- uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@main
+- uses: redhat-community-ai-tools/harness-eval/.github/actions/harness-eval@v8.0.1
   with:
     autonomy-policy: .harness-eval/autonomy-policy.yaml   # optional
     autonomy-allow-review: "false"   # REVIEW_REQUIRED fails the step; set "true" to let a human gate it instead
 ```
+
+For a check that feeds an auto-merge decision, pinning by commit SHA
+(e.g. `@<full-sha>`) is the strictest option because a tag can be
+force-pushed.
 
 The step's `autonomy-verdict` output is `PASS`, `FAIL` or `REVIEW_REQUIRED`;
 a policy engine (for example a Gemara control evaluated by ComplyTime) reads

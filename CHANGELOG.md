@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Documentation (`README.md`, `docs/INSTALL.md`) now references the
+  composite GitHub Action at `@v8.0.1` instead of the floating `@main`
+  tag, and notes that pinning by commit SHA is the strictest option
+  for checks that feed auto-merge decisions (#144).
 - `CLAUDE.md` "Before committing" section now includes
   `uv run scripts/sync_commands.py --check` so agents and developers
   catch command-sync issues locally instead of waiting for CI (#178).
