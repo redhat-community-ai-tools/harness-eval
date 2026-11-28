@@ -113,6 +113,14 @@ All notable changes to this project will be documented in this file.
   of interpreting them as regex replacement escapes, which could crash scans.
   SARIF paths use URI-compatible separators, POSIX absolute references stay
   external on Windows, and fixes preserve the file's existing newline style.
+- Secret redaction before a remote LLM call missed several forms: a quoted
+  JSON key (`"API_KEY": "..."`, the form an MCP config uses), a quoted value
+  containing spaces (only its first word was hidden), a credential flag
+  (`--token value`), a password or token in a URL (`https://user:pass@host`),
+  an `Authorization` header that is not `Bearer`, and keys named `passphrase`,
+  `passwd` or `private_key`. All are now redacted. Settings that count model
+  tokens (`max_tokens`, `token_budget`) are no longer redacted, so a reviewer
+  can read them.
 
 ### Removed
 - `inspection/merge.py` (`merge_inspection_results`), which only the removed
